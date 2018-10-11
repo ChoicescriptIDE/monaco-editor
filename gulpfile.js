@@ -170,6 +170,7 @@ function addPluginContribs(type) {
 				contribDefineIndex = contribContents.indexOf('define(\'' + plugin.contrib);
 				if (contribDefineIndex === -1) {
 					console.error('(1) CANNOT DETERMINE AMD define location for contribution', pluginPath);
+					console.log(plugin.contrib);
 					process.exit(-1);
 				}
 			}
