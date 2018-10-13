@@ -1,13 +1,2 @@
-/.vscode/
-/website/
-/docs/
-/test/
-/node_modules/
-/gulpfile.js
-/metadata.js
-/.npmignore
-/*.md
-/ISSUE_TEMPLATE
-/monaco.d.ts
-/package.json
-/package-lock.json
+*
+!release/**
