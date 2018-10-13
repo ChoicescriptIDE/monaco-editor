@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
+// Allow for running under nodejs/requirejs in tests
+var _monaco = (typeof monaco === 'undefined' ? self.monaco : monaco);
 export var conf = {
     onEnterRules: [
         {
@@ -10,11 +12,11 @@ export var conf = {
                 "achievement", "choice", "else", "elseif", "elsif",
                 "fake_choice", "if", "scene_list", "stat_chart"
             ].join("|") + ")).*\\s*$"),
-            action: { indentAction: monaco.languages.IndentAction.Indent }
+            action: { indentAction: _monaco.languages.IndentAction.Indent }
         },
         {
             beforeText: new RegExp("^\\s*\\*(?:" + ["ending", "finish", "goto", "goto_scene", "redirect_scene"].join("|") + ").*\\s*$"),
-            action: { indentAction: monaco.languages.IndentAction.Outdent }
+            action: { indentAction: _monaco.languages.IndentAction.Outdent }
         }
     ]
 };
