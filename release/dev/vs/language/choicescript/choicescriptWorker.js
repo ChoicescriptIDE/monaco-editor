@@ -8444,9 +8444,10 @@ var __extends = (this && this.__extends) || (function () {
         }
         ChoiceScriptValidation.prototype.configure = function (settings) {
             this.settings = settings;
-            // reload typo here rather than
-            // every time we call a visitor.
-            this.loadTypo(settings);
+            // Reload typo here rather than every time we call a visitor.
+            if (settings.spellCheckSettings.rootPath) {
+                this.loadTypo(settings);
+            }
         };
         ChoiceScriptValidation.prototype.loadTypo = function (settings) {
             var baseUrl = this.settings.spellCheckSettings.rootPath;
@@ -8457,14 +8458,16 @@ var __extends = (this && this.__extends) || (function () {
         };
         ChoiceScriptValidation.prototype.doValidation = function (document, stylesheet, settings) {
             if (settings === void 0) { settings = this.settings; }
-            if (settings && settings.validate === false
-                || !settings.spellCheckSettings.rootPath) {
+            if (settings && settings.validate === false) {
                 return [];
             }
             var entries = [];
             entries.push.apply(entries, nodes.ParseErrorCollector.entries(stylesheet));
             if (settings && settings.spellCheckSettings.enabled === true) {
-                entries.push.apply(entries, spellcheck_1.SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+                // Treat uninitialized rootPath as disabled.
+                if (settings.spellCheckSettings.rootPath) {
+                    entries.push.apply(entries, spellcheck_1.SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+                }
             }
             var ruleIds = [];
             for (var r in textRules_1.Rules) {
