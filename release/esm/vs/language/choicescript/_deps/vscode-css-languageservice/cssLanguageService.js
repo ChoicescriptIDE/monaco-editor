@@ -7,13 +7,13 @@ import { Parser } from './parser/cssParser.js';
 import { CSSCompletion } from './services/cssCompletion.js';
 import { CSSHover } from './services/cssHover.js';
 import { CSSNavigation } from './services/cssNavigation.js';
-import { CSSpellCheck } from './services/CSSpellCheck.js';
+import { ChoiceScriptValidation } from './services/ChoiceScriptValidation.js';
 export * from './cssLanguageTypes.js';
 export * from './_deps/vscode-languageserver-types/main.js';
-function createFacade(parser, completion, hover, navigation, spellcheck) {
+function createFacade(parser, completion, hover, navigation, validation) {
     return {
-        configure: spellcheck.configure.bind(spellcheck),
-        doSpellCheck: spellcheck.doSpellCheck.bind(spellcheck),
+        configure: validation.configure.bind(validation),
+        doValidation: validation.doValidation.bind(validation),
         parseStylesheet: parser.parseStylesheet.bind(parser),
         doComplete: completion.doComplete.bind(completion),
         setCompletionParticipants: completion.setCompletionParticipants.bind(completion),
@@ -30,6 +30,6 @@ function createFacade(parser, completion, hover, navigation, spellcheck) {
     };
 }
 export function getCSSLanguageService() {
-    return createFacade(new Parser(), new CSSCompletion(), new CSSHover(), new CSSNavigation(), new CSSpellCheck());
+    return createFacade(new Parser(), new CSSCompletion(), new CSSHover(), new CSSNavigation(), new ChoiceScriptValidation());
 }
 //# sourceMappingURL=cssLanguageService.js.map

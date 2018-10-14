@@ -8422,7 +8422,7 @@ var __extends = (this && this.__extends) || (function () {
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/services/CSSpellCheck',["require", "exports", "../parser/cssNodes", "vscode-languageserver-types", "./textRules", "./spellcheck", "./typo/typo"], factory);
+        define('vscode-css-languageservice/services/ChoiceScriptValidation',["require", "exports", "../parser/cssNodes", "vscode-languageserver-types", "./textRules", "./spellcheck", "./typo/typo"], factory);
     }
 })(function (require, exports) {
     /*---------------------------------------------------------------------------------------------
@@ -8436,26 +8436,35 @@ var __extends = (this && this.__extends) || (function () {
     var textRules_1 = require("./textRules");
     var spellcheck_1 = require("./spellcheck");
     var typo_1 = require("./typo/typo");
-    var CSSpellCheck = /** @class */ (function () {
-        function CSSpellCheck() {
-        }
-        CSSpellCheck.prototype.configure = function (settings) {
-            this.settings = settings;
+    var ChoiceScriptValidation = /** @class */ (function () {
+        function ChoiceScriptValidation() {
             this.typo = new typo_1.Typo("", "", "", {
                 platform: 'any'
             });
-            this.typo = new typo_1.Typo("en_US", this.typo._readFile("https://raw.githubusercontent.com/cfinke/Typo.js/master/typo/dictionaries/en_US/en_US.aff"), this.typo._readFile("https://raw.githubusercontent.com/cfinke/Typo.js/master/typo/dictionaries/en_US/en_US.dic"), {
+        }
+        ChoiceScriptValidation.prototype.configure = function (settings) {
+            this.settings = settings;
+            // reload typo here rather than
+            // every time we call a visitor.
+            this.loadTypo(settings);
+        };
+        ChoiceScriptValidation.prototype.loadTypo = function (settings) {
+            var baseUrl = settings.spellCheckSettings.rootPath;
+            var dict = this.settings.spellCheckSettings.dictionary;
+            this.typo = new typo_1.Typo(dict, this.typo._readFile(baseUrl + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + dict + "/" + dict + ".dic"), {
                 platform: 'any'
             });
         };
-        CSSpellCheck.prototype.doSpellCheck = function (document, stylesheet, settings) {
+        ChoiceScriptValidation.prototype.doValidation = function (document, stylesheet, settings) {
             if (settings === void 0) { settings = this.settings; }
             if (settings && settings.validate === false) {
                 return [];
             }
             var entries = [];
             entries.push.apply(entries, nodes.ParseErrorCollector.entries(stylesheet));
-            entries.push.apply(entries, spellcheck_1.SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+            if (settings && settings.spellCheckSettings.enabled === true) {
+                entries.push.apply(entries, spellcheck_1.SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+            }
             var ruleIds = [];
             for (var r in textRules_1.Rules) {
                 ruleIds.push(textRules_1.Rules[r].id);
@@ -8475,11 +8484,11 @@ var __extends = (this && this.__extends) || (function () {
             }
             return entries.filter(function (entry) { return entry.getLevel() !== nodes.Level.Ignore; }).map(toDiagnostic);
         };
-        return CSSpellCheck;
+        return ChoiceScriptValidation;
     }());
-    exports.CSSpellCheck = CSSpellCheck;
+    exports.ChoiceScriptValidation = ChoiceScriptValidation;
 });
-//# sourceMappingURL=CSSpellCheck.js.map;
+//# sourceMappingURL=ChoiceScriptValidation.js.map;
 (function (factory) {
     if (typeof module === "object" && typeof module.exports === "object") {
         var v = factory(require, exports);
@@ -8499,6 +8508,11 @@ var __extends = (this && this.__extends) || (function () {
     exports.Range = vscode_languageserver_types_1.Range;
     exports.TextEdit = vscode_languageserver_types_1.TextEdit;
     exports.Position = vscode_languageserver_types_1.Position;
+    var SpellCheckDictionary;
+    (function (SpellCheckDictionary) {
+        SpellCheckDictionary["EN_US"] = "en_US";
+        SpellCheckDictionary["EN_GB"] = "en_GB";
+    })(SpellCheckDictionary = exports.SpellCheckDictionary || (exports.SpellCheckDictionary = {}));
 });
 //# sourceMappingURL=cssLanguageTypes.js.map;
 (function (factory) {
@@ -8507,7 +8521,7 @@ var __extends = (this && this.__extends) || (function () {
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/cssLanguageService',["require", "exports", "./parser/cssParser", "./services/cssCompletion", "./services/cssHover", "./services/cssNavigation", "./services/CSSpellCheck", "./cssLanguageTypes", "vscode-languageserver-types"], factory);
+        define('vscode-css-languageservice/cssLanguageService',["require", "exports", "./parser/cssParser", "./services/cssCompletion", "./services/cssHover", "./services/cssNavigation", "./services/ChoiceScriptValidation", "./cssLanguageTypes", "vscode-languageserver-types"], factory);
     }
 })(function (require, exports) {
     /*---------------------------------------------------------------------------------------------
@@ -8523,13 +8537,13 @@ var __extends = (this && this.__extends) || (function () {
     var cssCompletion_1 = require("./services/cssCompletion");
     var cssHover_1 = require("./services/cssHover");
     var cssNavigation_1 = require("./services/cssNavigation");
-    var CSSpellCheck_1 = require("./services/CSSpellCheck");
+    var ChoiceScriptValidation_1 = require("./services/ChoiceScriptValidation");
     __export(require("./cssLanguageTypes"));
     __export(require("vscode-languageserver-types"));
-    function createFacade(parser, completion, hover, navigation, spellcheck) {
+    function createFacade(parser, completion, hover, navigation, validation) {
         return {
-            configure: spellcheck.configure.bind(spellcheck),
-            doSpellCheck: spellcheck.doSpellCheck.bind(spellcheck),
+            configure: validation.configure.bind(validation),
+            doValidation: validation.doValidation.bind(validation),
             parseStylesheet: parser.parseStylesheet.bind(parser),
             doComplete: completion.doComplete.bind(completion),
             setCompletionParticipants: completion.setCompletionParticipants.bind(completion),
@@ -8546,7 +8560,7 @@ var __extends = (this && this.__extends) || (function () {
         };
     }
     function getCSSLanguageService() {
-        return createFacade(new cssParser_1.Parser(), new cssCompletion_1.CSSCompletion(), new cssHover_1.CSSHover(), new cssNavigation_1.CSSNavigation(), new CSSpellCheck_1.CSSpellCheck());
+        return createFacade(new cssParser_1.Parser(), new cssCompletion_1.CSSCompletion(), new cssHover_1.CSSHover(), new cssNavigation_1.CSSNavigation(), new ChoiceScriptValidation_1.ChoiceScriptValidation());
     }
     exports.getCSSLanguageService = getCSSLanguageService;
 });
@@ -8576,11 +8590,11 @@ define('vs/language/choicescript/choicescriptWorker',["require", "exports", "vsc
             this._languageService.configure(this._languageSettings);
         }
         // --- language service host ---------------
-        CSSWorker.prototype.doSpellCheck = function (uri) {
+        CSSWorker.prototype.doValidation = function (uri) {
             var document = this._getTextDocument(uri);
             if (document) {
                 var stylesheet = this._languageService.parseStylesheet(document);
-                var check = this._languageService.doSpellCheck(document, stylesheet);
+                var check = this._languageService.doValidation(document, stylesheet, this._languageSettings);
                 return Promise.as(check);
             }
             return Promise.as([]);

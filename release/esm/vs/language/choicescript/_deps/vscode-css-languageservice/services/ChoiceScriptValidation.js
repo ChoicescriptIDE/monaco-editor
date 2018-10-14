@@ -8,27 +8,35 @@ import { Range, DiagnosticSeverity } from './../_deps/vscode-languageserver-type
 import { Rules } from './textRules.js';
 import { SpellCheckVisitor } from './spellcheck.js';
 import { Typo } from './typo/typo.js';
-var CSSpellCheck = /** @class */ (function () {
-    function CSSpellCheck() {
+var ChoiceScriptValidation = /** @class */ (function () {
+    function ChoiceScriptValidation() {
+        this.typo = new Typo("", "", "", {
+            platform: 'any'
+        });
     }
-    CSSpellCheck.prototype.configure = function (settings) {
+    ChoiceScriptValidation.prototype.configure = function (settings) {
         this.settings = settings;
+        // reload typo here rather than
+        // every time we call a visitor.
+        this.loadTypo(settings);
     };
-    CSSpellCheck.prototype.doSpellCheck = function (document, stylesheet, settings) {
+    ChoiceScriptValidation.prototype.loadTypo = function (settings) {
+        var baseUrl = settings.spellCheckSettings.rootPath;
+        var dict = this.settings.spellCheckSettings.dictionary;
+        this.typo = new Typo(dict, this.typo._readFile(baseUrl + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + dict + "/" + dict + ".dic"), {
+            platform: 'any'
+        });
+    };
+    ChoiceScriptValidation.prototype.doValidation = function (document, stylesheet, settings) {
         if (settings === void 0) { settings = this.settings; }
         if (settings && settings.validate === false) {
             return [];
         }
-        // Might be a better place to do this...
-        this.typo = new Typo("", "", "", {
-            platform: 'any'
-        });
-        this.typo = new Typo("en_US", this.typo._readFile("https://raw.githubusercontent.com/cfinke/Typo.js/master/typo/dictionaries/en_US/en_US.aff"), this.typo._readFile("https://raw.githubusercontent.com/cfinke/Typo.js/master/typo/dictionaries/en_US/en_US.dic"), {
-            platform: 'any'
-        });
         var entries = [];
         entries.push.apply(entries, nodes.ParseErrorCollector.entries(stylesheet));
-        entries.push.apply(entries, SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+        if (settings && settings.spellCheckSettings.enabled === true) {
+            entries.push.apply(entries, SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+        }
         var ruleIds = [];
         for (var r in Rules) {
             ruleIds.push(Rules[r].id);
@@ -48,7 +56,7 @@ var CSSpellCheck = /** @class */ (function () {
         }
         return entries.filter(function (entry) { return entry.getLevel() !== nodes.Level.Ignore; }).map(toDiagnostic);
     };
-    return CSSpellCheck;
+    return ChoiceScriptValidation;
 }());
-export { CSSpellCheck };
-//# sourceMappingURL=CSSpellCheck.js.map
+export { ChoiceScriptValidation };
+//# sourceMappingURL=ChoiceScriptValidation.js.map

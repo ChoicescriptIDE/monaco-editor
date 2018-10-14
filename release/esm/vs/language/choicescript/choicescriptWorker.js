@@ -21,11 +21,11 @@ var CSSWorker = /** @class */ (function () {
         this._languageService.configure(this._languageSettings);
     }
     // --- language service host ---------------
-    CSSWorker.prototype.doSpellCheck = function (uri) {
+    CSSWorker.prototype.doValidation = function (uri) {
         var document = this._getTextDocument(uri);
         if (document) {
             var stylesheet = this._languageService.parseStylesheet(document);
-            var check = this._languageService.doSpellCheck(document, stylesheet);
+            var check = this._languageService.doValidation(document, stylesheet, this._languageSettings);
             return Promise.as(check);
         }
         return Promise.as([]);

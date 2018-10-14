@@ -5411,6 +5411,11 @@ export namespace worker {
 export namespace languages.choicescript {
     export interface DiagnosticsOptions {
         readonly validate?: boolean;
+        readonly spellCheckSettings?: {
+            rootPath: string,
+            enabled: boolean,
+            dictionary: 'en_US' | 'en_GB'
+        };
         readonly lint?: {
             readonly compatibleVendorPrefixes?: 'ignore' | 'warning' | 'error',
             readonly vendorPrefix?: 'ignore' | 'warning' | 'error',

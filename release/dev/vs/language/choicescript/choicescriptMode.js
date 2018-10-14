@@ -1486,9 +1486,9 @@ define('vs/language/choicescript/languageFeatures',["require", "exports", "vscod
                 var handle;
                 _this._listener[model.uri.toString()] = model.onDidChangeContent(function () {
                     clearTimeout(handle);
-                    handle = setTimeout(function () { return _this._doSpellCheck(model.uri, modeId); }, 500);
+                    handle = setTimeout(function () { return _this._doValidate(model.uri, modeId); }, 500);
                 });
-                _this._doSpellCheck(model.uri, modeId);
+                _this._doValidate(model.uri, modeId);
             };
             var onModelRemoved = function (model) {
                 monaco.editor.setModelMarkers(model, _this._languageId, []);
@@ -1526,9 +1526,9 @@ define('vs/language/choicescript/languageFeatures',["require", "exports", "vscod
             this._disposables.forEach(function (d) { return d && d.dispose(); });
             this._disposables = [];
         };
-        DiagnosticsAdapter.prototype._doSpellCheck = function (resource, languageId) {
+        DiagnosticsAdapter.prototype._doValidate = function (resource, languageId) {
             this._worker(resource).then(function (worker) {
-                return worker.doSpellCheck(resource.toString());
+                return worker.doValidation(resource.toString());
             }).then(function (diagnostics) {
                 var markers = diagnostics.map(function (d) { return toDiagnostics(resource, d); });
                 var model = monaco.editor.getModel(resource);

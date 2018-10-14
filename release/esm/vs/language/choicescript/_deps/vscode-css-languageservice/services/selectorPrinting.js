@@ -343,7 +343,7 @@ var SelectorElementBuilder = /** @class */ (function () {
                     this.element.addChild(labelElement);
                     this.element = labelElement;
                 }
-                else if (this.prev && (this.prev.matches('+') || this.prev.matches('~'))) {
+                else if (this.prev && (this.prev.matches('+') || this.prev.matches('~')) && this.element.parent) {
                     this.element = this.element.parent;
                 }
                 if (this.prev && this.prev.matches('~')) {

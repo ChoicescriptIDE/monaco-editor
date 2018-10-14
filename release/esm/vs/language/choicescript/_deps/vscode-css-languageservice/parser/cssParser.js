@@ -958,6 +958,9 @@ var Parser = /** @class */ (function () {
         }
         if (node.getArguments().addChild(this._parseFunctionArgument())) {
             while (this.accept(TokenType.Comma)) {
+                if (this.peek(TokenType.ParenthesisR)) {
+                    break;
+                }
                 if (!node.getArguments().addChild(this._parseFunctionArgument())) {
                     this.markError(node, ParseError.ExpressionExpected);
                 }

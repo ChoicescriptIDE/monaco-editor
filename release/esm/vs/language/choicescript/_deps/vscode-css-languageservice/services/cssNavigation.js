@@ -45,6 +45,9 @@ var CSSNavigation = /** @class */ (function () {
         if (!node || node.type === nodes.NodeType.Stylesheet || node.type === nodes.NodeType.Declarations) {
             return result;
         }
+        if (node.type === nodes.NodeType.Identifier && node.parent && node.parent.type === nodes.NodeType.ClassSelector) {
+            node = node.parent;
+        }
         var symbols = new Symbols(stylesheet);
         var symbol = symbols.findSymbolFromNode(node);
         var name = node.getText();
@@ -106,6 +109,9 @@ var CSSNavigation = /** @class */ (function () {
             if (node instanceof nodes.Selector) {
                 entry.name = node.getText();
                 locationNode = node.findParent(nodes.NodeType.Ruleset);
+                entry.location = Location.create(document.uri, getRange(locationNode, document));
+                result.push(entry);
+                return false;
             }
             else if (node instanceof nodes.VariableDeclaration) {
                 entry.name = node.getName();
