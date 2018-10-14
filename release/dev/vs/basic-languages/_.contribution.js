@@ -32,8 +32,4 @@ define(["require", "exports", "vs/editor/editor.api"], function (require, export
         });
     }
     exports.registerLanguage = registerLanguage;
-    function registerTheme(themeName, themeData) {
-        _monaco.editor.defineTheme(themeName, themeData);
-    }
-    exports.registerTheme = registerTheme;
 });

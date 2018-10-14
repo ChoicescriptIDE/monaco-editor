@@ -28,6 +28,3 @@ export function registerLanguage(def) {
         loadLanguage(languageId);
     });
 }
-export function registerTheme(themeName, themeData) {
-    _monaco.editor.defineTheme(themeName, themeData);
-}
