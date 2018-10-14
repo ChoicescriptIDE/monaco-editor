@@ -8449,7 +8449,7 @@ var __extends = (this && this.__extends) || (function () {
             this.loadTypo(settings);
         };
         ChoiceScriptValidation.prototype.loadTypo = function (settings) {
-            var baseUrl = settings.spellCheckSettings.rootPath;
+            var baseUrl = this.settings.spellCheckSettings.rootPath;
             var dict = this.settings.spellCheckSettings.dictionary;
             this.typo = new typo_1.Typo(dict, this.typo._readFile(baseUrl + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + dict + "/" + dict + ".dic"), {
                 platform: 'any'
@@ -8457,7 +8457,8 @@ var __extends = (this && this.__extends) || (function () {
         };
         ChoiceScriptValidation.prototype.doValidation = function (document, stylesheet, settings) {
             if (settings === void 0) { settings = this.settings; }
-            if (settings && settings.validate === false) {
+            if (settings && settings.validate === false
+                || !settings.spellCheckSettings.rootPath) {
                 return [];
             }
             var entries = [];
