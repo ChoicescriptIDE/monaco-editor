@@ -41,11 +41,13 @@ var LanguageServiceDefaultsImpl = /** @class */ (function () {
 }());
 export { LanguageServiceDefaultsImpl };
 var diagnosticDefault = {
-    validate: true,
+    // Generally try to disable things by default
+    // when we're using CSIDE but enable otherwise
+    // for ease of testing.
+    validate: (typeof window.cside !== "undefined") ? false : true,
     spellCheckSettings: {
-        // Use github source for testing. CSIDE will set in production.
-        rootPath: (typeof window.cside !== "undefined") ? "" : "https://raw.githubusercontent.com/cfinke/Typo.js/master/typo/dictionaries/",
-        enabled: true,
+        rootPath: (typeof window.cside !== "undefined") ? "" : "https://raw.githubusercontent.com/ChoicescriptIDE/main/latest/source/lib/typo/dictionaries/",
+        enabled: (typeof window.cside !== "undefined") ? false : true,
         dictionary: "en_US"
     },
     lint: {

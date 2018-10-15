@@ -17,13 +17,14 @@ var ChoiceScriptValidation = /** @class */ (function () {
     ChoiceScriptValidation.prototype.configure = function (settings) {
         this.settings = settings;
         // Reload typo here rather than every time we call a visitor.
-        if (settings.spellCheckSettings.rootPath) {
+        // Don't bother reloading a dictionary if spellcheck is disabled.
+        if (this.settings.spellCheckSettings.enabled) {
             this.loadTypo(settings);
         }
     };
     ChoiceScriptValidation.prototype.loadTypo = function (settings) {
-        var baseUrl = this.settings.spellCheckSettings.rootPath;
-        var dict = this.settings.spellCheckSettings.dictionary;
+        var baseUrl = settings.spellCheckSettings.rootPath;
+        var dict = settings.spellCheckSettings.dictionary;
         this.typo = new Typo(dict, this.typo._readFile(baseUrl + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + dict + "/" + dict + ".dic"), {
             platform: 'any'
         });
@@ -36,10 +37,7 @@ var ChoiceScriptValidation = /** @class */ (function () {
         var entries = [];
         entries.push.apply(entries, nodes.ParseErrorCollector.entries(stylesheet));
         if (settings && settings.spellCheckSettings.enabled === true) {
-            // Treat uninitialized rootPath as disabled.
-            if (settings.spellCheckSettings.rootPath) {
-                entries.push.apply(entries, SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
-            }
+            entries.push.apply(entries, SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
         }
         var ruleIds = [];
         for (var r in Rules) {
