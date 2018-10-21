@@ -5,6 +5,3 @@ import './..editoreditor.api.jspi';
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 import './choicescript/choicescript.contribution.js';
-import './markdown/markdown.contribution.js';
-import './xml/xml.contribution.js';
-import './yaml/yaml.contribution.js';

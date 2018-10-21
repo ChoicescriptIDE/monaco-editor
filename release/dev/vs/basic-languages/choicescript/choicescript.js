@@ -7,21 +7,7 @@ define(["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     // Allow for running under nodejs/requirejs in tests
     var _monaco = (typeof monaco === 'undefined' ? self.monaco : monaco);
-    exports.conf = {
-        onEnterRules: [
-            {
-                beforeText: new RegExp("^\\s*(:?#|\\*(?:" + [
-                    "achievement", "choice", "else", "elseif", "elsif",
-                    "fake_choice", "if", "scene_list", "stat_chart"
-                ].join("|") + ")).*\\s*$"),
-                action: { indentAction: _monaco.languages.IndentAction.Indent }
-            },
-            {
-                beforeText: new RegExp("^\\s*\\*(?:" + ["ending", "finish", "goto", "goto_scene", "redirect_scene"].join("|") + ").*\\s*$"),
-                action: { indentAction: _monaco.languages.IndentAction.Outdent }
-            }
-        ]
-    };
+    /* Base Language */
     exports.language = {
         defaultToken: '',
         tokenPostfix: '.choicescript',
@@ -81,25 +67,71 @@ define(["require", "exports"], function (require, exports) {
             ]
         }
     };
-    exports.darkTheme = {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-            { token: 'extra-keywords', foreground: "DA9ED3" },
-            { token: 'flow-command', foreground: "599eff" },
-            { token: 'keyword', foreground: "FFA500" },
-            { token: 'conditional', foreground: "FFA500" },
-            { token: 'choice-option', foreground: "92A75C" },
-            { token: 'variable', foreground: "636DB5", fontStyle: 'bold' },
-            { token: 'custom-info', foreground: '808080' },
-            { token: 'custom-error', foreground: 'ff0000', fontStyle: 'bold' },
-            { token: 'custom-notice', foreground: 'FFA500' },
-            { token: 'custom-date', foreground: '008800' },
-        ],
+    /* Smart Indentation Rules */
+    exports.conf = {
+        onEnterRules: [
+            {
+                beforeText: new RegExp("^\\s*(:?#|\\*(?:" + [
+                    "achievement", "choice", "else", "elseif", "elsif",
+                    "fake_choice", "if", "scene_list", "stat_chart"
+                ].join("|") + ")).*\\s*$"),
+                action: { indentAction: _monaco.languages.IndentAction.Indent }
+            },
+            {
+                beforeText: new RegExp("^\\s*\\*(?:" + ["ending", "finish", "goto", "goto_scene", "redirect_scene"].join("|") + ").*\\s*$"),
+                action: { indentAction: _monaco.languages.IndentAction.Outdent }
+            }
+        ]
     };
-    exports.lightTheme = {
-        base: "vs",
-        inherit: true,
-        rules: []
+    /* ChoiceScript Tailored Themes */
+    exports.themes = {
+        ids: ["cs-dark", "cs-light"],
+        definitions: [
+            {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                    { token: 'extra-keywords', foreground: "DA9ED3" },
+                    { token: 'flow-command', foreground: "599eff" },
+                    { token: 'keyword', foreground: "FFA500" },
+                    { token: 'conditional', foreground: "FFA500" },
+                    { token: 'choice-option', foreground: "92A75C" },
+                    { token: 'variable', foreground: "636DB5", fontStyle: 'bold' },
+                    { token: 'custom-info', foreground: '808080' },
+                    { token: 'custom-error', foreground: 'ff0000', fontStyle: 'bold' },
+                    { token: 'custom-notice', foreground: 'FFA500' },
+                    { token: 'custom-date', foreground: '008800' },
+                ],
+                colors: {}
+            },
+            {
+                base: "vs",
+                inherit: true,
+                rules: [
+                    { token: 'choice-option', foreground: "92A75C" },
+                ],
+                colors: {}
+            }
+        ]
+    };
+    /* Automatic Formatting */
+    var autoFormatMap = {
+        ".": { match: "...", result: "…" },
+        "-": { match: "--", result: "—" } // emdash
+    };
+    exports.formatProvider = {
+        autoFormatTriggerCharacters: Object.keys(autoFormatMap),
+        provideOnTypeFormattingEdits: function (model, position, character, options, token) {
+            var matchLength = autoFormatMap[character].match.length;
+            var range = new monaco.Range(position.lineNumber, position.column >= matchLength ? position.column - matchLength : 0, position.lineNumber, position.column);
+            if (model.getValueInRange(range) === autoFormatMap[character].match) {
+                return [
+                    {
+                        range: range,
+                        text: autoFormatMap[character].result
+                    }
+                ];
+            }
+        }
     };
 });

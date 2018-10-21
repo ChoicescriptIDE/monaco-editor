@@ -264,29 +264,6 @@ function toDocumentHighlightKind(kind) {
     }
     return monaco.languages.DocumentHighlightKind.Text;
 }
-var DocumentHighlightAdapter = /** @class */ (function () {
-    function DocumentHighlightAdapter(_worker) {
-        this._worker = _worker;
-    }
-    DocumentHighlightAdapter.prototype.provideDocumentHighlights = function (model, position, token) {
-        var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
-            return worker.findDocumentHighlights(resource.toString(), fromPosition(position));
-        }).then(function (entries) {
-            if (!entries) {
-                return;
-            }
-            return entries.map(function (entry) {
-                return {
-                    range: toRange(entry.range),
-                    kind: toDocumentHighlightKind(entry.kind)
-                };
-            });
-        }));
-    };
-    return DocumentHighlightAdapter;
-}());
-export { DocumentHighlightAdapter };
 // --- definition ------
 function toLocation(location) {
     return {
@@ -294,43 +271,6 @@ function toLocation(location) {
         range: toRange(location.range)
     };
 }
-var DefinitionAdapter = /** @class */ (function () {
-    function DefinitionAdapter(_worker) {
-        this._worker = _worker;
-    }
-    DefinitionAdapter.prototype.provideDefinition = function (model, position, token) {
-        var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
-            return worker.findDefinition(resource.toString(), fromPosition(position));
-        }).then(function (definition) {
-            if (!definition) {
-                return;
-            }
-            return [toLocation(definition)];
-        }));
-    };
-    return DefinitionAdapter;
-}());
-export { DefinitionAdapter };
-// --- references ------
-var ReferenceAdapter = /** @class */ (function () {
-    function ReferenceAdapter(_worker) {
-        this._worker = _worker;
-    }
-    ReferenceAdapter.prototype.provideReferences = function (model, position, context, token) {
-        var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
-            return worker.findReferences(resource.toString(), fromPosition(position));
-        }).then(function (entries) {
-            if (!entries) {
-                return;
-            }
-            return entries.map(toLocation);
-        }));
-    };
-    return ReferenceAdapter;
-}());
-export { ReferenceAdapter };
 // --- rename ------
 function toWorkspaceEdit(edit) {
     if (!edit || !edit.changes) {
@@ -377,68 +317,6 @@ function toSymbolKind(kind) {
     }
     return mKind.Function;
 }
-var DocumentSymbolAdapter = /** @class */ (function () {
-    function DocumentSymbolAdapter(_worker) {
-        this._worker = _worker;
-    }
-    DocumentSymbolAdapter.prototype.provideDocumentSymbols = function (model, token) {
-        var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.findDocumentSymbols(resource.toString()); }).then(function (items) {
-            if (!items) {
-                return;
-            }
-            return items.map(function (item) { return ({
-                name: item.name,
-                detail: '',
-                containerName: item.containerName,
-                kind: toSymbolKind(item.kind),
-                range: toRange(item.location.range),
-                selectionRange: toRange(item.location.range)
-            }); });
-        }));
-    };
-    return DocumentSymbolAdapter;
-}());
-export { DocumentSymbolAdapter };
-var DocumentColorAdapter = /** @class */ (function () {
-    function DocumentColorAdapter(_worker) {
-        this._worker = _worker;
-    }
-    DocumentColorAdapter.prototype.provideDocumentColors = function (model, token) {
-        var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.findDocumentColors(resource.toString()); }).then(function (infos) {
-            if (!infos) {
-                return;
-            }
-            return infos.map(function (item) { return ({
-                color: item.color,
-                range: toRange(item.range)
-            }); });
-        }));
-    };
-    DocumentColorAdapter.prototype.provideColorPresentations = function (model, info, token) {
-        var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.getColorPresentations(resource.toString(), info.color, fromRange(info.range)); }).then(function (presentations) {
-            if (!presentations) {
-                return;
-            }
-            return presentations.map(function (presentation) {
-                var item = {
-                    label: presentation.label,
-                };
-                if (presentation.textEdit) {
-                    item.textEdit = toTextEdit(presentation.textEdit);
-                }
-                if (presentation.additionalTextEdits) {
-                    item.additionalTextEdits = presentation.additionalTextEdits.map(toTextEdit);
-                }
-                return item;
-            });
-        }));
-    };
-    return DocumentColorAdapter;
-}());
-export { DocumentColorAdapter };
 function toFoldingRangeKind(kind) {
     switch (kind) {
         case ls.FoldingRangeKind.Comment: return monaco.languages.FoldingRangeKind.Comment;

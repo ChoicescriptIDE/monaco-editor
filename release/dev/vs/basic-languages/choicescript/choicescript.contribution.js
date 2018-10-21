@@ -8,9 +8,11 @@ define(["require", "exports", "../_.contribution"], function (require, exports, 
     // Allow for running under nodejs/requirejs in tests
     var _monaco = (typeof monaco === 'undefined' ? self.monaco : monaco);
     __contribution_1.registerLanguage({
-        id: 'choicescript',
-        extensions: ['.txt'],
-        aliases: ['ChoiceScript', 'cs'],
-        loader: function () { return _monaco.Promise.wrap(new Promise(function (resolve_1, reject_1) { require(['./choicescript'], resolve_1, reject_1); })); }
+        loader: function () { return _monaco.Promise.wrap(new Promise(function (resolve_1, reject_1) { require(['./choicescript'], resolve_1, reject_1); })); },
+        lang: {
+            id: 'choicescript',
+            extensions: ['.txt'],
+            aliases: ['ChoiceScript', 'cs'],
+        }
     });
 });

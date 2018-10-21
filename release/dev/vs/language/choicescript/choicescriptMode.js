@@ -1729,29 +1729,6 @@ define('vs/language/choicescript/languageFeatures',["require", "exports", "vscod
         }
         return monaco.languages.DocumentHighlightKind.Text;
     }
-    var DocumentHighlightAdapter = /** @class */ (function () {
-        function DocumentHighlightAdapter(_worker) {
-            this._worker = _worker;
-        }
-        DocumentHighlightAdapter.prototype.provideDocumentHighlights = function (model, position, token) {
-            var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) {
-                return worker.findDocumentHighlights(resource.toString(), fromPosition(position));
-            }).then(function (entries) {
-                if (!entries) {
-                    return;
-                }
-                return entries.map(function (entry) {
-                    return {
-                        range: toRange(entry.range),
-                        kind: toDocumentHighlightKind(entry.kind)
-                    };
-                });
-            }));
-        };
-        return DocumentHighlightAdapter;
-    }());
-    exports.DocumentHighlightAdapter = DocumentHighlightAdapter;
     // --- definition ------
     function toLocation(location) {
         return {
@@ -1759,43 +1736,6 @@ define('vs/language/choicescript/languageFeatures',["require", "exports", "vscod
             range: toRange(location.range)
         };
     }
-    var DefinitionAdapter = /** @class */ (function () {
-        function DefinitionAdapter(_worker) {
-            this._worker = _worker;
-        }
-        DefinitionAdapter.prototype.provideDefinition = function (model, position, token) {
-            var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) {
-                return worker.findDefinition(resource.toString(), fromPosition(position));
-            }).then(function (definition) {
-                if (!definition) {
-                    return;
-                }
-                return [toLocation(definition)];
-            }));
-        };
-        return DefinitionAdapter;
-    }());
-    exports.DefinitionAdapter = DefinitionAdapter;
-    // --- references ------
-    var ReferenceAdapter = /** @class */ (function () {
-        function ReferenceAdapter(_worker) {
-            this._worker = _worker;
-        }
-        ReferenceAdapter.prototype.provideReferences = function (model, position, context, token) {
-            var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) {
-                return worker.findReferences(resource.toString(), fromPosition(position));
-            }).then(function (entries) {
-                if (!entries) {
-                    return;
-                }
-                return entries.map(toLocation);
-            }));
-        };
-        return ReferenceAdapter;
-    }());
-    exports.ReferenceAdapter = ReferenceAdapter;
     // --- rename ------
     function toWorkspaceEdit(edit) {
         if (!edit || !edit.changes) {
@@ -1842,68 +1782,6 @@ define('vs/language/choicescript/languageFeatures',["require", "exports", "vscod
         }
         return mKind.Function;
     }
-    var DocumentSymbolAdapter = /** @class */ (function () {
-        function DocumentSymbolAdapter(_worker) {
-            this._worker = _worker;
-        }
-        DocumentSymbolAdapter.prototype.provideDocumentSymbols = function (model, token) {
-            var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.findDocumentSymbols(resource.toString()); }).then(function (items) {
-                if (!items) {
-                    return;
-                }
-                return items.map(function (item) { return ({
-                    name: item.name,
-                    detail: '',
-                    containerName: item.containerName,
-                    kind: toSymbolKind(item.kind),
-                    range: toRange(item.location.range),
-                    selectionRange: toRange(item.location.range)
-                }); });
-            }));
-        };
-        return DocumentSymbolAdapter;
-    }());
-    exports.DocumentSymbolAdapter = DocumentSymbolAdapter;
-    var DocumentColorAdapter = /** @class */ (function () {
-        function DocumentColorAdapter(_worker) {
-            this._worker = _worker;
-        }
-        DocumentColorAdapter.prototype.provideDocumentColors = function (model, token) {
-            var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.findDocumentColors(resource.toString()); }).then(function (infos) {
-                if (!infos) {
-                    return;
-                }
-                return infos.map(function (item) { return ({
-                    color: item.color,
-                    range: toRange(item.range)
-                }); });
-            }));
-        };
-        DocumentColorAdapter.prototype.provideColorPresentations = function (model, info, token) {
-            var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.getColorPresentations(resource.toString(), info.color, fromRange(info.range)); }).then(function (presentations) {
-                if (!presentations) {
-                    return;
-                }
-                return presentations.map(function (presentation) {
-                    var item = {
-                        label: presentation.label,
-                    };
-                    if (presentation.textEdit) {
-                        item.textEdit = toTextEdit(presentation.textEdit);
-                    }
-                    if (presentation.additionalTextEdits) {
-                        item.additionalTextEdits = presentation.additionalTextEdits.map(toTextEdit);
-                    }
-                    return item;
-                });
-            }));
-        };
-        return DocumentColorAdapter;
-    }());
-    exports.DocumentColorAdapter = DocumentColorAdapter;
     function toFoldingRangeKind(kind) {
         switch (kind) {
             case ls.FoldingRangeKind.Comment: return monaco.languages.FoldingRangeKind.Comment;
@@ -1940,11 +1818,11 @@ define('vs/language/choicescript/choicescriptMode',["require", "exports", "./wor
         var languageId = defaults.languageId;
         monaco.languages.registerCompletionItemProvider(languageId, new languageFeatures.CompletionAdapter(worker));
         monaco.languages.registerHoverProvider(languageId, new languageFeatures.HoverAdapter(worker));
-        monaco.languages.registerDocumentHighlightProvider(languageId, new languageFeatures.DocumentHighlightAdapter(worker));
-        monaco.languages.registerDefinitionProvider(languageId, new languageFeatures.DefinitionAdapter(worker));
-        monaco.languages.registerReferenceProvider(languageId, new languageFeatures.ReferenceAdapter(worker));
-        monaco.languages.registerDocumentSymbolProvider(languageId, new languageFeatures.DocumentSymbolAdapter(worker));
-        monaco.languages.registerColorProvider(languageId, new languageFeatures.DocumentColorAdapter(worker));
+        //monaco.languages.registerDocumentHighlightProvider(languageId, new languageFeatures.DocumentHighlightAdapter(worker));
+        //monaco.languages.registerDefinitionProvider(languageId, new languageFeatures.DefinitionAdapter(worker));
+        //monaco.languages.registerReferenceProvider(languageId, new languageFeatures.ReferenceAdapter(worker));
+        //monaco.languages.registerDocumentSymbolProvider(languageId, new languageFeatures.DocumentSymbolAdapter(worker));
+        //monaco.languages.registerColorProvider(languageId, new languageFeatures.DocumentColorAdapter(worker));
         new languageFeatures.DiagnosticsAdapter(languageId, worker, defaults);
     }
     exports.setupMode = setupMode;
