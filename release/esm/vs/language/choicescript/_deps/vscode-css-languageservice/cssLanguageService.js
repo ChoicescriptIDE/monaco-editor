@@ -6,30 +6,23 @@
 import { Parser } from './parser/cssParser.js';
 import { CSSCompletion } from './services/cssCompletion.js';
 import { CSSHover } from './services/cssHover.js';
-import { CSSNavigation } from './services/cssNavigation.js';
 import { ChoiceScriptValidation } from './services/ChoiceScriptValidation.js';
+import { ChoiceScriptCodeActions } from './services/ChoiceScriptCodeActions.js';
 export * from './cssLanguageTypes.js';
 export * from './_deps/vscode-languageserver-types/main.js';
-function createFacade(parser, completion, hover, navigation, validation) {
+function createFacade(parser, completion, hover, validation, codeActions) {
     return {
         configure: validation.configure.bind(validation),
         doValidation: validation.doValidation.bind(validation),
-        parseStylesheet: parser.parseStylesheet.bind(parser),
+        parseScene: parser.parseScene.bind(parser),
         doComplete: completion.doComplete.bind(completion),
         setCompletionParticipants: completion.setCompletionParticipants.bind(completion),
         doHover: hover.doHover.bind(hover),
-        findDefinition: navigation.findDefinition.bind(navigation),
-        findReferences: navigation.findReferences.bind(navigation),
-        findDocumentHighlights: navigation.findDocumentHighlights.bind(navigation),
-        findDocumentLinks: navigation.findDocumentLinks.bind(navigation),
-        findDocumentSymbols: navigation.findDocumentSymbols.bind(navigation),
-        findColorSymbols: function (d, s) { return navigation.findDocumentColors(d, s).map(function (s) { return s.range; }); },
-        findDocumentColors: navigation.findDocumentColors.bind(navigation),
-        getColorPresentations: navigation.getColorPresentations.bind(navigation),
-        doRename: navigation.doRename.bind(navigation),
+        doCodeActions: codeActions.doCodeActions.bind(codeActions),
+        doCodeActions2: codeActions.doCodeActions2.bind(codeActions),
     };
 }
 export function getCSSLanguageService() {
-    return createFacade(new Parser(), new CSSCompletion(), new CSSHover(), new CSSNavigation(), new ChoiceScriptValidation());
+    return createFacade(new Parser(), new CSSCompletion(), new CSSHover(), new ChoiceScriptValidation(), new ChoiceScriptCodeActions());
 }
 //# sourceMappingURL=cssLanguageService.js.map

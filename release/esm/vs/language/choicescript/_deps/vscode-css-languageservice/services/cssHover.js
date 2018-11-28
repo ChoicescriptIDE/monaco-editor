@@ -6,7 +6,6 @@
 import * as nodes from '../parser/cssNodes.js';
 import * as languageFacts from './languageFacts.js';
 import { Range } from './../_deps/vscode-languageserver-types/main.js';
-import { selectorToMarkedString, simpleSelectorToMarkedString } from './selectorPrinting.js';
 var CSSHover = /** @class */ (function () {
     function CSSHover() {
     }
@@ -18,26 +17,27 @@ var CSSHover = /** @class */ (function () {
         var nodepath = nodes.getNodePath(stylesheet, offset);
         for (var i = 0; i < nodepath.length; i++) {
             var node = nodepath[i];
-            if (node.type === nodes.NodeType.Builtin) {
+            if (node instanceof nodes.Command) {
                 var propertyName = node.getText().slice(1, node.getText().length);
-                var builtins = languageFacts.getBuiltins();
-                var index = builtins.map(function (cmd) { return cmd.name; }).indexOf(propertyName);
+                var cmds = languageFacts.getCommands();
+                var index = cmds.map(function (cmd) { return cmd.name; }).indexOf(propertyName);
                 if (index !== -1) {
                     return {
-                        contents: builtins[index].description,
+                        contents: cmds[index].description,
                         range: getRange(node)
                     };
                 }
             }
-            if (node instanceof nodes.Selector) {
+            // Expression is not correct. Just used to shut up compile errors. Needs fixing.
+            if (node instanceof nodes.Expression) {
                 return {
-                    contents: selectorToMarkedString(node),
+                    contents: "selectorToMarkedString",
                     range: getRange(node)
                 };
             }
-            if (node instanceof nodes.SimpleSelector) {
+            if (node instanceof nodes.Expression) {
                 return {
-                    contents: simpleSelectorToMarkedString(node),
+                    contents: "simpleSelector",
                     range: getRange(node)
                 };
             }

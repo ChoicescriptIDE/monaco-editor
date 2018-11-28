@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-import * as nodes from '../parser/cssNodes.js';
-import * as browsers from '../data/browsers.js';
+import * as commands from '../data/commands.js';
 import * as nls from './../../../fillers/vscode-nls.js';
 var localize = nls.loadMessageBundle();
 export var colors = {
@@ -295,30 +294,29 @@ export var svgElements = ['circle', 'clipPath', 'cursor', 'defs', 'desc', 'ellip
     'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence', 'filter', 'foreignObject', 'g', 'hatch', 'hatchpath', 'image', 'line', 'linearGradient',
     'marker', 'mask', 'mesh', 'meshpatch', 'meshrow', 'metadata', 'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialGradient', 'rect', 'set', 'solidcolor', 'stop', 'svg', 'switch',
     'symbol', 'text', 'textPath', 'tspan', 'use', 'view'];
-export function isColorConstructor(node) {
-    var name = node.getName();
+/*export function isColorConstructor(node: nodes.Function): boolean {
+    let name = node.getName();
     if (!name) {
         return false;
     }
     return /^(rgb|rgba|hsl|hsla)$/gi.test(name);
-}
+}*/
 /**
  * Returns true if the node is a color value - either
  * defined a hex number, as rgb or rgba function, or
  * as color name.
  */
-export function isColorValue(node) {
+/*
+export function isColorValue(node: nodes.Node): boolean {
     if (node.type === nodes.NodeType.HexColorValue) {
         return true;
-    }
-    else if (node.type === nodes.NodeType.Function) {
-        return isColorConstructor(node);
-    }
-    else if (node.type === nodes.NodeType.Identifier) {
+    } else if (node.type === nodes.NodeType.Function) {
+        return isColorConstructor(<nodes.Function>node);
+    } else if (node.type === nodes.NodeType.Identifier) {
         if (node.parent && node.parent.type !== nodes.NodeType.Term) {
             return false;
         }
-        var candidateColor = node.getText().toLowerCase();
+        let candidateColor = node.getText().toLowerCase();
         if (candidateColor === 'none') {
             return false;
         }
@@ -327,7 +325,7 @@ export function isColorValue(node) {
         }
     }
     return false;
-}
+}*/
 var Digit0 = 48;
 var Digit9 = 57;
 var A = 65;
@@ -453,62 +451,60 @@ export function hslFromColor(rgba) {
     }
     return { h: h, s: s, l: l, a: a };
 }
-export function getColorValue(node) {
+/*
+export function getColorValue(node: nodes.Node): Color {
     if (node.type === nodes.NodeType.HexColorValue) {
-        var text = node.getText();
+        let text = node.getText();
         return colorFromHex(text);
-    }
-    else if (node.type === nodes.NodeType.Function) {
-        var functionNode = node;
-        var name = functionNode.getName();
-        var colorValues = functionNode.getArguments().getChildren();
+    } else if (node.type === nodes.NodeType.Function) {
+        let functionNode = <nodes.Function>node;
+        let name = functionNode.getName();
+        let colorValues = functionNode.getArguments().getChildren();
         if (!name || colorValues.length < 3 || colorValues.length > 4) {
             return null;
         }
         try {
-            var alpha = colorValues.length === 4 ? getNumericValue(colorValues[3], 1) : 1;
+            let alpha = colorValues.length === 4 ? getNumericValue(colorValues[3], 1) : 1;
             if (name === 'rgb' || name === 'rgba') {
                 return {
                     red: getNumericValue(colorValues[0], 255.0),
                     green: getNumericValue(colorValues[1], 255.0),
                     blue: getNumericValue(colorValues[2], 255.0),
-                    alpha: alpha
+                    alpha
                 };
-            }
-            else if (name === 'hsl' || name === 'hsla') {
-                var h = getAngle(colorValues[0]);
-                var s = getNumericValue(colorValues[1], 100.0);
-                var l = getNumericValue(colorValues[2], 100.0);
+            } else if (name === 'hsl' || name === 'hsla') {
+                let h = getAngle(colorValues[0]);
+                let s = getNumericValue(colorValues[1], 100.0);
+                let l = getNumericValue(colorValues[2], 100.0);
                 return colorFromHSL(h, s, l, alpha);
             }
-        }
-        catch (e) {
+        } catch (e) {
             // parse error on numeric value
             return null;
         }
-    }
-    else if (node.type === nodes.NodeType.Identifier) {
+    } else if (node.type === nodes.NodeType.Identifier) {
         if (node.parent && node.parent.type !== nodes.NodeType.Term) {
             return null;
         }
-        var term = node.parent;
+        let term = node.parent;
         if (term.parent && term.parent.type === nodes.NodeType.BinaryExpression) {
-            var expression = term.parent;
-            if (expression.parent && expression.parent.type === nodes.NodeType.ListEntry && expression.parent.key === expression) {
+            let expression = term.parent;
+            if (expression.parent && expression.parent.type === nodes.NodeType.ListEntry && (<nodes.ListEntry>expression.parent).key === expression) {
                 return null;
             }
         }
-        var candidateColor = node.getText().toLowerCase();
+
+        let candidateColor = node.getText().toLowerCase();
         if (candidateColor === 'none') {
             return null;
         }
-        var colorHex = colors[candidateColor];
+        let colorHex = colors[candidateColor];
         if (colorHex) {
             return colorFromHex(colorHex);
         }
     }
     return null;
-}
+}*/
 function getNumericValue(node, factor) {
     var val = node.getText();
     var m = val.match(/^([-+]?[0-9]*\.?[0-9]+)(%?)$/);
@@ -604,28 +600,30 @@ var EntryImpl = /** @class */ (function () {
     });
     return EntryImpl;
 }());
-var builtins = browsers.data.css.builtins;
-var builtinList;
-export function getBuiltins() {
-    if (!builtinList) {
-        builtinList = [];
-        for (var i = 0; i < builtins.length; i++) {
-            var rawEntry = builtins[i];
-            builtinList.push(new EntryImpl(rawEntry));
+var commandsArray = commands.fullCommandList;
+var fullCommandList;
+export function getCommands() {
+    if (!fullCommandList) {
+        fullCommandList = [];
+        for (var i = 0; i < commandsArray.length; i++) {
+            var rawEntry = {
+                name: commandsArray[i],
+                desc: [
+                    "**Command**: " + commandsArray[i],
+                ]
+            };
+            if (typeof commands.standardCommands[commandsArray[i]] !== "undefined"
+                && commands.standardCommands[commandsArray[i]].desc) {
+                rawEntry.desc.push("```choicescript\n" + commands.standardCommands[commandsArray[i]].desc + "\n```");
+            }
+            else if (typeof commands.flowCommands[commandsArray[i]] !== "undefined"
+                && commands.flowCommands[commandsArray[i]].desc) {
+                rawEntry.desc.push("```choicescript\n" + commands.flowCommands[commandsArray[i]].desc + "\n```");
+            }
+            rawEntry.desc.push("Read more on the [wiki](https://choicescriptdev.wikia.com/wiki/" + commandsArray[i] + ")");
+            fullCommandList.push(new EntryImpl(rawEntry));
         }
     }
-    return builtinList;
-}
-var flowCommands = browsers.data.css.flowCommands;
-var flowCommandList;
-export function getFlowCommands() {
-    if (!flowCommandList) {
-        flowCommandList = [];
-        for (var i = 0; i < flowCommands.length; i++) {
-            var rawEntry = flowCommands[i];
-            flowCommandList.push(new EntryImpl(rawEntry));
-        }
-    }
-    return flowCommandList;
+    return fullCommandList;
 }
 //# sourceMappingURL=languageFacts.js.map

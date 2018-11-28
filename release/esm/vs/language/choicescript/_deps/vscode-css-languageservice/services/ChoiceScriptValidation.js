@@ -18,6 +18,7 @@ var ChoiceScriptValidation = /** @class */ (function () {
         this.settings = settings;
         // Reload typo here rather than every time we call a visitor.
         // Don't bother reloading a dictionary if spellcheck is disabled.
+        console.log(settings);
         if (this.settings.spellCheckSettings.enabled) {
             this.loadTypo(settings);
         }
@@ -29,15 +30,15 @@ var ChoiceScriptValidation = /** @class */ (function () {
             platform: 'any'
         });
     };
-    ChoiceScriptValidation.prototype.doValidation = function (document, stylesheet, settings) {
+    ChoiceScriptValidation.prototype.doValidation = function (document, scene, settings) {
         if (settings === void 0) { settings = this.settings; }
         if (settings && settings.validate === false) {
             return [];
         }
         var entries = [];
-        entries.push.apply(entries, nodes.ParseErrorCollector.entries(stylesheet));
+        entries.push.apply(entries, nodes.ParseErrorCollector.entries(scene));
         if (settings && settings.spellCheckSettings.enabled === true) {
-            entries.push.apply(entries, SpellCheckVisitor.entries(stylesheet, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+            entries.push.apply(entries, SpellCheckVisitor.entries(scene, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
         }
         var ruleIds = [];
         for (var r in Rules) {

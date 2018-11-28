@@ -14,6 +14,8 @@ var CSSIssueType = /** @class */ (function () {
 }());
 export { CSSIssueType };
 export var ParseError = {
+    UnknownCommand: new CSSIssueType('cs-unknowncommand', localize('unknown.command', "unknown command")),
+    NoChoiceOption: new CSSIssueType('cs-nochoiceoption', localize('no.choice.command', "expected at least one choice option")),
     NumberExpected: new CSSIssueType('css-numberexpected', localize('expected.number', "number expected")),
     ConditionExpected: new CSSIssueType('css-conditionexpected', localize('expected.condt', "condition expected")),
     RuleOrSelectorExpected: new CSSIssueType('css-ruleorselectorexpected', localize('expected.ruleorselector', "at-rule or selector expected")),
@@ -39,7 +41,6 @@ export var ParseError = {
     CommaExpected: new CSSIssueType('css-commaexpected', localize('expected.comma', "comma expected")),
     PageDirectiveOrDeclarationExpected: new CSSIssueType('css-pagedirordeclexpected', localize('expected.pagedirordecl', "page directive or declaraton expected")),
     UnknownAtRule: new CSSIssueType('css-unknownatrule', localize('unknown.atrule', "at-rule unknown")),
-    UnknownCommand: new CSSIssueType('cs-unknowncommand', localize('unknown.command', "unknown command")),
     SelectorExpected: new CSSIssueType('css-selectorexpected', localize('expected.selector', "selector expected")),
     StringLiteralExpected: new CSSIssueType('css-stringliteralexpected', localize('expected.stringliteral', "string literal expected")),
     WhitespaceExpected: new CSSIssueType('css-whitespaceexpected', localize('expected.whitespace', "whitespace expected")),

@@ -1886,7 +1886,7 @@ void 0!==a.require&&"function"==typeof a.require.config&&a.require.config({ignor
 
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * monaco-css version: 2.2.0(ba20f0f49802da46b73b65bf178e3b488bbbd32f)
+ * monaco-css version: 2.2.0(290ea3e1be00c96cfbd8ae72487d1cb8f514edea)
  * Released under the MIT license
  * https://github.com/Microsoft/monaco-css/blob/master/LICENSE.md
  *-----------------------------------------------------------------------------*/

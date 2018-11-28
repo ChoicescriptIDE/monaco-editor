@@ -6,7 +6,7 @@
 import { TokenType, Scanner } from './cssScanner.js';
 import * as nodes from './cssNodes.js';
 import { ParseError } from './cssErrors.js';
-import * as languageFacts from '../services/languageFacts.js';
+import { standardCommandList, flowCommandList } from '../data/commands.js';
 /// <summary>
 /// A parser for the css core specification. See for reference:
 /// https://www.w3.org/TR/CSS21/grammar.html
@@ -167,7 +167,7 @@ var Parser = /** @class */ (function () {
             this.resync(resyncTokens, resyncStopTokens);
         }
     };
-    Parser.prototype.parseStylesheet = function (textDocument) {
+    Parser.prototype.parseScene = function (textDocument) {
         var versionId = textDocument.version;
         var textProvider = function (offset, length) {
             if (textDocument.version !== versionId) {
@@ -175,7 +175,7 @@ var Parser = /** @class */ (function () {
             }
             return textDocument.getText().substr(offset, length);
         };
-        return this.internalParse(textDocument.getText(), this._parseStylesheet, textProvider);
+        return this.internalParse(textDocument.getText(), this._parseScene, textProvider);
     };
     Parser.prototype.internalParse = function (input, parseFunc, textProvider) {
         this.scanner.setSource(input);
@@ -191,24 +191,20 @@ var Parser = /** @class */ (function () {
         }
         return node;
     };
-    Parser.prototype._parseStylesheet = function () {
-        var node = this.create(nodes.Stylesheet);
-        node.addChild(this._parseCharset());
+    Parser.prototype._parseScene = function () {
+        var node = this.create(nodes.Scene);
         do {
             var hasMatch = false;
             do {
                 hasMatch = false;
-                var statement = this._parseStylesheetStatement();
-                if (statement) {
-                    node.addChild(statement);
-                    hasMatch = true;
-                }
-                else {
-                    var line = this._parseTextLine();
-                    if (line) {
-                        node.addChild(line);
-                        hasMatch = true;
+                var line = this._parseLine();
+                // Hmm...
+                if (line) {
+                    node.addChild(line);
+                    while (!this.accept(TokenType.EOL) && !this.accept(TokenType.EOF)) {
+                        this.consumeToken();
                     }
+                    hasMatch = true;
                 }
             } while (hasMatch);
             if (this.peek(TokenType.EOF)) {
@@ -218,16 +214,18 @@ var Parser = /** @class */ (function () {
         } while (!this.peek(TokenType.EOF));
         return this.finish(node);
     };
-    Parser.prototype._parseStylesheetStatement = function () {
+    Parser.prototype._parseLine = function () {
         if (this.peek(TokenType.SingleLineComment)) {
             var node = this.create(nodes.Node);
             this.consumeToken();
             return this.finish(node);
         }
         else if (this.peek(TokenType.Builtin) || this.peek(TokenType.Invalid)) {
-            return this._parseCommand();
+            return this._parseChoiceScriptStatement();
         }
-        return null; // this._parseRuleset(false);
+        else {
+            return this._parseTextLine();
+        }
     };
     Parser.prototype._parseTextLine = function () {
         var node = this.createNode(nodes.NodeType.TextLine);
@@ -242,53 +240,71 @@ var Parser = /** @class */ (function () {
         }
         return null;
     };
-    Parser.prototype._parseCommand = function () {
-        return this._parseBasicCommand()
-            || this._parseInvalid();
+    Parser.prototype._parseChoiceScriptStatement = function () {
+        return this._parseChoiceScriptCommand();
     };
-    Parser.prototype._parseBasicCommand = function () {
-        var node = this.create(nodes.Builtin);
-        if (!this.acceptOneKeyword(languageFacts.getBuiltins().map(function (item) { return '*' + item.name; }))) {
-            this.markError(node, ParseError.UnknownCommand);
-            this.consumeToken();
+    Parser.prototype._parseChoiceScriptCommand = function () {
+        return this._parseChoiceCommand()
+            || this._parseFlowCommand()
+            || this._parseStandardCommand()
+            || this._parseInvalidCommand();
+    };
+    Parser.prototype._parseFlowCommand = function () {
+        var node = this.create(nodes.FlowCommand);
+        if (this.acceptOneKeyword(flowCommandList.map(function (cmd) { return '*' + cmd; }))) {
+            return this.finish(node);
+        }
+        return null;
+    };
+    Parser.prototype._parseChoiceOption = function () {
+        if (!this.peek(TokenType.Hash) && !this.peekDelim('#')) {
+            return null;
+        }
+        var node = this.create(nodes.ChoiceOption);
+        if (this.acceptDelim('#')) {
+            return this.finish(node);
+        }
+        else {
+            this.consumeToken(); // TokenType.Hash
+            while (!this.peek(TokenType.EOL) && !this.peek(TokenType.EOF)) {
+                this.consumeToken();
+            }
         }
         return this.finish(node);
     };
-    Parser.prototype._parseInvalid = function () {
-        var node = this.create(nodes.Builtin);
+    Parser.prototype._parseChoiceCommand = function () {
+        var node = this.create(nodes.ChoiceCommand);
+        if (this.acceptOneKeyword(["*choice"])) {
+            if (this.accept(TokenType.EOL)) {
+                while (node.addChild(this._parseChoiceOption())) {
+                    this.accept(TokenType.EOL); // EOL
+                }
+                if (node.hasChildren()) {
+                    return this.finish(node);
+                }
+                else {
+                    return this.finish(node, ParseError.NoChoiceOption);
+                }
+            }
+            return this.finish(node, ParseError.NoChoiceOption);
+        }
+        return null;
+    };
+    Parser.prototype._parseStandardCommand = function () {
+        var node = this.create(nodes.StandardCommand);
+        if (this.acceptOneKeyword(standardCommandList.map(function (cmd) { return '*' + cmd; }))) {
+            return this.finish(node);
+        }
+        return null;
+    };
+    Parser.prototype._parseInvalidCommand = function () {
+        var node = this.create(nodes.Command);
+        this.markError(node, ParseError.UnknownCommand);
         this.consumeToken();
-        return this.finish(node, ParseError.UnknownCommand);
+        return this.finish(node);
     };
     Parser.prototype._parseStylesheetAtStatement = function () {
         return this._parseDocument();
-    };
-    Parser.prototype._tryParseRuleset = function (isNested) {
-        var mark = this.mark();
-        if (this._parseSelector(isNested)) {
-            while (this.accept(TokenType.Comma) && this._parseSelector(isNested)) {
-                // loop
-            }
-            if (this.accept(TokenType.CurlyL)) {
-                this.restoreAtMark(mark);
-                return this._parseRuleset(isNested);
-            }
-        }
-        this.restoreAtMark(mark);
-        return null;
-    };
-    Parser.prototype._parseRuleset = function (isNested) {
-        if (isNested === void 0) { isNested = false; }
-        var node = this.create(nodes.RuleSet);
-        if (!node.getSelectors().addChild(this._parseSelector(isNested))) {
-            return null;
-        }
-        while (this.accept(TokenType.Comma) && node.getSelectors().addChild(this._parseSelector(isNested))) {
-            // loop
-        }
-        return this._parseBody(node, this._parseRuleSetDeclaration.bind(this));
-    };
-    Parser.prototype._parseRuleSetDeclaration = function () {
-        return this._parseAtApply() || this._tryParseCustomPropertyDeclaration() || this._parseDeclaration();
     };
     /**
      * Parses declarations like:
@@ -312,29 +328,21 @@ var Parser = /** @class */ (function () {
             case nodes.NodeType.Keyframe:
             case nodes.NodeType.ViewPort:
             case nodes.NodeType.Media:
-            case nodes.NodeType.Ruleset:
             case nodes.NodeType.Namespace:
             case nodes.NodeType.If:
             case nodes.NodeType.For:
             case nodes.NodeType.Each:
             case nodes.NodeType.While:
-            case nodes.NodeType.MixinDeclaration:
             case nodes.NodeType.FunctionDeclaration:
                 return false;
             case nodes.NodeType.VariableDeclaration:
-            case nodes.NodeType.ExtendsReference:
             case nodes.NodeType.MixinContent:
             case nodes.NodeType.ReturnStatement:
             case nodes.NodeType.MediaQuery:
-            case nodes.NodeType.Debug:
             case nodes.NodeType.Import:
             case nodes.NodeType.AtApplyRule:
             case nodes.NodeType.CustomPropertyDeclaration:
                 return true;
-            case nodes.NodeType.MixinReference:
-                return !node.getContent();
-            case nodes.NodeType.Declaration:
-                return !node.getNestedProperties();
         }
         return false;
     };
@@ -367,189 +375,6 @@ var Parser = /** @class */ (function () {
         }
         return this.finish(node);
     };
-    Parser.prototype._parseSelector = function (isNested) {
-        var node = this.create(nodes.Selector);
-        var hasContent = false;
-        if (isNested) {
-            // nested selectors can start with a combinator
-            hasContent = node.addChild(this._parseCombinator());
-        }
-        while (node.addChild(this._parseSimpleSelector())) {
-            hasContent = true;
-            node.addChild(this._parseCombinator()); // optional
-        }
-        return hasContent ? this.finish(node) : null;
-    };
-    Parser.prototype._parseDeclaration = function (resyncStopTokens) {
-        var node = this.create(nodes.Declaration);
-        if (!node.setProperty(this._parseProperty())) {
-            return null;
-        }
-        if (!this.accept(TokenType.Colon)) {
-            return this.finish(node, ParseError.ColonExpected, [TokenType.Colon], resyncStopTokens);
-        }
-        node.colonPosition = this.prevToken.offset;
-        if (!node.setValue(this._parseExpr())) {
-            return this.finish(node, ParseError.PropertyValueExpected);
-        }
-        node.addChild(this._parsePrio());
-        if (this.peek(TokenType.SemiColon)) {
-            node.semicolonPosition = this.token.offset; // not part of the declaration, but useful information for code assist
-        }
-        return this.finish(node);
-    };
-    Parser.prototype._tryParseCustomPropertyDeclaration = function () {
-        if (!this.peekRegExp(TokenType.Ident, /^--/)) {
-            return null;
-        }
-        var node = this.create(nodes.CustomPropertyDeclaration);
-        if (!node.setProperty(this._parseProperty())) {
-            return null;
-        }
-        if (!this.accept(TokenType.Colon)) {
-            return this.finish(node, ParseError.ColonExpected, [TokenType.Colon]);
-        }
-        node.colonPosition = this.prevToken.offset;
-        var mark = this.mark();
-        if (this.peek(TokenType.CurlyL)) {
-            // try to parse it as nested declaration
-            var propertySet = this.create(nodes.CustomPropertySet);
-            var declarations = this._parseDeclarations(this._parseRuleSetDeclaration.bind(this));
-            if (propertySet.setDeclarations(declarations) && !declarations.isErroneous(true)) {
-                propertySet.addChild(this._parsePrio());
-                if (this.peek(TokenType.SemiColon)) {
-                    this.finish(propertySet);
-                    node.setPropertySet(propertySet);
-                    node.semicolonPosition = this.token.offset; // not part of the declaration, but useful information for code assist
-                    return this.finish(node);
-                }
-            }
-            this.restoreAtMark(mark);
-        }
-        // try tp parse as expression
-        var expression = this._parseExpr();
-        if (expression && !expression.isErroneous(true)) {
-            this._parsePrio();
-            if (this.peek(TokenType.SemiColon)) {
-                node.setValue(expression);
-                node.semicolonPosition = this.token.offset; // not part of the declaration, but useful information for code assist
-                return this.finish(node);
-            }
-        }
-        this.restoreAtMark(mark);
-        node.addChild(this._parseCustomPropertyValue());
-        node.addChild(this._parsePrio());
-        if (this.token.offset === node.colonPosition + 1) {
-            return this.finish(node, ParseError.PropertyValueExpected);
-        }
-        return this.finish(node);
-    };
-    /**
-     * Parse custom property values.
-     *
-     * Based on https://www.w3.org/TR/css-variables/#syntax
-     *
-     * This code is somewhat unusual, as the allowed syntax is incredibly broad,
-     * parsing almost any sequence of tokens, save for a small set of exceptions.
-     * Unbalanced delimitors, invalid tokens, and declaration
-     * terminators like semicolons and !important directives (when not inside
-     * of delimitors).
-     */
-    Parser.prototype._parseCustomPropertyValue = function () {
-        var node = this.create(nodes.Node);
-        var isTopLevel = function () { return curlyDepth === 0 && parensDepth === 0 && bracketsDepth === 0; };
-        var curlyDepth = 0;
-        var parensDepth = 0;
-        var bracketsDepth = 0;
-        done: while (true) {
-            switch (this.token.type) {
-                case TokenType.SemiColon:
-                    // A semicolon only ends things if we're not inside a delimitor.
-                    if (isTopLevel()) {
-                        break done;
-                    }
-                    break;
-                case TokenType.Exclamation:
-                    // An exclamation ends the value if we're not inside delims.
-                    if (isTopLevel()) {
-                        break done;
-                    }
-                    break;
-                case TokenType.CurlyL:
-                    curlyDepth++;
-                    break;
-                case TokenType.CurlyR:
-                    curlyDepth--;
-                    if (curlyDepth < 0) {
-                        // The property value has been terminated without a semicolon, and
-                        // this is the last declaration in the ruleset.
-                        if (parensDepth === 0 && bracketsDepth === 0) {
-                            break done;
-                        }
-                        return this.finish(node, ParseError.LeftCurlyExpected);
-                    }
-                    break;
-                case TokenType.ParenthesisL:
-                    parensDepth++;
-                    break;
-                case TokenType.ParenthesisR:
-                    parensDepth--;
-                    if (parensDepth < 0) {
-                        return this.finish(node, ParseError.LeftParenthesisExpected);
-                    }
-                    break;
-                case TokenType.BracketL:
-                    bracketsDepth++;
-                    break;
-                case TokenType.BracketR:
-                    bracketsDepth--;
-                    if (bracketsDepth < 0) {
-                        return this.finish(node, ParseError.LeftSquareBracketExpected);
-                    }
-                    break;
-                case TokenType.BadString: // fall through
-                    break done;
-                case TokenType.EOF:
-                    // We shouldn't have reached the end of input, something is
-                    // unterminated.
-                    var error = ParseError.RightCurlyExpected;
-                    if (bracketsDepth > 0) {
-                        error = ParseError.RightSquareBracketExpected;
-                    }
-                    else if (parensDepth > 0) {
-                        error = ParseError.RightParenthesisExpected;
-                    }
-                    return this.finish(node, error);
-            }
-            this.consumeToken();
-        }
-        return this.finish(node);
-    };
-    Parser.prototype._tryToParseDeclaration = function () {
-        var mark = this.mark();
-        if (this._parseProperty() && this.accept(TokenType.Colon)) {
-            // looks like a declaration, go ahead
-            this.restoreAtMark(mark);
-            return this._parseDeclaration();
-        }
-        this.restoreAtMark(mark);
-        return null;
-    };
-    Parser.prototype._parseProperty = function () {
-        var node = this.create(nodes.Property);
-        var mark = this.mark();
-        if (this.acceptDelim('*') || this.acceptDelim('_')) {
-            // support for  IE 5.x, 6 and 7 star hack: see http://en.wikipedia.org/wiki/CSS_filter#Star_hack
-            if (this.hasWhitespace()) {
-                this.restoreAtMark(mark);
-                return null;
-            }
-        }
-        if (node.setIdentifier(this._parsePropertyIdentifier())) {
-            return this.finish(node);
-        }
-        return null;
-    };
     Parser.prototype._parsePropertyIdentifier = function () {
         return this._parseIdent();
     };
@@ -575,7 +400,7 @@ var Parser = /** @class */ (function () {
         var node = this.create(nodes.Document);
         this.consumeToken(); // @-moz-document
         this.resync([], [TokenType.CurlyL]); // ignore all the rules
-        return this._parseBody(node, this._parseStylesheetStatement.bind(this));
+        return this._parseBody(node, this._parseScene.bind(this));
     };
     Parser.prototype._parseOperator = function () {
         // these are operators for binary expressions
@@ -583,6 +408,9 @@ var Parser = /** @class */ (function () {
             this.peekDelim('*') ||
             this.peekDelim('+') ||
             this.peekDelim('-') ||
+            this.peekDelim('%') ||
+            this.peekDelim('!') ||
+            this.peekDelim('&') ||
             this.peek(TokenType.Dashmatch) ||
             this.peek(TokenType.Includes) ||
             this.peek(TokenType.SubstringOperator) ||
@@ -605,63 +433,6 @@ var Parser = /** @class */ (function () {
         this.consumeToken();
         return this.finish(node);
     };
-    Parser.prototype._parseCombinator = function () {
-        if (this.peekDelim('>')) {
-            var node = this.create(nodes.Node);
-            this.consumeToken();
-            var mark = this.mark();
-            if (!this.hasWhitespace() && this.acceptDelim('>')) {
-                if (!this.hasWhitespace() && this.acceptDelim('>')) {
-                    node.type = nodes.NodeType.SelectorCombinatorShadowPiercingDescendant;
-                    return this.finish(node);
-                }
-                this.restoreAtMark(mark);
-            }
-            node.type = nodes.NodeType.SelectorCombinatorParent;
-            return this.finish(node);
-        }
-        else if (this.peekDelim('+')) {
-            var node = this.create(nodes.Node);
-            this.consumeToken();
-            node.type = nodes.NodeType.SelectorCombinatorSibling;
-            return this.finish(node);
-        }
-        else if (this.peekDelim('~')) {
-            var node = this.create(nodes.Node);
-            this.consumeToken();
-            node.type = nodes.NodeType.SelectorCombinatorAllSiblings;
-            return this.finish(node);
-        }
-        else if (this.peekDelim('/')) {
-            var node = this.create(nodes.Node);
-            this.consumeToken();
-            var mark = this.mark();
-            if (!this.hasWhitespace() && this.acceptIdent('deep') && !this.hasWhitespace() && this.acceptDelim('/')) {
-                node.type = nodes.NodeType.SelectorCombinatorShadowPiercingDescendant;
-                return this.finish(node);
-            }
-            this.restoreAtMark(mark);
-        }
-        else {
-            return null;
-        }
-    };
-    Parser.prototype._parseSimpleSelector = function () {
-        // simple_selector
-        //  : element_name [ HASH | class | attrib | pseudo ]* | [ HASH | class | attrib | pseudo ]+ ;
-        var node = this.create(nodes.SimpleSelector);
-        var c = 0;
-        if (node.addChild(this._parseElementName())) {
-            c++;
-        }
-        while ((c === 0 || !this.hasWhitespace()) && node.addChild(this._parseSimpleSelectorBody())) {
-            c++;
-        }
-        return c > 0 ? this.finish(node) : null;
-    };
-    Parser.prototype._parseSimpleSelectorBody = function () {
-        return this._parsePseudo() || this._parseHash() || this._parseClass() || this._parseAttrib();
-    };
     Parser.prototype._parseSelectorIdent = function () {
         return this._parseIdent();
     };
@@ -669,7 +440,7 @@ var Parser = /** @class */ (function () {
         if (!this.peek(TokenType.Hash) && !this.peekDelim('#')) {
             return null;
         }
-        var node = this.createNode(nodes.NodeType.IdentifierSelector);
+        var node = this.createNode(nodes.NodeType.ChoiceOption);
         if (this.acceptDelim('#')) {
             if (this.hasWhitespace() || !node.addChild(this._parseSelectorIdent())) {
                 return this.finish(node, ParseError.IdentifierExpected);
@@ -677,29 +448,6 @@ var Parser = /** @class */ (function () {
         }
         else {
             this.consumeToken(); // TokenType.Hash
-        }
-        return this.finish(node);
-    };
-    Parser.prototype._parseClass = function () {
-        // class: '.' IDENT ;
-        if (!this.peekDelim('.')) {
-            return null;
-        }
-        var node = this.createNode(nodes.NodeType.ClassSelector);
-        this.consumeToken(); // '.'
-        if (this.hasWhitespace() || !node.addChild(this._parseSelectorIdent())) {
-            return this.finish(node, ParseError.IdentifierExpected);
-        }
-        return this.finish(node);
-    };
-    Parser.prototype._parseElementName = function () {
-        // element_name: (ns? '|')? IDENT | '*';
-        var pos = this.mark();
-        var node = this.createNode(nodes.NodeType.ElementNameSelector);
-        node.addChild(this._parseNamespacePrefix());
-        if (!node.addChild(this._parseSelectorIdent()) && !this.acceptDelim('*')) {
-            this.restoreAtMark(pos);
-            return null;
         }
         return this.finish(node);
     };
@@ -714,93 +462,6 @@ var Parser = /** @class */ (function () {
             return null;
         }
         return this.finish(node);
-    };
-    Parser.prototype._parseAttrib = function () {
-        // attrib : '[' S* IDENT S* [ [ '=' | INCLUDES | DASHMATCH ] S*   [ IDENT | STRING ] S* ]? ']'
-        if (!this.peek(TokenType.BracketL)) {
-            return null;
-        }
-        var node = this.create(nodes.AttributeSelector);
-        this.consumeToken(); // BracketL
-        // Optional attrib namespace
-        node.setNamespacePrefix(this._parseNamespacePrefix());
-        if (!node.setIdentifier(this._parseIdent())) {
-            return this.finish(node, ParseError.IdentifierExpected);
-        }
-        if (node.setOperator(this._parseOperator())) {
-            node.setValue(this._parseBinaryExpr());
-            this.acceptIdent('i'); // case insensitive matching
-        }
-        if (!this.accept(TokenType.BracketR)) {
-            return this.finish(node, ParseError.RightSquareBracketExpected);
-        }
-        return this.finish(node);
-    };
-    Parser.prototype._parsePseudo = function () {
-        var _this = this;
-        // pseudo: ':' [ IDENT | FUNCTION S* [IDENT S*]? ')' ]
-        var node = this._tryParsePseudoIdentifier();
-        if (node) {
-            if (!this.hasWhitespace() && this.accept(TokenType.ParenthesisL)) {
-                var tryAsSelector = function () {
-                    var selectors = _this.create(nodes.Node);
-                    if (!selectors.addChild(_this._parseSelector(false))) {
-                        return null;
-                    }
-                    while (_this.accept(TokenType.Comma) && selectors.addChild(_this._parseSelector(false))) {
-                        // loop
-                    }
-                    if (_this.peek(TokenType.ParenthesisR)) {
-                        return _this.finish(selectors);
-                    }
-                };
-                node.addChild(this.try(tryAsSelector) || this._parseBinaryExpr());
-                if (!this.accept(TokenType.ParenthesisR)) {
-                    return this.finish(node, ParseError.RightParenthesisExpected);
-                }
-            }
-            return this.finish(node);
-        }
-        return null;
-    };
-    Parser.prototype._tryParsePseudoIdentifier = function () {
-        if (!this.peek(TokenType.Colon)) {
-            return null;
-        }
-        var pos = this.mark();
-        var node = this.createNode(nodes.NodeType.PseudoSelector);
-        this.consumeToken(); // Colon
-        if (this.hasWhitespace()) {
-            this.restoreAtMark(pos);
-            return null;
-        }
-        // optional, support ::
-        if (this.accept(TokenType.Colon) && this.hasWhitespace()) {
-            this.markError(node, ParseError.IdentifierExpected);
-        }
-        if (!node.addChild(this._parseIdent())) {
-            this.markError(node, ParseError.IdentifierExpected);
-        }
-        return node;
-    };
-    Parser.prototype._tryParsePrio = function () {
-        var mark = this.mark();
-        var prio = this._parsePrio();
-        if (prio) {
-            return prio;
-        }
-        this.restoreAtMark(mark);
-        return null;
-    };
-    Parser.prototype._parsePrio = function () {
-        if (!this.peek(TokenType.Exclamation)) {
-            return null;
-        }
-        var node = this.createNode(nodes.NodeType.Prio);
-        if (this.accept(TokenType.Exclamation) && this.acceptIdent('important')) {
-            return this.finish(node);
-        }
-        return null;
     };
     Parser.prototype._parseExpr = function (stopOnComma) {
         if (stopOnComma === void 0) { stopOnComma = false; }
@@ -858,9 +519,7 @@ var Parser = /** @class */ (function () {
     Parser.prototype._parseTerm = function () {
         var node = this.create(nodes.Term);
         node.setOperator(this._parseUnaryOperator()); // optional
-        if (node.setExpression(this._parseURILiteral()) || // url before function
-            node.setExpression(this._parseFunction()) || // function before ident
-            node.setExpression(this._parseIdent()) ||
+        if (node.setExpression(this._parseIdent()) ||
             node.setExpression(this._parseStringLiteral()) ||
             node.setExpression(this._parseNumeric()) ||
             node.setExpression(this._parseHexColor()) ||
@@ -907,26 +566,6 @@ var Parser = /** @class */ (function () {
         this.consumeToken();
         return this.finish(node);
     };
-    Parser.prototype._parseURILiteral = function () {
-        if (!this.peekRegExp(TokenType.Ident, /^url(-prefix)?$/i)) {
-            return null;
-        }
-        var pos = this.mark();
-        var node = this.createNode(nodes.NodeType.URILiteral);
-        this.accept(TokenType.Ident);
-        if (this.hasWhitespace() || !this.peek(TokenType.ParenthesisL)) {
-            this.restoreAtMark(pos);
-            return null;
-        }
-        this.scanner.inURL = true;
-        this.consumeToken(); // consume ()
-        node.addChild(this._parseURLArgument()); // argument is optional
-        this.scanner.inURL = false;
-        if (!this.accept(TokenType.ParenthesisR)) {
-            return this.finish(node, ParseError.RightParenthesisExpected);
-        }
-        return this.finish(node);
-    };
     Parser.prototype._parseURLArgument = function () {
         var node = this.create(nodes.Node);
         if (!this.accept(TokenType.String) && !this.accept(TokenType.BadString) && !this.acceptUnquotedString()) {
@@ -944,31 +583,6 @@ var Parser = /** @class */ (function () {
         }
         node.isCustomProperty = this.peekRegExp(TokenType.Ident, /^--/);
         this.consumeToken();
-        return this.finish(node);
-    };
-    Parser.prototype._parseFunction = function () {
-        var pos = this.mark();
-        var node = this.create(nodes.Function);
-        if (!node.setIdentifier(this._parseFunctionIdentifier())) {
-            return null;
-        }
-        if (this.hasWhitespace() || !this.accept(TokenType.ParenthesisL)) {
-            this.restoreAtMark(pos);
-            return null;
-        }
-        if (node.getArguments().addChild(this._parseFunctionArgument())) {
-            while (this.accept(TokenType.Comma)) {
-                if (this.peek(TokenType.ParenthesisR)) {
-                    break;
-                }
-                if (!node.getArguments().addChild(this._parseFunctionArgument())) {
-                    this.markError(node, ParseError.ExpressionExpected);
-                }
-            }
-        }
-        if (!this.accept(TokenType.ParenthesisR)) {
-            return this.finish(node, ParseError.RightParenthesisExpected);
-        }
         return this.finish(node);
     };
     Parser.prototype._parseFunctionIdentifier = function () {

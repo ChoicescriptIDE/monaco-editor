@@ -7,13 +7,6 @@ import { Rules } from './textRules.js';
 import * as nodes from '../parser/cssNodes.js';
 import * as nls from './../../../fillers/vscode-nls.js';
 var localize = nls.loadMessageBundle();
-var Element = /** @class */ (function () {
-    function Element(text, data) {
-        this.name = text;
-        this.node = data;
-    }
-    return Element;
-}());
 var NodesByRootMap = /** @class */ (function () {
     function NodesByRootMap() {
         this.data = {};
@@ -34,7 +27,7 @@ var NodesByRootMap = /** @class */ (function () {
 var SpellCheckVisitor = /** @class */ (function () {
     function SpellCheckVisitor(document, settings, typo) {
         this.warnings = [];
-        this.visitStylesheet = function (node) {
+        this.visitScene = function (node) {
             return true;
         };
         this.visitWord = function (node) {
@@ -52,29 +45,6 @@ var SpellCheckVisitor = /** @class */ (function () {
         var visitor = new SpellCheckVisitor(document, settings, typo);
         node.acceptVisitor(visitor);
         return visitor.getEntries(entryFilter);
-    };
-    SpellCheckVisitor.prototype.fetch = function (input, s) {
-        var elements = [];
-        for (var _i = 0, input_1 = input; _i < input_1.length; _i++) {
-            var curr = input_1[_i];
-            if (curr.name === s) {
-                elements.push(curr);
-            }
-        }
-        return elements;
-    };
-    SpellCheckVisitor.prototype.fetchWithValue = function (input, s, v) {
-        var elements = [];
-        for (var _i = 0, input_2 = input; _i < input_2.length; _i++) {
-            var inputElement = input_2[_i];
-            if (inputElement.name === s) {
-                var expression = inputElement.node.getValue();
-                if (expression && this.findValueInExpression(expression, v)) {
-                    elements.push(inputElement);
-                }
-            }
-        }
-        return elements;
     };
     SpellCheckVisitor.prototype.findValueInExpression = function (expression, v) {
         var found = false;
@@ -120,8 +90,8 @@ var SpellCheckVisitor = /** @class */ (function () {
     };
     SpellCheckVisitor.prototype.visitNode = function (node) {
         switch (node.type) {
-            case nodes.NodeType.Stylesheet:
-                return this.visitStylesheet(node);
+            case nodes.NodeType.Scene:
+                return this.visitScene(node);
             case nodes.NodeType.TextLine:
                 return true;
             case nodes.NodeType.RealWord:
@@ -129,25 +99,6 @@ var SpellCheckVisitor = /** @class */ (function () {
             default:
                 return true;
         }
-    };
-    SpellCheckVisitor.prototype.visitKeyframe = function (node) {
-        var keyword = node.getKeyword();
-        var text = keyword.getText();
-        this.keyframes.add(node.getName(), text, (text !== '@keyframes') ? keyword : null);
-        return true;
-    };
-    SpellCheckVisitor.prototype.isCSSDeclaration = function (node) {
-        if (node instanceof nodes.Declaration) {
-            if (!node.getValue()) {
-                return false;
-            }
-            var property = node.getProperty();
-            if (!property || property.getIdentifier().containsInterpolation()) {
-                return false;
-            }
-            return true;
-        }
-        return false;
     };
     SpellCheckVisitor.prefixes = [
         '-ms-', '-moz-', '-o-', '-webkit-',

@@ -1,0 +1,77 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+export var standardCommands = {
+    abort: { desc: "" },
+    achieve: { desc: "*achieve my_unique_achievement_id" },
+    achievement: { desc: "*achievement unique_id true 100 Achievement Title\n\tPre-earned description.\n\tPost-earned description." },
+    advertisement: { desc: "" },
+    allow_reuse: { desc: "*choice\n\t#Delete the file\n\t\t*gosub delete_file\n\t*allow_reuse #Log out\n\t\t*goto log_out" },
+    author: { desc: "*author Jane Doe" },
+    bug: { desc: "*bug Oops! Something broke. Please report this bug." },
+    check_achievements: { desc: "" },
+    check_purchase: { desc: "" },
+    check_registration: { desc: "" },
+    choice: { desc: "*choice\n\t#Option 1\n\t\t*comment code here\n\t\t*goto label1\n\t#Option 2\n\t\t*comment code here\n\t\t*goto label2" },
+    create: { desc: "*create name \"Joe\"" },
+    delay_break: { desc: "" },
+    delay_ending: { desc: "" },
+    delete: { desc: "" },
+    disable_reuse: { desc: "*choice\n\t*disable_reuse #Delete the file\n\t\t*gosub delete_file\n\t#Log out\n\t\t*goto log_out" },
+    else: { desc: "*if (success)\n\t*goto_scene victory\n*else\n\t*goto_scene defeat" },
+    elseif: { desc: "*if (class = \"wizard\")\n\tYou are a wise wizard!\n*elseif (class = \"warrior\")\n\tYou are a loyal warrior!\n*else\n\tYou must be a wily rouge!" },
+    elsif: { desc: "*if (class = \"wizard\")\n\tYou are a wise wizard!\n*elsif (class = \"warrior\")\n\tYou are a loyal warrior!\n*else\n\tYou must be a wily rouge!" },
+    end_trial: { desc: "" },
+    ending: { desc: "Thanks for playing!\n*ending" },
+    fake_choice: { desc: "What is your favorite colour?\n\n*fake_choice\n\t#Red\n\t#Green\n\t#Blue\n\nHow interesting! That's mine too!" },
+    finish: { desc: "Thus ends the chapter!\n*finish" },
+    hide_reuse: { desc: "*choice\n\t*hide_reuse #Delete the file\n\t\t*gosub delete_file\n\t#Log out\n\t\t*goto log_out" },
+    if: { desc: "*if (is_warrior)\n\t*set strength (strength + 5)" },
+    image: { desc: "*image myimage.png" },
+    input_number: { desc: "*input_number percentage 1 100" },
+    input_text: { desc: "*temp name \"\"\n*input_text name\nHello ${name}" },
+    line_break: { desc: "" },
+    link: { desc: "*link http://www.choiceofgames.com/" },
+    link_button: { desc: "" },
+    login: { desc: "" },
+    looplimit: { desc: "(Unimplemented)" },
+    more_games: { desc: "" },
+    page_break: { desc: "*page_break Optional Button Text" },
+    params: { desc: "*gosub sub_routine \"Jane\" \"Doe\"\n-----------\n*label sub_routine\n*params firstname lastname\nHi ${firstname} ${lastname}!\n*return" },
+    print: { desc: "This command is deprecated. Please use the ${var} notation." },
+    purchase: { desc: "" },
+    rand: { desc: "*rand dice_roll 1 6" },
+    reset: { desc: "" },
+    restart: { desc: "" },
+    restore_game: { desc: "" },
+    restore_purchases: { desc: "" },
+    save_game: { desc: "" },
+    scene_list: { desc: "*scene_list\n\tscene_01\n\tscene_02\n\tscene_03" },
+    script: { desc: "(Unsupported)" },
+    selectable_if: { desc: "*choice\n\t*selectable_if (strength > 10) #Pump some iron\n\t\t...\n\t#Take a break\n\t\t..." },
+    set: { desc: "*set n 5" },
+    setref: { desc: "This command is deprecated.\nPlease use the *set {var} notation." },
+    share_this_game: { desc: "" },
+    show_password: { desc: "" },
+    sound: { desc: "*sound mysoundfile.mp3" },
+    stat_chart: { desc: "" },
+    subscribe: { desc: "" },
+    temp: { desc: "*temp " },
+    title: { desc: "*title My Brand New Game" }
+};
+export var flowCommands = {
+    gosub: { desc: "*gosub my_label ?param1 ?param2 ?..." },
+    gosub_scene: { desc: "*gosub_scene my_scene ?my_label " },
+    goto: { desc: "*goto my_label" },
+    goto_random_scene: { desc: "" },
+    goto_scene: { desc: "*goto_scene my_scene ?my_label" },
+    gotoref: { desc: "This command is deprecated.\nPlease use the *goto {var} notation." },
+    label: { desc: "*label my_label" },
+    redirect_scene: { desc: "" },
+    return: { desc: "" }
+};
+export var standardCommandList = Object.keys(standardCommands);
+export var flowCommandList = Object.keys(flowCommands);
+export var fullCommandList = standardCommandList.concat(flowCommandList);
+//# sourceMappingURL=commands.js.map

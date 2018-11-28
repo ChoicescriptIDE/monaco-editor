@@ -47,10 +47,11 @@ export var TokenType;
     TokenType[TokenType["Comment"] = 39] = "Comment";
     TokenType[TokenType["SingleLineComment"] = 40] = "SingleLineComment";
     TokenType[TokenType["EOF"] = 41] = "EOF";
-    TokenType[TokenType["CustomToken"] = 42] = "CustomToken";
-    TokenType[TokenType["Builtin"] = 43] = "Builtin";
-    TokenType[TokenType["Invalid"] = 44] = "Invalid";
-    TokenType[TokenType["Word"] = 45] = "Word";
+    TokenType[TokenType["EOL"] = 42] = "EOL";
+    TokenType[TokenType["CustomToken"] = 43] = "CustomToken";
+    TokenType[TokenType["Builtin"] = 44] = "Builtin";
+    TokenType[TokenType["Invalid"] = 45] = "Invalid";
+    TokenType[TokenType["Word"] = 46] = "Word";
 })(TokenType || (TokenType = {}));
 var MultiLineStream = /** @class */ (function () {
     function MultiLineStream(source) {
@@ -231,7 +232,7 @@ var Scanner = /** @class */ (function () {
         return null;
     };
     Scanner.prototype.scan = function () {
-        // processes all whitespaces and comments
+        // processes all whitespaces and comments... BUT NOT NEW LINES
         var triviaToken = this.trivia();
         if (triviaToken !== null) {
             return triviaToken;
@@ -265,6 +266,10 @@ var Scanner = /** @class */ (function () {
                 return this.finishToken(offset, TokenType.Invalid, content.join(''));
             }
         }
+        // newlines
+        if (this._newline(content)) {
+            return this.finishToken(offset, TokenType.EOL, content.join(''));
+        }
         // hash
         if (this.stream.advanceIfChar(_HSH)) {
             content = ['#'];
@@ -274,10 +279,6 @@ var Scanner = /** @class */ (function () {
             else {
                 return this.finishToken(offset, TokenType.Delim);
             }
-        }
-        // Important
-        if (this.stream.advanceIfChar(_BNG)) {
-            return this.finishToken(offset, TokenType.Exclamation);
         }
         // Numbers
         if (this._number()) {
@@ -492,7 +493,7 @@ var Scanner = /** @class */ (function () {
     };
     Scanner.prototype._whitespace = function () {
         var n = this.stream.advanceWhileChar(function (ch) {
-            return ch === _WSP || ch === _TAB || ch === _NWL || ch === _LFD || ch === _CAR;
+            return ch === _WSP || ch === _TAB;
         });
         return n > 0;
     };

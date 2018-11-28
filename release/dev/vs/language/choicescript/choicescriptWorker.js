@@ -1837,71 +1837,71 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.standardCommands = {
-        abort: { desc: "*abort" },
+        abort: { desc: "" },
         achieve: { desc: "*achieve my_unique_achievement_id" },
         achievement: { desc: "*achievement unique_id true 100 Achievement Title\n\tPre-earned description.\n\tPost-earned description." },
         advertisement: { desc: "" },
-        allow_reuse: { desc: "" },
-        author: { desc: "" },
-        bug: { desc: "" },
+        allow_reuse: { desc: "*choice\n\t#Delete the file\n\t\t*gosub delete_file\n\t*allow_reuse #Log out\n\t\t*goto log_out" },
+        author: { desc: "*author Jane Doe" },
+        bug: { desc: "*bug Oops! Something broke. Please report this bug." },
         check_achievements: { desc: "" },
         check_purchase: { desc: "" },
         check_registration: { desc: "" },
-        choice: { desc: "*choice\n\t# Option 1\n\t\t*comment code here\n\t\t*goto label1\n\t# Option 2\n\t\t*comment code here\n\t\t*goto label2" },
-        create: { desc: "" },
+        choice: { desc: "*choice\n\t#Option 1\n\t\t*comment code here\n\t\t*goto label1\n\t#Option 2\n\t\t*comment code here\n\t\t*goto label2" },
+        create: { desc: "*create name \"Joe\"" },
         delay_break: { desc: "" },
         delay_ending: { desc: "" },
         delete: { desc: "" },
-        disable_reuse: { desc: "" },
-        else: { desc: "" },
-        elseif: { desc: "" },
-        elsif: { desc: "" },
+        disable_reuse: { desc: "*choice\n\t*disable_reuse #Delete the file\n\t\t*gosub delete_file\n\t#Log out\n\t\t*goto log_out" },
+        else: { desc: "*if (success)\n\t*goto_scene victory\n*else\n\t*goto_scene defeat" },
+        elseif: { desc: "*if (class = \"wizard\")\n\tYou are a wise wizard!\n*elseif (class = \"warrior\")\n\tYou are a loyal warrior!\n*else\n\tYou must be a wily rouge!" },
+        elsif: { desc: "*if (class = \"wizard\")\n\tYou are a wise wizard!\n*elsif (class = \"warrior\")\n\tYou are a loyal warrior!\n*else\n\tYou must be a wily rouge!" },
         end_trial: { desc: "" },
-        ending: { desc: "" },
-        fake_choice: { desc: "" },
-        finish: { desc: "" },
-        hide_reuse: { desc: "" },
-        if: { desc: "" },
-        image: { desc: "" },
-        input_number: { desc: "" },
-        input_text: { desc: "" },
+        ending: { desc: "Thanks for playing!\n*ending" },
+        fake_choice: { desc: "What is your favorite colour?\n\n*fake_choice\n\t#Red\n\t#Green\n\t#Blue\n\nHow interesting! That's mine too!" },
+        finish: { desc: "Thus ends the chapter!\n*finish" },
+        hide_reuse: { desc: "*choice\n\t*hide_reuse #Delete the file\n\t\t*gosub delete_file\n\t#Log out\n\t\t*goto log_out" },
+        if: { desc: "*if (is_warrior)\n\t*set strength (strength + 5)" },
+        image: { desc: "*image myimage.png" },
+        input_number: { desc: "*input_number percentage 1 100" },
+        input_text: { desc: "*temp name \"\"\n*input_text name\nHello ${name}" },
         line_break: { desc: "" },
-        link: { desc: "" },
+        link: { desc: "*link http://www.choiceofgames.com/" },
         link_button: { desc: "" },
         login: { desc: "" },
         looplimit: { desc: "(Unimplemented)" },
         more_games: { desc: "" },
-        page_break: { desc: "" },
-        params: { desc: "" },
-        print: { desc: "" },
+        page_break: { desc: "*page_break Optional Button Text" },
+        params: { desc: "*gosub sub_routine \"Jane\" \"Doe\"\n-----------\n*label sub_routine\n*params firstname lastname\nHi ${firstname} ${lastname}!\n*return" },
+        print: { desc: "This command is deprecated. Please use the ${var} notation." },
         purchase: { desc: "" },
-        rand: { desc: "" },
+        rand: { desc: "*rand dice_roll 1 6" },
         reset: { desc: "" },
         restart: { desc: "" },
         restore_game: { desc: "" },
         restore_purchases: { desc: "" },
         save_game: { desc: "" },
-        scene_list: { desc: "" },
-        script: { desc: "" },
-        selectable_if: { desc: "" },
-        set: { desc: "" },
-        setref: { desc: "" },
+        scene_list: { desc: "*scene_list\n\tscene_01\n\tscene_02\n\tscene_03" },
+        script: { desc: "(Unsupported)" },
+        selectable_if: { desc: "*choice\n\t*selectable_if (strength > 10) #Pump some iron\n\t\t...\n\t#Take a break\n\t\t..." },
+        set: { desc: "*set n 5" },
+        setref: { desc: "This command is deprecated.\nPlease use the *set {var} notation." },
         share_this_game: { desc: "" },
         show_password: { desc: "" },
-        sound: { desc: "" },
+        sound: { desc: "*sound mysoundfile.mp3" },
         stat_chart: { desc: "" },
         subscribe: { desc: "" },
-        temp: { desc: "" },
-        title: { desc: "" }
+        temp: { desc: "*temp " },
+        title: { desc: "*title My Brand New Game" }
     };
     exports.flowCommands = {
-        gosub: { desc: "" },
-        gosub_scene: { desc: "" },
-        goto: { desc: "" },
+        gosub: { desc: "*gosub my_label ?param1 ?param2 ?..." },
+        gosub_scene: { desc: "*gosub_scene my_scene ?my_label " },
+        goto: { desc: "*goto my_label" },
         goto_random_scene: { desc: "" },
-        goto_scene: { desc: "" },
-        gotoref: { desc: "" },
-        label: { desc: "" },
+        goto_scene: { desc: "*goto_scene my_scene ?my_label" },
+        gotoref: { desc: "This command is deprecated.\nPlease use the *goto {var} notation." },
+        label: { desc: "*label my_label" },
         redirect_scene: { desc: "" },
         return: { desc: "" }
     };
@@ -4582,698 +4582,6 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/services/cssCompletion',["require", "exports", "../parser/cssNodes", "../parser/cssErrors", "./languageFacts", "vscode-languageserver-types", "vscode-nls"], factory);
-    }
-})(function (require, exports) {
-    /*---------------------------------------------------------------------------------------------
-     *  Copyright (c) Microsoft Corporation. All rights reserved.
-     *  Licensed under the MIT License. See License.txt in the project root for license information.
-     *--------------------------------------------------------------------------------------------*/
-    'use strict';
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var nodes = require("../parser/cssNodes");
-    var cssErrors_1 = require("../parser/cssErrors");
-    //import { Symbols, Symbol } from '../parser/cssSymbolScope';
-    var languageFacts = require("./languageFacts");
-    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
-    var nls = require("vscode-nls");
-    var localize = nls.loadMessageBundle();
-    var SnippetFormat = vscode_languageserver_types_1.InsertTextFormat.Snippet;
-    var CSSCompletion = /** @class */ (function () {
-        function CSSCompletion(variablePrefix) {
-            if (variablePrefix === void 0) { variablePrefix = null; }
-            this.completionParticipants = [];
-            this.valueTypes = [
-                nodes.NodeType.Identifier, nodes.NodeType.Value, nodes.NodeType.StringLiteral, nodes.NodeType.NumericValue,
-                nodes.NodeType.HexColorValue, nodes.NodeType.PrintVariable,
-            ];
-            this.variablePrefix = variablePrefix;
-        }
-        /*protected getSymbolContext(): Symbols {
-            if (!this.symbolContext) {
-                this.symbolContext = new Symbols(this.scene);
-            }
-            return this.symbolContext;
-        }*/
-        CSSCompletion.prototype.setCompletionParticipants = function (registeredCompletionParticipants) {
-            this.completionParticipants = registeredCompletionParticipants || [];
-        };
-        CSSCompletion.prototype.doComplete = function (document, position, styleSheet) {
-            this.offset = document.offsetAt(position);
-            this.position = position;
-            this.currentWord = getCurrentWord(document, this.offset);
-            this.defaultReplaceRange = vscode_languageserver_types_1.Range.create(vscode_languageserver_types_1.Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);
-            this.textDocument = document;
-            this.scene = styleSheet;
-            try {
-                var result = { isIncomplete: false, items: [] };
-                this.nodePath = nodes.getNodePath(this.scene, this.offset);
-                for (var i = this.nodePath.length - 1; i >= 0; i--) {
-                    var node = this.nodePath[i];
-                    if (node.hasIssue(cssErrors_1.ParseError.UnknownCommand)) {
-                        this.getCompletionsForCommands(result);
-                        // this.getCompletionForTopLevel(result);
-                        // } else if (node instanceof nodes.Variable) {
-                        // this.getCompletionsForVariableDeclaration()O
-                    }
-                    if (result.items.length > 0 || this.offset > node.offset) {
-                        return this.finalize(result);
-                    }
-                }
-                if (result.items.length === 0) {
-                    if (this.variablePrefix && this.currentWord.indexOf(this.variablePrefix) === 0) {
-                        //this.getVariableProposals(null, result);
-                    }
-                }
-                return this.finalize(result);
-            }
-            finally {
-                // don't hold on any state, clear symbolContext
-                this.position = null;
-                this.currentWord = null;
-                this.textDocument = null;
-                this.scene = null;
-                //this.symbolContext = null;
-                this.defaultReplaceRange = null;
-                this.nodePath = null;
-            }
-        };
-        CSSCompletion.prototype.finalize = function (result) {
-            var needsSortText = result.items.some(function (i) { return !!i.sortText; });
-            if (needsSortText) {
-                for (var _b = 0, _c = result.items; _b < _c.length; _b++) {
-                    var i = _c[_b];
-                    if (!i.sortText) {
-                        i.sortText = 'd';
-                    }
-                }
-            }
-            return result;
-        };
-        CSSCompletion.prototype.findInNodePath = function () {
-            var types = [];
-            for (var _b = 0; _b < arguments.length; _b++) {
-                types[_b] = arguments[_b];
-            }
-            for (var i = this.nodePath.length - 1; i >= 0; i--) {
-                var node = this.nodePath[i];
-                if (types.indexOf(node.type) !== -1) {
-                    return node;
-                }
-            }
-            return null;
-        };
-        CSSCompletion.prototype.getCompletionsForCommands = function (result) {
-            var _this = this;
-            var commands = languageFacts.getCommands().filter(function (cmd) {
-                return _this.currentWord.slice(0, 1) === cmd.name.slice(0, 1);
-            });
-            for (var _i = 0, _a = commands; _i < _a.length; _i++) {
-                result.items.push({
-                    label: _a[_i].name,
-                    detail: "(command)",
-                    documentation: "TBD",
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(null), _a[_i].name),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Keyword
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getCSSWideKeywordProposals = function (entry, existingNode, result) {
-            for (var keywords in languageFacts.cssWideKeywords) {
-                result.items.push({
-                    label: keywords,
-                    documentation: languageFacts.cssWideKeywords[keywords],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), keywords),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
-                });
-            }
-            return result;
-        };
-        /*public getVariableProposals(existingNode: nodes.Node, result: CompletionList): CompletionList {
-            let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
-            for (let symbol of symbols) {
-                let insertText = strings.startsWith(symbol.name, '--') ? `var(${symbol.name})` : symbol.name;
-                const suggest: CompletionItem = {
-                    label: symbol.name,
-                    documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
-                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
-                    kind: CompletionItemKind.Variable,
-                    sortText: 'z'
-                };
-    
-                if (symbol.node.type === nodes.NodeType.FunctionParameter) {
-                    const mixinNode = <nodes.MixinDeclaration>(symbol.node.getParent());
-                    if (mixinNode.type === nodes.NodeType.MixinDeclaration) {
-                        suggest.detail = localize('completion.argument', 'argument from \'{0}\'', mixinNode.getName());
-                    }
-                }
-    
-                result.items.push(suggest);
-            }
-            return result;
-        }*/
-        /*public getVariableProposalsForCSSVarFunction(result: CompletionList): CompletionList {
-            let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
-            symbols = symbols.filter((symbol): boolean => {
-                return strings.startsWith(symbol.name, '--');
-            });
-            for (let symbol of symbols) {
-                result.items.push({
-                    label: symbol.name,
-                    documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
-                    textEdit: TextEdit.replace(this.getCompletionRange(null), symbol.name),
-                    kind: CompletionItemKind.Variable
-                });
-            }
-            return result;
-        }*/
-        CSSCompletion.prototype.getUnitProposals = function (entry, existingNode, result) {
-            var currentWord = '0';
-            if (this.currentWord.length > 0) {
-                var numMatch = this.currentWord.match(/^-?\d[\.\d+]*/);
-                if (numMatch) {
-                    currentWord = numMatch[0];
-                    result.isIncomplete = currentWord.length === this.currentWord.length;
-                }
-            }
-            else if (this.currentWord.length === 0) {
-                result.isIncomplete = true;
-            }
-            if (existingNode && existingNode.parent && existingNode.parent.type === nodes.NodeType.Term) {
-                existingNode = existingNode.getParent(); // include the unary operator
-            }
-            for (var _b = 0, _c = entry.restrictions; _b < _c.length; _b++) {
-                var restriction = _c[_b];
-                var units = languageFacts.units[restriction];
-                if (units) {
-                    for (var _d = 0, units_1 = units; _d < units_1.length; _d++) {
-                        var unit = units_1[_d];
-                        var insertText = currentWord + unit;
-                        result.items.push({
-                            label: insertText,
-                            textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
-                            kind: vscode_languageserver_types_1.CompletionItemKind.Unit
-                        });
-                    }
-                }
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getCompletionRange = function (existingNode) {
-            if (existingNode && existingNode.offset <= this.offset) {
-                var end = existingNode.end !== -1 ? this.textDocument.positionAt(existingNode.end) : this.position;
-                return vscode_languageserver_types_1.Range.create(this.textDocument.positionAt(existingNode.offset), end);
-            }
-            return this.defaultReplaceRange;
-        };
-        /*protected getColorProposals(entry: languageFacts.IEntry, existingNode: nodes.Node, result: CompletionList): CompletionList {
-            for (let color in languageFacts.colors) {
-                result.items.push({
-                    label: color,
-                    documentation: languageFacts.colors[color],
-                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
-                    kind: CompletionItemKind.Color
-                });
-            }
-            for (let color in languageFacts.colorKeywords) {
-                result.items.push({
-                    label: color,
-                    documentation: languageFacts.colorKeywords[color],
-                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
-                    kind: CompletionItemKind.Value
-                });
-            }
-            let colorValues = new Set();
-            this.scene.acceptVisitor(new ColorValueCollector(colorValues, this.offset));
-            for (let color of colorValues.getEntries()) {
-                result.items.push({
-                    label: color,
-                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
-                    kind: CompletionItemKind.Color
-                });
-            }
-            for (let p of languageFacts.colorFunctions) {
-                let tabStop = 1;
-                let replaceFunction = (match, p1) => '${' + tabStop++ + ':' + p1 + '}';
-                let insertText = p.func.replace(/\[?\$(\w+)\]?/g, replaceFunction);
-                result.items.push({
-                    label: p.func.substr(0, p.func.indexOf('(')),
-                    detail: p.func,
-                    documentation: p.desc,
-                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
-                    insertTextFormat: SnippetFormat,
-                    kind: CompletionItemKind.Function
-                });
-            }
-            return result;
-        }*/
-        CSSCompletion.prototype.getPositionProposals = function (entry, existingNode, result) {
-            for (var position in languageFacts.positionKeywords) {
-                result.items.push({
-                    label: position,
-                    documentation: languageFacts.positionKeywords[position],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), position),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getRepeatStyleProposals = function (entry, existingNode, result) {
-            for (var repeat in languageFacts.repeatStyleKeywords) {
-                result.items.push({
-                    label: repeat,
-                    documentation: languageFacts.repeatStyleKeywords[repeat],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), repeat),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getLineStyleProposals = function (entry, existingNode, result) {
-            for (var lineStyle in languageFacts.lineStyleKeywords) {
-                result.items.push({
-                    label: lineStyle,
-                    documentation: languageFacts.lineStyleKeywords[lineStyle],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), lineStyle),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getLineWidthProposals = function (entry, existingNode, result) {
-            for (var _b = 0, _c = languageFacts.lineWidthKeywords; _b < _c.length; _b++) {
-                var lineWidth = _c[_b];
-                result.items.push({
-                    label: lineWidth,
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), lineWidth),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getGeometryBoxProposals = function (entry, existingNode, result) {
-            for (var box in languageFacts.geometryBoxKeywords) {
-                result.items.push({
-                    label: box,
-                    documentation: languageFacts.geometryBoxKeywords[box],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), box),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getBoxProposals = function (entry, existingNode, result) {
-            for (var box in languageFacts.boxKeywords) {
-                result.items.push({
-                    label: box,
-                    documentation: languageFacts.boxKeywords[box],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), box),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getImageProposals = function (entry, existingNode, result) {
-            for (var image in languageFacts.imageFunctions) {
-                var insertText = moveCursorInsideParenthesis(image);
-                result.items.push({
-                    label: image,
-                    documentation: languageFacts.imageFunctions[image],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
-                    insertTextFormat: image !== insertText ? SnippetFormat : void 0
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getTimingFunctionProposals = function (entry, existingNode, result) {
-            for (var timing in languageFacts.transitionTimingFunctions) {
-                var insertText = moveCursorInsideParenthesis(timing);
-                result.items.push({
-                    label: timing,
-                    documentation: languageFacts.transitionTimingFunctions[timing],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
-                    insertTextFormat: timing !== insertText ? SnippetFormat : void 0
-                });
-            }
-            return result;
-        };
-        CSSCompletion.prototype.getBasicShapeProposals = function (entry, existingNode, result) {
-            for (var shape in languageFacts.basicShapeFunctions) {
-                var insertText = moveCursorInsideParenthesis(shape);
-                result.items.push({
-                    label: shape,
-                    documentation: languageFacts.basicShapeFunctions[shape],
-                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
-                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
-                    insertTextFormat: shape !== insertText ? SnippetFormat : void 0
-                });
-            }
-            return result;
-        };
-        /*public getCompletionsForVariableDeclaration(declaration: nodes.VariableDeclaration, result: CompletionList): CompletionList {
-            if (this.offset > declaration.colonPosition) {
-                this.getVariableProposals(declaration.getValue(), result);
-            }
-            return result;
-        }*/
-        CSSCompletion.prototype.getCompletionForUriLiteralValue = function (uriLiteralNode, result) {
-            var uriValue;
-            var position;
-            var range;
-            // No children, empty value
-            if (uriLiteralNode.getChildren().length === 0) {
-                uriValue = '';
-                position = this.position;
-                var emptyURIValuePosition = this.textDocument.positionAt(uriLiteralNode.offset + 'url('.length);
-                range = vscode_languageserver_types_1.Range.create(emptyURIValuePosition, emptyURIValuePosition);
-            }
-            else {
-                var uriValueNode = uriLiteralNode.getChild(0);
-                uriValue = uriValueNode.getText();
-                position = this.position;
-                range = this.getCompletionRange(uriValueNode);
-            }
-            this.completionParticipants.forEach(function (participant) {
-                if (participant.onCssURILiteralValue) {
-                    participant.onCssURILiteralValue({
-                        uriValue: uriValue,
-                        position: position,
-                        range: range
-                    });
-                }
-            });
-            return result;
-        };
-        CSSCompletion.prototype.getCompletionForImportPath = function (importPathNode, result) {
-            var _this = this;
-            this.completionParticipants.forEach(function (participant) {
-                if (participant.onCssImportPath) {
-                    participant.onCssImportPath({
-                        pathValue: importPathNode.getText(),
-                        position: _this.position,
-                        range: _this.getCompletionRange(importPathNode)
-                    });
-                }
-            });
-            return result;
-        };
-        return CSSCompletion;
-    }());
-    exports.CSSCompletion = CSSCompletion;
-    var Set = /** @class */ (function () {
-        function Set() {
-            this.entries = {};
-        }
-        Set.prototype.add = function (entry) {
-            this.entries[entry] = true;
-        };
-        Set.prototype.getEntries = function () {
-            return Object.keys(this.entries);
-        };
-        return Set;
-    }());
-    function moveCursorInsideParenthesis(text) {
-        return text.replace(/\(\)$/, "($1)");
-    }
-    /*class ColorValueCollector implements nodes.IVisitor {
-    
-        constructor(public entries: Set, private currentOffset: number) {
-            // nothing to do
-        }
-    
-        public visitNode(node: nodes.Node): boolean {
-            if (node instanceof nodes.HexColorValue || (node instanceof nodes.Function && languageFacts.isColorConstructor(<nodes.Function>node))) {
-                if (this.currentOffset < node.offset || node.end < this.currentOffset) {
-                    this.entries.add(node.getText());
-                }
-            }
-            return true;
-        }
-    }*/
-    function isDefined(obj) {
-        return typeof obj !== 'undefined';
-    }
-    function getCurrentWord(document, offset) {
-        var i = offset - 1;
-        var text = document.getText();
-        while (i >= 0 && ' \t\n\r":{[()]},*>+'.indexOf(text.charAt(i)) === -1) {
-            i--;
-        }
-        return text.substring(i + 1, offset);
-    }
-});
-//# sourceMappingURL=cssCompletion.js.map;
-(function (factory) {
-    if (typeof module === "object" && typeof module.exports === "object") {
-        var v = factory(require, exports);
-        if (v !== undefined) module.exports = v;
-    }
-    else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/services/cssHover',["require", "exports", "../parser/cssNodes", "./languageFacts", "vscode-languageserver-types"], factory);
-    }
-})(function (require, exports) {
-    /*---------------------------------------------------------------------------------------------
-     *  Copyright (c) Microsoft Corporation. All rights reserved.
-     *  Licensed under the MIT License. See License.txt in the project root for license information.
-     *--------------------------------------------------------------------------------------------*/
-    'use strict';
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var nodes = require("../parser/cssNodes");
-    var languageFacts = require("./languageFacts");
-    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
-    var CSSHover = /** @class */ (function () {
-        function CSSHover() {
-        }
-        CSSHover.prototype.doHover = function (document, position, stylesheet) {
-            function getRange(node) {
-                return vscode_languageserver_types_1.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
-            }
-            var offset = document.offsetAt(position);
-            var nodepath = nodes.getNodePath(stylesheet, offset);
-            for (var i = 0; i < nodepath.length; i++) {
-                var node = nodepath[i];
-                if (node instanceof nodes.Command) {
-                    var propertyName = node.getText().slice(1, node.getText().length);
-                    var cmds = languageFacts.getCommands();
-                    var index = cmds.map(function (cmd) { return cmd.name; }).indexOf(propertyName);
-                    if (index !== -1) {
-                        return {
-                            contents: cmds[index].description,
-                            range: getRange(node)
-                        };
-                    }
-                }
-                // Expression is not correct. Just used to shut up compile errors. Needs fixing.
-                if (node instanceof nodes.Expression) {
-                    return {
-                        contents: "selectorToMarkedString",
-                        range: getRange(node)
-                    };
-                }
-                if (node instanceof nodes.Expression) {
-                    return {
-                        contents: "simpleSelector",
-                        range: getRange(node)
-                    };
-                }
-            }
-            return null;
-        };
-        return CSSHover;
-    }());
-    exports.CSSHover = CSSHover;
-});
-//# sourceMappingURL=cssHover.js.map;
-(function (factory) {
-    if (typeof module === "object" && typeof module.exports === "object") {
-        var v = factory(require, exports);
-        if (v !== undefined) module.exports = v;
-    }
-    else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/services/textRules',["require", "exports", "../parser/cssNodes", "vscode-nls"], factory);
-    }
-})(function (require, exports) {
-    /*---------------------------------------------------------------------------------------------
-     *  Copyright (c) Microsoft Corporation. All rights reserved.
-     *  Licensed under the MIT License. See License.txt in the project root for license information.
-     *--------------------------------------------------------------------------------------------*/
-    'use strict';
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var nodes = require("../parser/cssNodes");
-    var nls = require("vscode-nls");
-    var localize = nls.loadMessageBundle();
-    var Warning = nodes.Level.Warning;
-    var Error = nodes.Level.Error;
-    var Ignore = nodes.Level.Ignore;
-    var Rule = /** @class */ (function () {
-        function Rule(id, message, defaultValue) {
-            this.id = id;
-            this.message = message;
-            this.defaultValue = defaultValue;
-            // nothing to do
-        }
-        return Rule;
-    }());
-    exports.Rule = Rule;
-    exports.Rules = {
-        BadSpelling: new Rule('badSpelling', localize('rule.badSpelling', "Bad spelling."), Warning),
-    };
-    var LintConfigurationSettings = /** @class */ (function () {
-        function LintConfigurationSettings(conf) {
-            if (conf === void 0) { conf = {}; }
-            this.conf = conf;
-        }
-        LintConfigurationSettings.prototype.get = function (rule) {
-            if (this.conf.hasOwnProperty(rule.id)) {
-                var level = toLevel(this.conf[rule.id]);
-                if (level) {
-                    return level;
-                }
-            }
-            return rule.defaultValue;
-        };
-        return LintConfigurationSettings;
-    }());
-    exports.LintConfigurationSettings = LintConfigurationSettings;
-    function toLevel(level) {
-        switch (level) {
-            case 'ignore': return nodes.Level.Ignore;
-            case 'warning': return nodes.Level.Warning;
-            case 'error': return nodes.Level.Error;
-        }
-        return null;
-    }
-});
-//# sourceMappingURL=textRules.js.map;
-(function (factory) {
-    if (typeof module === "object" && typeof module.exports === "object") {
-        var v = factory(require, exports);
-        if (v !== undefined) module.exports = v;
-    }
-    else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/services/spellcheck',["require", "exports", "./textRules", "../parser/cssNodes", "vscode-nls"], factory);
-    }
-})(function (require, exports) {
-    /*---------------------------------------------------------------------------------------------
-     *  Copyright (c) Microsoft Corporation. All rights reserved.
-     *  Licensed under the MIT License. See License.txt in the project root for license information.
-     *--------------------------------------------------------------------------------------------*/
-    'use strict';
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var textRules_1 = require("./textRules");
-    var nodes = require("../parser/cssNodes");
-    var nls = require("vscode-nls");
-    var localize = nls.loadMessageBundle();
-    var NodesByRootMap = /** @class */ (function () {
-        function NodesByRootMap() {
-            this.data = {};
-        }
-        NodesByRootMap.prototype.add = function (root, name, node) {
-            var entry = this.data[root];
-            if (!entry) {
-                entry = { nodes: [], names: [] };
-                this.data[root] = entry;
-            }
-            entry.names.push(name);
-            if (node) {
-                entry.nodes.push(node);
-            }
-        };
-        return NodesByRootMap;
-    }());
-    var SpellCheckVisitor = /** @class */ (function () {
-        function SpellCheckVisitor(document, settings, typo) {
-            this.warnings = [];
-            this.visitScene = function (node) {
-                return true;
-            };
-            this.visitWord = function (node) {
-                if (!this.typo.check(node.getText())) {
-                    this.addEntry(node, textRules_1.Rules.BadSpelling, "Bad spelling: " + node.getText());
-                }
-                return true;
-            };
-            this.settings = settings;
-            this.documentText = document.getText();
-            this.keyframes = new NodesByRootMap();
-            this.typo = typo;
-        }
-        SpellCheckVisitor.entries = function (node, document, settings, entryFilter, typo) {
-            var visitor = new SpellCheckVisitor(document, settings, typo);
-            node.acceptVisitor(visitor);
-            return visitor.getEntries(entryFilter);
-        };
-        SpellCheckVisitor.prototype.findValueInExpression = function (expression, v) {
-            var found = false;
-            expression.accept(function (node) {
-                if (node.type === nodes.NodeType.Identifier && node.getText() === v) {
-                    found = true;
-                }
-                return !found;
-            });
-            return found;
-        };
-        SpellCheckVisitor.prototype.getEntries = function (filter) {
-            if (filter === void 0) { filter = (nodes.Level.Warning | nodes.Level.Error); }
-            return this.warnings.filter(function (entry) {
-                return (entry.getLevel() & filter) !== 0;
-            });
-        };
-        SpellCheckVisitor.prototype.addEntry = function (node, rule, details) {
-            var entry = new nodes.Marker(node, rule, nodes.Level.Warning, details, node.offset, node.length);
-            this.warnings.push(entry);
-        };
-        SpellCheckVisitor.prototype.getMissingNames = function (expected, actual) {
-            expected = expected.slice(0); // clone
-            for (var i = 0; i < actual.length; i++) {
-                var k = expected.indexOf(actual[i]);
-                if (k !== -1) {
-                    expected[k] = null;
-                }
-            }
-            var result = null;
-            for (var i = 0; i < expected.length; i++) {
-                var curr = expected[i];
-                if (curr) {
-                    if (result === null) {
-                        result = localize('namelist.single', "'{0}'", curr);
-                    }
-                    else {
-                        result = localize('namelist.concatenated', "{0}, '{1}'", result, curr);
-                    }
-                }
-            }
-            return result;
-        };
-        SpellCheckVisitor.prototype.visitNode = function (node) {
-            switch (node.type) {
-                case nodes.NodeType.Scene:
-                    return this.visitScene(node);
-                case nodes.NodeType.TextLine:
-                    return true;
-                case nodes.NodeType.RealWord:
-                    return this.visitWord(node);
-                default:
-                    return true;
-            }
-        };
-        SpellCheckVisitor.prefixes = [
-            '-ms-', '-moz-', '-o-', '-webkit-',
-        ];
-        return SpellCheckVisitor;
-    }());
-    exports.SpellCheckVisitor = SpellCheckVisitor;
-});
-//# sourceMappingURL=spellcheck.js.map;
-(function (factory) {
-    if (typeof module === "object" && typeof module.exports === "object") {
-        var v = factory(require, exports);
-        if (v !== undefined) module.exports = v;
-    }
-    else if (typeof define === "function" && define.amd) {
         define('vscode-css-languageservice/services/typo/typo',["require", "exports"], factory);
     }
 })(function (require, exports) {
@@ -6052,6 +5360,775 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/cssCompletion',["require", "exports", "../parser/cssNodes", "../parser/cssErrors", "./languageFacts", "vscode-languageserver-types", "./typo/typo", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var cssErrors_1 = require("../parser/cssErrors");
+    //import { Symbols, Symbol } from '../parser/cssSymbolScope';
+    var languageFacts = require("./languageFacts");
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var typo_1 = require("./typo/typo");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var SnippetFormat = vscode_languageserver_types_1.InsertTextFormat.Snippet;
+    var CSSCompletion = /** @class */ (function () {
+        function CSSCompletion(variablePrefix) {
+            if (variablePrefix === void 0) { variablePrefix = null; }
+            this.completionParticipants = [];
+            this.valueTypes = [
+                nodes.NodeType.Identifier, nodes.NodeType.Value, nodes.NodeType.StringLiteral, nodes.NodeType.NumericValue,
+                nodes.NodeType.HexColorValue, nodes.NodeType.PrintVariable,
+            ];
+            var baseUrl = "https://raw.githubusercontent.com/ChoicescriptIDE/main/latest/source/lib/typo/dictionaries/";
+            var dict = "en_US";
+            this.typo = new typo_1.Typo("", "", "", {
+                platform: 'any'
+            });
+            this.typo = new typo_1.Typo(dict, this.typo._readFile(baseUrl + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + dict + "/" + dict + ".dic"), {
+                platform: 'any'
+            });
+            this.variablePrefix = variablePrefix;
+        }
+        /*protected getSymbolContext(): Symbols {
+            if (!this.symbolContext) {
+                this.symbolContext = new Symbols(this.scene);
+            }
+            return this.symbolContext;
+        }*/
+        CSSCompletion.prototype.setCompletionParticipants = function (registeredCompletionParticipants) {
+            this.completionParticipants = registeredCompletionParticipants || [];
+        };
+        CSSCompletion.prototype.doComplete = function (document, position, styleSheet) {
+            var _this = this;
+            this.offset = document.offsetAt(position);
+            this.position = position;
+            this.currentWord = getCurrentWord(document, this.offset);
+            this.defaultReplaceRange = vscode_languageserver_types_1.Range.create(vscode_languageserver_types_1.Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);
+            this.textDocument = document;
+            this.scene = styleSheet;
+            try {
+                var result_1 = { isIncomplete: false, items: [] };
+                this.nodePath = nodes.getNodePath(this.scene, this.offset);
+                for (var i = this.nodePath.length - 1; i >= 0; i--) {
+                    var node = this.nodePath[i];
+                    if (node.hasIssue(cssErrors_1.ParseError.UnknownCommand)) {
+                        this.getCompletionsForCommands(result_1);
+                        return new Promise(function (resolve, reject) {
+                            resolve(_this.finalize(result_1));
+                        });
+                        // this.getCompletionForTopLevel(result);
+                        // } else if (node instanceof nodes.Variable) {
+                        // this.getCompletionsForVariableDeclaration()O
+                    }
+                    else if (node.type === nodes.NodeType.RealWord
+                        && node.getText().length > 2
+                        && !this.typo.check(node.getText())) {
+                        return this.getSuggestionsForSpellings(result_1).then(function (list) {
+                            return _this.finalize(list);
+                        }).catch(function () {
+                            return _this.finalize(result_1);
+                        });
+                    }
+                    else {
+                        return new Promise(function (resolve, reject) {
+                            resolve(_this.finalize(result_1));
+                        });
+                    }
+                }
+            }
+            finally {
+                // don't hold on any state, clear symbolContext
+                this.position = null;
+                this.currentWord = null;
+                this.textDocument = null;
+                this.scene = null;
+                //this.symbolContext = null;
+                this.defaultReplaceRange = null;
+                this.nodePath = null;
+            }
+        };
+        CSSCompletion.prototype.finalize = function (result) {
+            var needsSortText = result.items.some(function (i) { return !!i.sortText; });
+            if (needsSortText) {
+                for (var _b = 0, _c = result.items; _b < _c.length; _b++) {
+                    var i = _c[_b];
+                    if (!i.sortText) {
+                        i.sortText = 'd';
+                    }
+                }
+            }
+            return result;
+        };
+        CSSCompletion.prototype.findInNodePath = function () {
+            var types = [];
+            for (var _b = 0; _b < arguments.length; _b++) {
+                types[_b] = arguments[_b];
+            }
+            for (var i = this.nodePath.length - 1; i >= 0; i--) {
+                var node = this.nodePath[i];
+                if (types.indexOf(node.type) !== -1) {
+                    return node;
+                }
+            }
+            return null;
+        };
+        CSSCompletion.prototype.getCompletionsForCommands = function (result) {
+            var _this = this;
+            var commands = languageFacts.getCommands().filter(function (cmd) {
+                return _this.currentWord.slice(0, 1) === cmd.name.slice(0, 1);
+            });
+            for (var _i = 0, _a = commands; _i < _a.length; _i++) {
+                result.items.push({
+                    label: _a[_i].name,
+                    detail: "(command)",
+                    documentation: "TBD",
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(null), _a[_i].name),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Keyword
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getSuggestionsForSpellings = function (result) {
+            var _this = this;
+            var self = this;
+            var word = this.currentWord;
+            return new Promise(function (resolve, reject) {
+                if (_this.typo.working) {
+                    reject(result);
+                }
+                else {
+                    _this.typo.working = true;
+                    _this.typo.suggest(word, 5, function (suggestions) {
+                        var result = { items: [], isIncomplete: false };
+                        if (suggestions.length < 1) {
+                            result.items.push({
+                                label: "No spelling suggestions for " + word,
+                                documentation: "",
+                                textEdit: null,
+                                insertText: { value: word },
+                                kind: vscode_languageserver_types_1.CompletionItemKind.Keyword
+                            });
+                        }
+                        else {
+                            //defaults
+                            result.items.push({
+                                label: "Ignore '" + word + "' this session.",
+                                documentation: "",
+                                textEdit: null,
+                                filterText: word,
+                                sortText: 'b',
+                                insertText: { value: word },
+                                kind: vscode_languageserver_types_1.CompletionItemKind.Property
+                            });
+                            result.items.push({
+                                label: "Add '" + word + "' to user dictionary.",
+                                documentation: "",
+                                textEdit: null,
+                                filterText: word,
+                                sortText: 'c',
+                                insertText: { value: word },
+                                kind: vscode_languageserver_types_1.CompletionItemKind.Property
+                            });
+                            result.items = result.items.concat(suggestions.map(function (suggestion) {
+                                return {
+                                    label: "Correct to: " + suggestion,
+                                    documentation: "",
+                                    textEdit: null,
+                                    filterText: word,
+                                    sortText: 'a',
+                                    insertText: { value: suggestion },
+                                    kind: vscode_languageserver_types_1.CompletionItemKind.Text
+                                };
+                            }));
+                        }
+                        self.typo.working = false;
+                        resolve(result);
+                    });
+                }
+            });
+        };
+        CSSCompletion.prototype.getCSSWideKeywordProposals = function (entry, existingNode, result) {
+            for (var keywords in languageFacts.cssWideKeywords) {
+                result.items.push({
+                    label: keywords,
+                    documentation: languageFacts.cssWideKeywords[keywords],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), keywords),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Keyword
+                });
+            }
+            return result;
+        };
+        /*public getVariableProposals(existingNode: nodes.Node, result: CompletionList): CompletionList {
+            let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
+            for (let symbol of symbols) {
+                let insertText = strings.startsWith(symbol.name, '--') ? `var(${symbol.name})` : symbol.name;
+                const suggest: CompletionItem = {
+                    label: symbol.name,
+                    documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: CompletionItemKind.Variable,
+                    sortText: 'z'
+                };
+    
+                if (symbol.node.type === nodes.NodeType.FunctionParameter) {
+                    const mixinNode = <nodes.MixinDeclaration>(symbol.node.getParent());
+                    if (mixinNode.type === nodes.NodeType.MixinDeclaration) {
+                        suggest.detail = localize('completion.argument', 'argument from \'{0}\'', mixinNode.getName());
+                    }
+                }
+    
+                result.items.push(suggest);
+            }
+            return result;
+        }*/
+        /*public getVariableProposalsForCSSVarFunction(result: CompletionList): CompletionList {
+            let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
+            symbols = symbols.filter((symbol): boolean => {
+                return strings.startsWith(symbol.name, '--');
+            });
+            for (let symbol of symbols) {
+                result.items.push({
+                    label: symbol.name,
+                    documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
+                    textEdit: TextEdit.replace(this.getCompletionRange(null), symbol.name),
+                    kind: CompletionItemKind.Variable
+                });
+            }
+            return result;
+        }*/
+        CSSCompletion.prototype.getUnitProposals = function (entry, existingNode, result) {
+            var currentWord = '0';
+            if (this.currentWord.length > 0) {
+                var numMatch = this.currentWord.match(/^-?\d[\.\d+]*/);
+                if (numMatch) {
+                    currentWord = numMatch[0];
+                    result.isIncomplete = currentWord.length === this.currentWord.length;
+                }
+            }
+            else if (this.currentWord.length === 0) {
+                result.isIncomplete = true;
+            }
+            if (existingNode && existingNode.parent && existingNode.parent.type === nodes.NodeType.Term) {
+                existingNode = existingNode.getParent(); // include the unary operator
+            }
+            for (var _b = 0, _c = entry.restrictions; _b < _c.length; _b++) {
+                var restriction = _c[_b];
+                var units = languageFacts.units[restriction];
+                if (units) {
+                    for (var _d = 0, units_1 = units; _d < units_1.length; _d++) {
+                        var unit = units_1[_d];
+                        var insertText = currentWord + unit;
+                        result.items.push({
+                            label: insertText,
+                            textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                            kind: vscode_languageserver_types_1.CompletionItemKind.Unit
+                        });
+                    }
+                }
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getCompletionRange = function (existingNode) {
+            if (existingNode && existingNode.offset <= this.offset) {
+                var end = existingNode.end !== -1 ? this.textDocument.positionAt(existingNode.end) : this.position;
+                return vscode_languageserver_types_1.Range.create(this.textDocument.positionAt(existingNode.offset), end);
+            }
+            return this.defaultReplaceRange;
+        };
+        /*protected getColorProposals(entry: languageFacts.IEntry, existingNode: nodes.Node, result: CompletionList): CompletionList {
+            for (let color in languageFacts.colors) {
+                result.items.push({
+                    label: color,
+                    documentation: languageFacts.colors[color],
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
+                    kind: CompletionItemKind.Color
+                });
+            }
+            for (let color in languageFacts.colorKeywords) {
+                result.items.push({
+                    label: color,
+                    documentation: languageFacts.colorKeywords[color],
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
+                    kind: CompletionItemKind.Value
+                });
+            }
+            let colorValues = new Set();
+            this.scene.acceptVisitor(new ColorValueCollector(colorValues, this.offset));
+            for (let color of colorValues.getEntries()) {
+                result.items.push({
+                    label: color,
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
+                    kind: CompletionItemKind.Color
+                });
+            }
+            for (let p of languageFacts.colorFunctions) {
+                let tabStop = 1;
+                let replaceFunction = (match, p1) => '${' + tabStop++ + ':' + p1 + '}';
+                let insertText = p.func.replace(/\[?\$(\w+)\]?/g, replaceFunction);
+                result.items.push({
+                    label: p.func.substr(0, p.func.indexOf('(')),
+                    detail: p.func,
+                    documentation: p.desc,
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    insertTextFormat: SnippetFormat,
+                    kind: CompletionItemKind.Function
+                });
+            }
+            return result;
+        }*/
+        CSSCompletion.prototype.getPositionProposals = function (entry, existingNode, result) {
+            for (var position in languageFacts.positionKeywords) {
+                result.items.push({
+                    label: position,
+                    documentation: languageFacts.positionKeywords[position],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), position),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getRepeatStyleProposals = function (entry, existingNode, result) {
+            for (var repeat in languageFacts.repeatStyleKeywords) {
+                result.items.push({
+                    label: repeat,
+                    documentation: languageFacts.repeatStyleKeywords[repeat],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), repeat),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getLineStyleProposals = function (entry, existingNode, result) {
+            for (var lineStyle in languageFacts.lineStyleKeywords) {
+                result.items.push({
+                    label: lineStyle,
+                    documentation: languageFacts.lineStyleKeywords[lineStyle],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), lineStyle),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getLineWidthProposals = function (entry, existingNode, result) {
+            for (var _b = 0, _c = languageFacts.lineWidthKeywords; _b < _c.length; _b++) {
+                var lineWidth = _c[_b];
+                result.items.push({
+                    label: lineWidth,
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), lineWidth),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getGeometryBoxProposals = function (entry, existingNode, result) {
+            for (var box in languageFacts.geometryBoxKeywords) {
+                result.items.push({
+                    label: box,
+                    documentation: languageFacts.geometryBoxKeywords[box],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), box),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getBoxProposals = function (entry, existingNode, result) {
+            for (var box in languageFacts.boxKeywords) {
+                result.items.push({
+                    label: box,
+                    documentation: languageFacts.boxKeywords[box],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), box),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getImageProposals = function (entry, existingNode, result) {
+            for (var image in languageFacts.imageFunctions) {
+                var insertText = moveCursorInsideParenthesis(image);
+                result.items.push({
+                    label: image,
+                    documentation: languageFacts.imageFunctions[image],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
+                    insertTextFormat: image !== insertText ? SnippetFormat : void 0
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getTimingFunctionProposals = function (entry, existingNode, result) {
+            for (var timing in languageFacts.transitionTimingFunctions) {
+                var insertText = moveCursorInsideParenthesis(timing);
+                result.items.push({
+                    label: timing,
+                    documentation: languageFacts.transitionTimingFunctions[timing],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
+                    insertTextFormat: timing !== insertText ? SnippetFormat : void 0
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getBasicShapeProposals = function (entry, existingNode, result) {
+            for (var shape in languageFacts.basicShapeFunctions) {
+                var insertText = moveCursorInsideParenthesis(shape);
+                result.items.push({
+                    label: shape,
+                    documentation: languageFacts.basicShapeFunctions[shape],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
+                    insertTextFormat: shape !== insertText ? SnippetFormat : void 0
+                });
+            }
+            return result;
+        };
+        /*public getCompletionsForVariableDeclaration(declaration: nodes.VariableDeclaration, result: CompletionList): CompletionList {
+            if (this.offset > declaration.colonPosition) {
+                this.getVariableProposals(declaration.getValue(), result);
+            }
+            return result;
+        }*/
+        CSSCompletion.prototype.getCompletionForUriLiteralValue = function (uriLiteralNode, result) {
+            var uriValue;
+            var position;
+            var range;
+            // No children, empty value
+            if (uriLiteralNode.getChildren().length === 0) {
+                uriValue = '';
+                position = this.position;
+                var emptyURIValuePosition = this.textDocument.positionAt(uriLiteralNode.offset + 'url('.length);
+                range = vscode_languageserver_types_1.Range.create(emptyURIValuePosition, emptyURIValuePosition);
+            }
+            else {
+                var uriValueNode = uriLiteralNode.getChild(0);
+                uriValue = uriValueNode.getText();
+                position = this.position;
+                range = this.getCompletionRange(uriValueNode);
+            }
+            this.completionParticipants.forEach(function (participant) {
+                if (participant.onCssURILiteralValue) {
+                    participant.onCssURILiteralValue({
+                        uriValue: uriValue,
+                        position: position,
+                        range: range
+                    });
+                }
+            });
+            return result;
+        };
+        CSSCompletion.prototype.getCompletionForImportPath = function (importPathNode, result) {
+            var _this = this;
+            this.completionParticipants.forEach(function (participant) {
+                if (participant.onCssImportPath) {
+                    participant.onCssImportPath({
+                        pathValue: importPathNode.getText(),
+                        position: _this.position,
+                        range: _this.getCompletionRange(importPathNode)
+                    });
+                }
+            });
+            return result;
+        };
+        return CSSCompletion;
+    }());
+    exports.CSSCompletion = CSSCompletion;
+    var Set = /** @class */ (function () {
+        function Set() {
+            this.entries = {};
+        }
+        Set.prototype.add = function (entry) {
+            this.entries[entry] = true;
+        };
+        Set.prototype.getEntries = function () {
+            return Object.keys(this.entries);
+        };
+        return Set;
+    }());
+    function moveCursorInsideParenthesis(text) {
+        return text.replace(/\(\)$/, "($1)");
+    }
+    /*class ColorValueCollector implements nodes.IVisitor {
+    
+        constructor(public entries: Set, private currentOffset: number) {
+            // nothing to do
+        }
+    
+        public visitNode(node: nodes.Node): boolean {
+            if (node instanceof nodes.HexColorValue || (node instanceof nodes.Function && languageFacts.isColorConstructor(<nodes.Function>node))) {
+                if (this.currentOffset < node.offset || node.end < this.currentOffset) {
+                    this.entries.add(node.getText());
+                }
+            }
+            return true;
+        }
+    }*/
+    function isDefined(obj) {
+        return typeof obj !== 'undefined';
+    }
+    function getCurrentWord(document, offset) {
+        var i = offset - 1;
+        var text = document.getText();
+        while (i >= 0 && ' \t\n\r":{[()]},*>+'.indexOf(text.charAt(i)) === -1) {
+            i--;
+        }
+        return text.substring(i + 1, offset);
+    }
+});
+//# sourceMappingURL=cssCompletion.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/cssHover',["require", "exports", "../parser/cssNodes", "./languageFacts", "vscode-languageserver-types"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var languageFacts = require("./languageFacts");
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var CSSHover = /** @class */ (function () {
+        function CSSHover() {
+        }
+        CSSHover.prototype.doHover = function (document, position, stylesheet) {
+            function getRange(node) {
+                return vscode_languageserver_types_1.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
+            }
+            var offset = document.offsetAt(position);
+            var nodepath = nodes.getNodePath(stylesheet, offset);
+            for (var i = 0; i < nodepath.length; i++) {
+                var node = nodepath[i];
+                if (node instanceof nodes.Command) {
+                    var propertyName = node.getText().slice(1, node.getText().length);
+                    var cmds = languageFacts.getCommands();
+                    var index = cmds.map(function (cmd) { return cmd.name; }).indexOf(propertyName);
+                    if (index !== -1) {
+                        return {
+                            contents: cmds[index].description,
+                            range: getRange(node)
+                        };
+                    }
+                }
+                // Expression is not correct. Just used to shut up compile errors. Needs fixing.
+                if (node instanceof nodes.Expression) {
+                    return {
+                        contents: "selectorToMarkedString",
+                        range: getRange(node)
+                    };
+                }
+                if (node instanceof nodes.Expression) {
+                    return {
+                        contents: "simpleSelector",
+                        range: getRange(node)
+                    };
+                }
+            }
+            return null;
+        };
+        return CSSHover;
+    }());
+    exports.CSSHover = CSSHover;
+});
+//# sourceMappingURL=cssHover.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/textRules',["require", "exports", "../parser/cssNodes", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var Warning = nodes.Level.Warning;
+    var Error = nodes.Level.Error;
+    var Ignore = nodes.Level.Ignore;
+    var Rule = /** @class */ (function () {
+        function Rule(id, message, defaultValue) {
+            this.id = id;
+            this.message = message;
+            this.defaultValue = defaultValue;
+            // nothing to do
+        }
+        return Rule;
+    }());
+    exports.Rule = Rule;
+    exports.Rules = {
+        BadSpelling: new Rule('badSpelling', localize('rule.badSpelling', "Bad spelling."), Warning),
+    };
+    var LintConfigurationSettings = /** @class */ (function () {
+        function LintConfigurationSettings(conf) {
+            if (conf === void 0) { conf = {}; }
+            this.conf = conf;
+        }
+        LintConfigurationSettings.prototype.get = function (rule) {
+            if (this.conf.hasOwnProperty(rule.id)) {
+                var level = toLevel(this.conf[rule.id]);
+                if (level) {
+                    return level;
+                }
+            }
+            return rule.defaultValue;
+        };
+        return LintConfigurationSettings;
+    }());
+    exports.LintConfigurationSettings = LintConfigurationSettings;
+    function toLevel(level) {
+        switch (level) {
+            case 'ignore': return nodes.Level.Ignore;
+            case 'warning': return nodes.Level.Warning;
+            case 'error': return nodes.Level.Error;
+        }
+        return null;
+    }
+});
+//# sourceMappingURL=textRules.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/spellcheck',["require", "exports", "./textRules", "../parser/cssNodes", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var textRules_1 = require("./textRules");
+    var nodes = require("../parser/cssNodes");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var NodesByRootMap = /** @class */ (function () {
+        function NodesByRootMap() {
+            this.data = {};
+        }
+        NodesByRootMap.prototype.add = function (root, name, node) {
+            var entry = this.data[root];
+            if (!entry) {
+                entry = { nodes: [], names: [] };
+                this.data[root] = entry;
+            }
+            entry.names.push(name);
+            if (node) {
+                entry.nodes.push(node);
+            }
+        };
+        return NodesByRootMap;
+    }());
+    var SpellCheckVisitor = /** @class */ (function () {
+        function SpellCheckVisitor(document, settings, typo) {
+            this.warnings = [];
+            this.visitScene = function (node) {
+                return true;
+            };
+            this.visitWord = function (node) {
+                if (!this.typo.check(node.getText())) {
+                    this.addEntry(node, textRules_1.Rules.BadSpelling, "Bad spelling: " + node.getText());
+                }
+                return true;
+            };
+            this.settings = settings;
+            this.documentText = document.getText();
+            this.keyframes = new NodesByRootMap();
+            this.typo = typo;
+        }
+        SpellCheckVisitor.entries = function (node, document, settings, entryFilter, typo) {
+            var visitor = new SpellCheckVisitor(document, settings, typo);
+            node.acceptVisitor(visitor);
+            return visitor.getEntries(entryFilter);
+        };
+        SpellCheckVisitor.prototype.findValueInExpression = function (expression, v) {
+            var found = false;
+            expression.accept(function (node) {
+                if (node.type === nodes.NodeType.Identifier && node.getText() === v) {
+                    found = true;
+                }
+                return !found;
+            });
+            return found;
+        };
+        SpellCheckVisitor.prototype.getEntries = function (filter) {
+            if (filter === void 0) { filter = (nodes.Level.Warning | nodes.Level.Error); }
+            return this.warnings.filter(function (entry) {
+                return (entry.getLevel() & filter) !== 0;
+            });
+        };
+        SpellCheckVisitor.prototype.addEntry = function (node, rule, details) {
+            var entry = new nodes.Marker(node, rule, nodes.Level.Warning, details, node.offset, node.length);
+            this.warnings.push(entry);
+        };
+        SpellCheckVisitor.prototype.getMissingNames = function (expected, actual) {
+            expected = expected.slice(0); // clone
+            for (var i = 0; i < actual.length; i++) {
+                var k = expected.indexOf(actual[i]);
+                if (k !== -1) {
+                    expected[k] = null;
+                }
+            }
+            var result = null;
+            for (var i = 0; i < expected.length; i++) {
+                var curr = expected[i];
+                if (curr) {
+                    if (result === null) {
+                        result = localize('namelist.single', "'{0}'", curr);
+                    }
+                    else {
+                        result = localize('namelist.concatenated', "{0}, '{1}'", result, curr);
+                    }
+                }
+            }
+            return result;
+        };
+        SpellCheckVisitor.prototype.visitNode = function (node) {
+            switch (node.type) {
+                case nodes.NodeType.Scene:
+                    return this.visitScene(node);
+                case nodes.NodeType.TextLine:
+                    return true;
+                case nodes.NodeType.RealWord:
+                    return this.visitWord(node);
+                default:
+                    return true;
+            }
+        };
+        SpellCheckVisitor.prefixes = [
+            '-ms-', '-moz-', '-o-', '-webkit-',
+        ];
+        return SpellCheckVisitor;
+    }());
+    exports.SpellCheckVisitor = SpellCheckVisitor;
+});
+//# sourceMappingURL=spellcheck.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
         define('vscode-css-languageservice/services/ChoiceScriptValidation',["require", "exports", "../parser/cssNodes", "vscode-languageserver-types", "./textRules", "./spellcheck", "./typo/typo"], factory);
     }
 })(function (require, exports) {
@@ -6076,6 +6153,7 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
             this.settings = settings;
             // Reload typo here rather than every time we call a visitor.
             // Don't bother reloading a dictionary if spellcheck is disabled.
+            console.log(settings);
             if (this.settings.spellCheckSettings.enabled) {
                 this.loadTypo(settings);
             }
@@ -6127,6 +6205,163 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/lintRules',["require", "exports", "../parser/cssNodes", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var Warning = nodes.Level.Warning;
+    var Error = nodes.Level.Error;
+    var Ignore = nodes.Level.Ignore;
+    var Rule = /** @class */ (function () {
+        function Rule(id, message, defaultValue) {
+            this.id = id;
+            this.message = message;
+            this.defaultValue = defaultValue;
+            // nothing to do
+        }
+        return Rule;
+    }());
+    exports.Rule = Rule;
+    exports.Rules = {
+        AllVendorPrefixes: new Rule('compatibleVendorPrefixes', localize('rule.vendorprefixes.all', "When using a vendor-specific prefix make sure to also include all other vendor-specific properties"), Ignore),
+        IncludeStandardPropertyWhenUsingVendorPrefix: new Rule('vendorPrefix', localize('rule.standardvendorprefix.all', "When using a vendor-specific prefix also include the standard property"), Warning),
+        DuplicateDeclarations: new Rule('duplicateProperties', localize('rule.duplicateDeclarations', "Do not use duplicate style definitions"), Ignore),
+        EmptyRuleSet: new Rule('emptyRules', localize('rule.emptyRuleSets', "Do not use empty rulesets"), Warning),
+        ImportStatemement: new Rule('importStatement', localize('rule.importDirective', "Import statements do not load in parallel"), Ignore),
+        BewareOfBoxModelSize: new Rule('boxModel', localize('rule.bewareOfBoxModelSize', "Do not use width or height when using padding or border"), Ignore),
+        UniversalSelector: new Rule('universalSelector', localize('rule.universalSelector', "The universal selector (*) is known to be slow"), Ignore),
+        ZeroWithUnit: new Rule('zeroUnits', localize('rule.zeroWidthUnit', "No unit for zero needed"), Ignore),
+        RequiredPropertiesForFontFace: new Rule('fontFaceProperties', localize('rule.fontFaceProperties', "@font-face rule must define 'src' and 'font-family' properties"), Warning),
+        HexColorLength: new Rule('hexColorLength', localize('rule.hexColor', "Hex colors must consist of three, four, six or eight hex numbers"), Error),
+        ArgsInColorFunction: new Rule('argumentsInColorFunction', localize('rule.colorFunction', "Invalid number of parameters"), Error),
+        UnknownProperty: new Rule('unknownProperties', localize('rule.unknownProperty', "Unknown property."), Warning),
+        UnknownAtRules: new Rule('unknownAtRules', localize('rule.unknownAtRules', "Unknown at-rule."), Warning),
+        IEStarHack: new Rule('ieHack', localize('rule.ieHack', "IE hacks are only necessary when supporting IE7 and older"), Ignore),
+        UnknownVendorSpecificProperty: new Rule('unknownVendorSpecificProperties', localize('rule.unknownVendorSpecificProperty', "Unknown vendor specific property."), Ignore),
+        PropertyIgnoredDueToDisplay: new Rule('propertyIgnoredDueToDisplay', localize('rule.propertyIgnoredDueToDisplay', "Property is ignored due to the display."), Warning),
+        AvoidImportant: new Rule('important', localize('rule.avoidImportant', "Avoid using !important. It is an indication that the specificity of the entire CSS has gotten out of control and needs to be refactored."), Ignore),
+        AvoidFloat: new Rule('float', localize('rule.avoidFloat', "Avoid using 'float'. Floats lead to fragile CSS that is easy to break if one aspect of the layout changes."), Ignore),
+        AvoidIdSelector: new Rule('idSelector', localize('rule.avoidIdSelector', "Selectors should not contain IDs because these rules are too tightly coupled with the HTML."), Ignore),
+    };
+    var LintConfigurationSettings = /** @class */ (function () {
+        function LintConfigurationSettings(conf) {
+            if (conf === void 0) { conf = {}; }
+            this.conf = conf;
+        }
+        LintConfigurationSettings.prototype.get = function (rule) {
+            if (this.conf.hasOwnProperty(rule.id)) {
+                var level = toLevel(this.conf[rule.id]);
+                if (level) {
+                    return level;
+                }
+            }
+            return rule.defaultValue;
+        };
+        return LintConfigurationSettings;
+    }());
+    exports.LintConfigurationSettings = LintConfigurationSettings;
+    function toLevel(level) {
+        switch (level) {
+            case 'ignore': return nodes.Level.Ignore;
+            case 'warning': return nodes.Level.Warning;
+            case 'error': return nodes.Level.Error;
+        }
+        return null;
+    }
+});
+//# sourceMappingURL=lintRules.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/ChoiceScriptCodeActions',["require", "exports", "../parser/cssNodes", "../services/lintRules", "vscode-languageserver-types", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var lintRules_1 = require("../services/lintRules");
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var ChoiceScriptCodeActions = /** @class */ (function () {
+        function ChoiceScriptCodeActions() {
+        }
+        ChoiceScriptCodeActions.prototype.doCodeActions = function (document, range, context, scene) {
+            return this.doCodeActions2(document, range, context, scene).map(function (ca) {
+                return vscode_languageserver_types_1.Command.create(ca.title, '_choicescript.applyCodeAction', document.uri, document.version, ca.edit.documentChanges[0].edits);
+            });
+        };
+        ChoiceScriptCodeActions.prototype.doCodeActions2 = function (document, range, context, scene) {
+            var result = [];
+            if (context.diagnostics) {
+                for (var _i = 0, _a = context.diagnostics; _i < _a.length; _i++) {
+                    var diagnostic = _a[_i];
+                    this.appendSpellingSuggestions(document, scene, diagnostic, result);
+                }
+            }
+            return result;
+        };
+        ChoiceScriptCodeActions.prototype.getSpellingSuggestions = function (document, word, marker, result) {
+            // let text = word.getText();
+            var suggestions = ["Suggestion One", "Suggestion Two", "Suggestion Three", "Suggestion Four", "Suggestion Five"];
+            var maxActions = 3;
+            for (var _i = 0, suggestions_1 = suggestions; _i < suggestions_1.length; _i++) {
+                var suggestion = suggestions_1[_i];
+                var title = localize('choicescript.codeaction.correctspelling', "Correct to '{0}'", suggestion);
+                var edit = vscode_languageserver_types_1.TextEdit.replace(marker.range, suggestion);
+                var documentIdentifier = vscode_languageserver_types_1.VersionedTextDocumentIdentifier.create(document.uri, document.version);
+                var workspaceEdit = { documentChanges: [vscode_languageserver_types_1.TextDocumentEdit.create(documentIdentifier, [edit])] };
+                var codeAction = vscode_languageserver_types_1.CodeAction.create(title, workspaceEdit, vscode_languageserver_types_1.CodeActionKind.QuickFix);
+                codeAction.diagnostics = [marker];
+                result.push(codeAction);
+                if (--maxActions <= 0) {
+                    return;
+                }
+            }
+        };
+        ChoiceScriptCodeActions.prototype.appendSpellingSuggestions = function (document, stylesheet, marker, result) {
+            if (marker.code !== lintRules_1.Rules.UnknownProperty.id) {
+                return;
+            }
+            var offset = document.offsetAt(marker.range.start);
+            var end = document.offsetAt(marker.range.end);
+            var nodepath = nodes.getNodePath(stylesheet, offset);
+            for (var i = nodepath.length - 1; i >= 0; i--) {
+                var word = nodepath[i];
+                if (word instanceof nodes.RealWord) {
+                    if (word && word.offset === offset && word.end === end) {
+                        this.getSpellingSuggestions(document, word, marker, result);
+                        return;
+                    }
+                }
+            }
+        };
+        return ChoiceScriptCodeActions;
+    }());
+    exports.ChoiceScriptCodeActions = ChoiceScriptCodeActions;
+});
+//# sourceMappingURL=ChoiceScriptCodeActions.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
         define('vscode-css-languageservice/cssLanguageTypes',["require", "exports", "vscode-languageserver-types"], factory);
     }
 })(function (require, exports) {
@@ -6153,7 +6388,7 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/cssLanguageService',["require", "exports", "./parser/cssParser", "./services/cssCompletion", "./services/cssHover", "./services/ChoiceScriptValidation", "./cssLanguageTypes", "vscode-languageserver-types"], factory);
+        define('vscode-css-languageservice/cssLanguageService',["require", "exports", "./parser/cssParser", "./services/cssCompletion", "./services/cssHover", "./services/ChoiceScriptValidation", "./services/ChoiceScriptCodeActions", "./cssLanguageTypes", "vscode-languageserver-types"], factory);
     }
 })(function (require, exports) {
     /*---------------------------------------------------------------------------------------------
@@ -6169,9 +6404,10 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
     var cssCompletion_1 = require("./services/cssCompletion");
     var cssHover_1 = require("./services/cssHover");
     var ChoiceScriptValidation_1 = require("./services/ChoiceScriptValidation");
+    var ChoiceScriptCodeActions_1 = require("./services/ChoiceScriptCodeActions");
     __export(require("./cssLanguageTypes"));
     __export(require("vscode-languageserver-types"));
-    function createFacade(parser, completion, hover, validation) {
+    function createFacade(parser, completion, hover, validation, codeActions) {
         return {
             configure: validation.configure.bind(validation),
             doValidation: validation.doValidation.bind(validation),
@@ -6179,10 +6415,12 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
             doComplete: completion.doComplete.bind(completion),
             setCompletionParticipants: completion.setCompletionParticipants.bind(completion),
             doHover: hover.doHover.bind(hover),
+            doCodeActions: codeActions.doCodeActions.bind(codeActions),
+            doCodeActions2: codeActions.doCodeActions2.bind(codeActions),
         };
     }
     function getCSSLanguageService() {
-        return createFacade(new cssParser_1.Parser(), new cssCompletion_1.CSSCompletion(), new cssHover_1.CSSHover(), new ChoiceScriptValidation_1.ChoiceScriptValidation());
+        return createFacade(new cssParser_1.Parser(), new cssCompletion_1.CSSCompletion(), new cssHover_1.CSSHover(), new ChoiceScriptValidation_1.ChoiceScriptValidation(), new ChoiceScriptCodeActions_1.ChoiceScriptCodeActions());
     }
     exports.getCSSLanguageService = getCSSLanguageService;
 });

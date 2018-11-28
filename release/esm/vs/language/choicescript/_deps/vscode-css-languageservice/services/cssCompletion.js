@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 import * as nodes from '../parser/cssNodes.js';
-import { Symbols } from '../parser/cssSymbolScope.js';
+import { ParseError } from '../parser/cssErrors.js';
+//import { Symbols, Symbol } from '../parser/cssSymbolScope';
 import * as languageFacts from './languageFacts.js';
-import * as strings from '../utils/strings.js';
 import { Position, CompletionItemKind, Range, TextEdit, InsertTextFormat } from './../_deps/vscode-languageserver-types/main.js';
+import { Typo } from './typo/typo.js';
 import * as nls from './../../../fillers/vscode-nls.js';
 var localize = nls.loadMessageBundle();
 var SnippetFormat = InsertTextFormat.Snippet;
@@ -16,56 +17,73 @@ var CSSCompletion = /** @class */ (function () {
         if (variablePrefix === void 0) { variablePrefix = null; }
         this.completionParticipants = [];
         this.valueTypes = [
-            nodes.NodeType.Identifier, nodes.NodeType.Value, nodes.NodeType.StringLiteral, nodes.NodeType.URILiteral, nodes.NodeType.NumericValue,
-            nodes.NodeType.HexColorValue, nodes.NodeType.VariableName, nodes.NodeType.Prio
+            nodes.NodeType.Identifier, nodes.NodeType.Value, nodes.NodeType.StringLiteral, nodes.NodeType.NumericValue,
+            nodes.NodeType.HexColorValue, nodes.NodeType.PrintVariable,
         ];
+        var baseUrl = "https://raw.githubusercontent.com/ChoicescriptIDE/main/latest/source/lib/typo/dictionaries/";
+        var dict = "en_US";
+        this.typo = new Typo("", "", "", {
+            platform: 'any'
+        });
+        this.typo = new Typo(dict, this.typo._readFile(baseUrl + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + dict + "/" + dict + ".dic"), {
+            platform: 'any'
+        });
         this.variablePrefix = variablePrefix;
     }
-    CSSCompletion.prototype.getSymbolContext = function () {
+    /*protected getSymbolContext(): Symbols {
         if (!this.symbolContext) {
-            this.symbolContext = new Symbols(this.styleSheet);
+            this.symbolContext = new Symbols(this.scene);
         }
         return this.symbolContext;
-    };
+    }*/
     CSSCompletion.prototype.setCompletionParticipants = function (registeredCompletionParticipants) {
         this.completionParticipants = registeredCompletionParticipants || [];
     };
     CSSCompletion.prototype.doComplete = function (document, position, styleSheet) {
+        var _this = this;
         this.offset = document.offsetAt(position);
         this.position = position;
         this.currentWord = getCurrentWord(document, this.offset);
         this.defaultReplaceRange = Range.create(Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);
         this.textDocument = document;
-        this.styleSheet = styleSheet;
+        this.scene = styleSheet;
         try {
-            var result = { isIncomplete: false, items: [] };
-            this.nodePath = nodes.getNodePath(this.styleSheet, this.offset);
+            var result_1 = { isIncomplete: false, items: [] };
+            this.nodePath = nodes.getNodePath(this.scene, this.offset);
             for (var i = this.nodePath.length - 1; i >= 0; i--) {
                 var node = this.nodePath[i];
-                if (node.type === nodes.NodeType.Builtin) {
-                    this.getCompletionsForBuiltin(result);
+                if (node.hasIssue(ParseError.UnknownCommand)) {
+                    this.getCompletionsForCommands(result_1);
+                    return new Promise(function (resolve, reject) {
+                        resolve(_this.finalize(result_1));
+                    });
                     // this.getCompletionForTopLevel(result);
                     // } else if (node instanceof nodes.Variable) {
-                    // this.getCompletionsForVariableDeclaration()
+                    // this.getCompletionsForVariableDeclaration()O
                 }
-                if (result.items.length > 0 || this.offset > node.offset) {
-                    return this.finalize(result);
+                else if (node.type === nodes.NodeType.RealWord
+                    && node.getText().length > 2
+                    && !this.typo.check(node.getText())) {
+                    return this.getSuggestionsForSpellings(result_1).then(function (list) {
+                        return _this.finalize(list);
+                    }).catch(function () {
+                        return _this.finalize(result_1);
+                    });
+                }
+                else {
+                    return new Promise(function (resolve, reject) {
+                        resolve(_this.finalize(result_1));
+                    });
                 }
             }
-            if (result.items.length === 0) {
-                if (this.variablePrefix && this.currentWord.indexOf(this.variablePrefix) === 0) {
-                    this.getVariableProposals(null, result);
-                }
-            }
-            return this.finalize(result);
         }
         finally {
             // don't hold on any state, clear symbolContext
             this.position = null;
             this.currentWord = null;
             this.textDocument = null;
-            this.styleSheet = null;
-            this.symbolContext = null;
+            this.scene = null;
+            //this.symbolContext = null;
             this.defaultReplaceRange = null;
             this.nodePath = null;
         }
@@ -95,18 +113,80 @@ var CSSCompletion = /** @class */ (function () {
         }
         return null;
     };
-    CSSCompletion.prototype.getCompletionsForBuiltin = function (result) {
-        var builtins = languageFacts.getBuiltins();
-        for (var _i = 0, _a = builtins; _i < _a.length; _i++) {
+    CSSCompletion.prototype.getCompletionsForCommands = function (result) {
+        var _this = this;
+        var commands = languageFacts.getCommands().filter(function (cmd) {
+            return _this.currentWord.slice(0, 1) === cmd.name.slice(0, 1);
+        });
+        for (var _i = 0, _a = commands; _i < _a.length; _i++) {
             result.items.push({
-                label: _a[_i]["name"],
-                detail: "(command) builtin",
-                documentation: "*choice\n\nDisplays a choice of options to the player.",
-                textEdit: TextEdit.replace(this.getCompletionRange(null), _a[_i]["name"]),
+                label: _a[_i].name,
+                detail: "(command)",
+                documentation: "TBD",
+                textEdit: TextEdit.replace(this.getCompletionRange(null), _a[_i].name),
                 kind: CompletionItemKind.Keyword
             });
         }
         return result;
+    };
+    CSSCompletion.prototype.getSuggestionsForSpellings = function (result) {
+        var _this = this;
+        var self = this;
+        var word = this.currentWord;
+        return new Promise(function (resolve, reject) {
+            if (_this.typo.working) {
+                reject(result);
+            }
+            else {
+                _this.typo.working = true;
+                _this.typo.suggest(word, 5, function (suggestions) {
+                    var result = { items: [], isIncomplete: false };
+                    if (suggestions.length < 1) {
+                        result.items.push({
+                            label: "No spelling suggestions for " + word,
+                            documentation: "",
+                            textEdit: null,
+                            insertText: { value: word },
+                            kind: CompletionItemKind.Keyword
+                        });
+                    }
+                    else {
+                        //defaults
+                        result.items.push({
+                            label: "Ignore '" + word + "' this session.",
+                            documentation: "",
+                            textEdit: null,
+                            filterText: word,
+                            sortText: 'b',
+                            insertText: { value: word },
+                            kind: CompletionItemKind.Property
+                        });
+                        result.items.push({
+                            label: "Add '" + word + "' to user dictionary.",
+                            documentation: "",
+                            textEdit: null,
+                            filterText: word,
+                            sortText: 'c',
+                            insertText: { value: word },
+                            kind: CompletionItemKind.Property
+                        });
+                        result.items = result.items.concat(suggestions.map(function (suggestion) {
+                            return {
+                                label: "Correct to: " + suggestion,
+                                documentation: "",
+                                textEdit: null,
+                                filterText: word,
+                                sortText: 'a',
+                                insertText: { value: suggestion },
+                                kind: CompletionItemKind.Text
+                            };
+                        }));
+                    }
+                    self.typo.working = false;
+                    resolve(result);
+                });
+            }
+        });
     };
     CSSCompletion.prototype.getCSSWideKeywordProposals = function (entry, existingNode, result) {
         for (var keywords in languageFacts.cssWideKeywords) {
@@ -114,46 +194,40 @@ var CSSCompletion = /** @class */ (function () {
                 label: keywords,
                 documentation: languageFacts.cssWideKeywords[keywords],
                 textEdit: TextEdit.replace(this.getCompletionRange(existingNode), keywords),
-                kind: CompletionItemKind.Value
+                kind: CompletionItemKind.Keyword
             });
         }
         return result;
     };
-    CSSCompletion.prototype.getCompletionsForInterpolation = function (node, result) {
-        if (this.offset >= node.offset + 2) {
-            this.getVariableProposals(null, result);
-        }
-        return result;
-    };
-    CSSCompletion.prototype.getVariableProposals = function (existingNode, result) {
-        var symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
-        for (var _b = 0, symbols_1 = symbols; _b < symbols_1.length; _b++) {
-            var symbol = symbols_1[_b];
-            var insertText = strings.startsWith(symbol.name, '--') ? "var(" + symbol.name + ")" : symbol.name;
-            var suggest = {
+    /*public getVariableProposals(existingNode: nodes.Node, result: CompletionList): CompletionList {
+        let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
+        for (let symbol of symbols) {
+            let insertText = strings.startsWith(symbol.name, '--') ? `var(${symbol.name})` : symbol.name;
+            const suggest: CompletionItem = {
                 label: symbol.name,
                 documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
                 textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
                 kind: CompletionItemKind.Variable,
                 sortText: 'z'
             };
+
             if (symbol.node.type === nodes.NodeType.FunctionParameter) {
-                var mixinNode = (symbol.node.getParent());
+                const mixinNode = <nodes.MixinDeclaration>(symbol.node.getParent());
                 if (mixinNode.type === nodes.NodeType.MixinDeclaration) {
                     suggest.detail = localize('completion.argument', 'argument from \'{0}\'', mixinNode.getName());
                 }
             }
+
             result.items.push(suggest);
         }
         return result;
-    };
-    CSSCompletion.prototype.getVariableProposalsForCSSVarFunction = function (result) {
-        var symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
-        symbols = symbols.filter(function (symbol) {
+    }*/
+    /*public getVariableProposalsForCSSVarFunction(result: CompletionList): CompletionList {
+        let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
+        symbols = symbols.filter((symbol): boolean => {
             return strings.startsWith(symbol.name, '--');
         });
-        for (var _b = 0, symbols_2 = symbols; _b < symbols_2.length; _b++) {
-            var symbol = symbols_2[_b];
+        for (let symbol of symbols) {
             result.items.push({
                 label: symbol.name,
                 documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
@@ -162,7 +236,7 @@ var CSSCompletion = /** @class */ (function () {
             });
         }
         return result;
-    };
+    }*/
     CSSCompletion.prototype.getUnitProposals = function (entry, existingNode, result) {
         var currentWord = '0';
         if (this.currentWord.length > 0) {
@@ -202,8 +276,8 @@ var CSSCompletion = /** @class */ (function () {
         }
         return this.defaultReplaceRange;
     };
-    CSSCompletion.prototype.getColorProposals = function (entry, existingNode, result) {
-        for (var color in languageFacts.colors) {
+    /*protected getColorProposals(entry: languageFacts.IEntry, existingNode: nodes.Node, result: CompletionList): CompletionList {
+        for (let color in languageFacts.colors) {
             result.items.push({
                 label: color,
                 documentation: languageFacts.colors[color],
@@ -211,7 +285,7 @@ var CSSCompletion = /** @class */ (function () {
                 kind: CompletionItemKind.Color
             });
         }
-        for (var color in languageFacts.colorKeywords) {
+        for (let color in languageFacts.colorKeywords) {
             result.items.push({
                 label: color,
                 documentation: languageFacts.colorKeywords[color],
@@ -219,36 +293,30 @@ var CSSCompletion = /** @class */ (function () {
                 kind: CompletionItemKind.Value
             });
         }
-        var colorValues = new Set();
-        this.styleSheet.acceptVisitor(new ColorValueCollector(colorValues, this.offset));
-        for (var _b = 0, _c = colorValues.getEntries(); _b < _c.length; _b++) {
-            var color = _c[_b];
+        let colorValues = new Set();
+        this.scene.acceptVisitor(new ColorValueCollector(colorValues, this.offset));
+        for (let color of colorValues.getEntries()) {
             result.items.push({
                 label: color,
                 textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
                 kind: CompletionItemKind.Color
             });
         }
-        var _loop_1 = function (p) {
-            var tabStop = 1;
-            var replaceFunction = function (match, p1) { return '${' + tabStop++ + ':' + p1 + '}'; };
-            var insertText = p.func.replace(/\[?\$(\w+)\]?/g, replaceFunction);
+        for (let p of languageFacts.colorFunctions) {
+            let tabStop = 1;
+            let replaceFunction = (match, p1) => '${' + tabStop++ + ':' + p1 + '}';
+            let insertText = p.func.replace(/\[?\$(\w+)\]?/g, replaceFunction);
             result.items.push({
                 label: p.func.substr(0, p.func.indexOf('(')),
                 detail: p.func,
                 documentation: p.desc,
-                textEdit: TextEdit.replace(this_1.getCompletionRange(existingNode), insertText),
+                textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
                 insertTextFormat: SnippetFormat,
                 kind: CompletionItemKind.Function
             });
-        };
-        var this_1 = this;
-        for (var _d = 0, _e = languageFacts.colorFunctions; _d < _e.length; _d++) {
-            var p = _e[_d];
-            _loop_1(p);
         }
         return result;
-    };
+    }*/
     CSSCompletion.prototype.getPositionProposals = function (entry, existingNode, result) {
         for (var position in languageFacts.positionKeywords) {
             result.items.push({
@@ -354,65 +422,12 @@ var CSSCompletion = /** @class */ (function () {
         }
         return result;
     };
-    CSSCompletion.prototype.getCompletionsForVariableDeclaration = function (declaration, result) {
+    /*public getCompletionsForVariableDeclaration(declaration: nodes.VariableDeclaration, result: CompletionList): CompletionList {
         if (this.offset > declaration.colonPosition) {
             this.getVariableProposals(declaration.getValue(), result);
         }
         return result;
-    };
-    CSSCompletion.prototype.getCompletionsForFunctionArgument = function (arg, func, result) {
-        if (func.getIdentifier().getText() === 'var') {
-            if (!func.getArguments().hasChildren() || func.getArguments().getChild(0) === arg) {
-                this.getVariableProposalsForCSSVarFunction(result);
-            }
-        }
-        return result;
-    };
-    CSSCompletion.prototype.getCompletionsForFunctionDeclaration = function (decl, result) {
-        var declarations = decl.getDeclarations();
-        if (declarations && this.offset > declarations.offset && this.offset < declarations.end) {
-            this.getTermProposals(null, null, result);
-        }
-        return result;
-    };
-    CSSCompletion.prototype.getCompletionsForMixinReference = function (ref, result) {
-        var allMixins = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Mixin);
-        for (var _b = 0, allMixins_1 = allMixins; _b < allMixins_1.length; _b++) {
-            var mixinSymbol = allMixins_1[_b];
-            if (mixinSymbol.node instanceof nodes.MixinDeclaration) {
-                result.items.push(this.makeTermProposal(mixinSymbol, mixinSymbol.node.getParameters(), null));
-            }
-        }
-        return result;
-    };
-    CSSCompletion.prototype.getTermProposals = function (entry, existingNode, result) {
-        var allFunctions = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Function);
-        for (var _b = 0, allFunctions_1 = allFunctions; _b < allFunctions_1.length; _b++) {
-            var functionSymbol = allFunctions_1[_b];
-            if (functionSymbol.node instanceof nodes.FunctionDeclaration) {
-                result.items.push(this.makeTermProposal(functionSymbol, functionSymbol.node.getParameters(), existingNode));
-            }
-        }
-        return result;
-    };
-    CSSCompletion.prototype.makeTermProposal = function (symbol, parameters, existingNode) {
-        var decl = symbol.node;
-        var params = parameters.getChildren().map(function (c) {
-            return (c instanceof nodes.FunctionParameter) ? c.getName() : c.getText();
-        });
-        var insertText = symbol.name + '(' + params.map(function (p, index) { return '${' + (index + 1) + ':' + p + '}'; }).join(', ') + ')';
-        return {
-            label: symbol.name,
-            detail: symbol.name + '(' + params.join(', ') + ')',
-            textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
-            insertTextFormat: SnippetFormat,
-            kind: CompletionItemKind.Function,
-            sortText: 'z'
-        };
-    };
-    CSSCompletion.prototype.getCompletionsForExtendsReference = function (extendsRef, existingNode, result) {
-        return result;
-    };
+    }*/
     CSSCompletion.prototype.getCompletionForUriLiteralValue = function (uriLiteralNode, result) {
         var uriValue;
         var position;
@@ -472,49 +487,21 @@ var Set = /** @class */ (function () {
 function moveCursorInsideParenthesis(text) {
     return text.replace(/\(\)$/, "($1)");
 }
-function collectValues(styleSheet, declaration) {
-    var fullPropertyName = declaration.getFullPropertyName();
-    var entries = new Set();
-    function visitValue(node) {
-        if (node instanceof nodes.Identifier || node instanceof nodes.NumericValue || node instanceof nodes.HexColorValue) {
-            entries.add(node.getText());
-        }
-        return true;
-    }
-    function matchesProperty(decl) {
-        var propertyName = decl.getFullPropertyName();
-        return fullPropertyName === propertyName;
-    }
-    function vistNode(node) {
-        if (node instanceof nodes.Declaration && node !== declaration) {
-            if (matchesProperty(node)) {
-                var value = node.getValue();
-                if (value) {
-                    value.accept(visitValue);
-                }
-            }
-        }
-        return true;
-    }
-    styleSheet.accept(vistNode);
-    return entries;
-}
-var ColorValueCollector = /** @class */ (function () {
-    function ColorValueCollector(entries, currentOffset) {
-        this.entries = entries;
-        this.currentOffset = currentOffset;
+/*class ColorValueCollector implements nodes.IVisitor {
+
+    constructor(public entries: Set, private currentOffset: number) {
         // nothing to do
     }
-    ColorValueCollector.prototype.visitNode = function (node) {
-        if (node instanceof nodes.HexColorValue || (node instanceof nodes.Function && languageFacts.isColorConstructor(node))) {
+
+    public visitNode(node: nodes.Node): boolean {
+        if (node instanceof nodes.HexColorValue || (node instanceof nodes.Function && languageFacts.isColorConstructor(<nodes.Function>node))) {
             if (this.currentOffset < node.offset || node.end < this.currentOffset) {
                 this.entries.add(node.getText());
             }
         }
         return true;
-    };
-    return ColorValueCollector;
-}());
+    }
+}*/
 function isDefined(obj) {
     return typeof obj !== 'undefined';
 }

@@ -24,81 +24,62 @@ export var NodeType;
 (function (NodeType) {
     NodeType[NodeType["Undefined"] = 0] = "Undefined";
     NodeType[NodeType["Identifier"] = 1] = "Identifier";
-    NodeType[NodeType["Stylesheet"] = 2] = "Stylesheet";
-    NodeType[NodeType["Ruleset"] = 3] = "Ruleset";
-    NodeType[NodeType["Selector"] = 4] = "Selector";
-    NodeType[NodeType["SimpleSelector"] = 5] = "SimpleSelector";
-    NodeType[NodeType["SelectorInterpolation"] = 6] = "SelectorInterpolation";
-    NodeType[NodeType["SelectorCombinator"] = 7] = "SelectorCombinator";
-    NodeType[NodeType["SelectorCombinatorParent"] = 8] = "SelectorCombinatorParent";
-    NodeType[NodeType["SelectorCombinatorSibling"] = 9] = "SelectorCombinatorSibling";
-    NodeType[NodeType["SelectorCombinatorAllSiblings"] = 10] = "SelectorCombinatorAllSiblings";
-    NodeType[NodeType["SelectorCombinatorShadowPiercingDescendant"] = 11] = "SelectorCombinatorShadowPiercingDescendant";
-    NodeType[NodeType["Page"] = 12] = "Page";
-    NodeType[NodeType["PageBoxMarginBox"] = 13] = "PageBoxMarginBox";
-    NodeType[NodeType["ClassSelector"] = 14] = "ClassSelector";
-    NodeType[NodeType["IdentifierSelector"] = 15] = "IdentifierSelector";
-    NodeType[NodeType["ElementNameSelector"] = 16] = "ElementNameSelector";
-    NodeType[NodeType["PseudoSelector"] = 17] = "PseudoSelector";
-    NodeType[NodeType["AttributeSelector"] = 18] = "AttributeSelector";
-    NodeType[NodeType["Declaration"] = 19] = "Declaration";
-    NodeType[NodeType["Declarations"] = 20] = "Declarations";
-    NodeType[NodeType["Property"] = 21] = "Property";
-    NodeType[NodeType["Expression"] = 22] = "Expression";
-    NodeType[NodeType["BinaryExpression"] = 23] = "BinaryExpression";
-    NodeType[NodeType["Term"] = 24] = "Term";
-    NodeType[NodeType["Operator"] = 25] = "Operator";
-    NodeType[NodeType["Value"] = 26] = "Value";
-    NodeType[NodeType["StringLiteral"] = 27] = "StringLiteral";
-    NodeType[NodeType["URILiteral"] = 28] = "URILiteral";
-    NodeType[NodeType["EscapedValue"] = 29] = "EscapedValue";
-    NodeType[NodeType["Function"] = 30] = "Function";
-    NodeType[NodeType["NumericValue"] = 31] = "NumericValue";
-    NodeType[NodeType["HexColorValue"] = 32] = "HexColorValue";
-    NodeType[NodeType["MixinDeclaration"] = 33] = "MixinDeclaration";
-    NodeType[NodeType["MixinReference"] = 34] = "MixinReference";
-    NodeType[NodeType["VariableName"] = 35] = "VariableName";
-    NodeType[NodeType["VariableDeclaration"] = 36] = "VariableDeclaration";
-    NodeType[NodeType["Prio"] = 37] = "Prio";
-    NodeType[NodeType["Interpolation"] = 38] = "Interpolation";
-    NodeType[NodeType["NestedProperties"] = 39] = "NestedProperties";
-    NodeType[NodeType["ExtendsReference"] = 40] = "ExtendsReference";
-    NodeType[NodeType["SelectorPlaceholder"] = 41] = "SelectorPlaceholder";
-    NodeType[NodeType["Debug"] = 42] = "Debug";
-    NodeType[NodeType["If"] = 43] = "If";
-    NodeType[NodeType["Else"] = 44] = "Else";
-    NodeType[NodeType["For"] = 45] = "For";
-    NodeType[NodeType["Each"] = 46] = "Each";
-    NodeType[NodeType["While"] = 47] = "While";
-    NodeType[NodeType["MixinContent"] = 48] = "MixinContent";
-    NodeType[NodeType["Media"] = 49] = "Media";
-    NodeType[NodeType["Keyframe"] = 50] = "Keyframe";
-    NodeType[NodeType["FontFace"] = 51] = "FontFace";
-    NodeType[NodeType["Import"] = 52] = "Import";
-    NodeType[NodeType["Namespace"] = 53] = "Namespace";
-    NodeType[NodeType["Invocation"] = 54] = "Invocation";
-    NodeType[NodeType["FunctionDeclaration"] = 55] = "FunctionDeclaration";
-    NodeType[NodeType["ReturnStatement"] = 56] = "ReturnStatement";
-    NodeType[NodeType["MediaQuery"] = 57] = "MediaQuery";
-    NodeType[NodeType["FunctionParameter"] = 58] = "FunctionParameter";
-    NodeType[NodeType["FunctionArgument"] = 59] = "FunctionArgument";
-    NodeType[NodeType["KeyframeSelector"] = 60] = "KeyframeSelector";
-    NodeType[NodeType["ViewPort"] = 61] = "ViewPort";
-    NodeType[NodeType["Document"] = 62] = "Document";
-    NodeType[NodeType["AtApplyRule"] = 63] = "AtApplyRule";
-    NodeType[NodeType["CustomPropertyDeclaration"] = 64] = "CustomPropertyDeclaration";
-    NodeType[NodeType["CustomPropertySet"] = 65] = "CustomPropertySet";
-    NodeType[NodeType["ListEntry"] = 66] = "ListEntry";
-    NodeType[NodeType["Supports"] = 67] = "Supports";
-    NodeType[NodeType["SupportsCondition"] = 68] = "SupportsCondition";
-    NodeType[NodeType["NamespacePrefix"] = 69] = "NamespacePrefix";
-    NodeType[NodeType["GridLine"] = 70] = "GridLine";
-    NodeType[NodeType["Plugin"] = 71] = "Plugin";
-    NodeType[NodeType["UnknownAtRule"] = 72] = "UnknownAtRule";
-    NodeType[NodeType["Builtin"] = 73] = "Builtin";
-    NodeType[NodeType["InvalidBuiltin"] = 74] = "InvalidBuiltin";
-    NodeType[NodeType["RealWord"] = 75] = "RealWord";
-    NodeType[NodeType["TextLine"] = 76] = "TextLine";
+    NodeType[NodeType["Scene"] = 2] = "Scene";
+    NodeType[NodeType["Line"] = 3] = "Line";
+    NodeType[NodeType["ChoiceScriptStatement"] = 4] = "ChoiceScriptStatement";
+    NodeType[NodeType["StringLiteral"] = 5] = "StringLiteral";
+    NodeType[NodeType["Operator"] = 6] = "Operator";
+    NodeType[NodeType["Expression"] = 7] = "Expression";
+    NodeType[NodeType["BinaryExpression"] = 8] = "BinaryExpression";
+    NodeType[NodeType["Term"] = 9] = "Term";
+    NodeType[NodeType["Value"] = 10] = "Value";
+    NodeType[NodeType["RealWord"] = 11] = "RealWord";
+    NodeType[NodeType["TextLine"] = 12] = "TextLine";
+    NodeType[NodeType["ChoiceCommand"] = 13] = "ChoiceCommand";
+    NodeType[NodeType["ChoiceOption"] = 14] = "ChoiceOption";
+    NodeType[NodeType["MultiReplace"] = 15] = "MultiReplace";
+    NodeType[NodeType["PrintVariable"] = 16] = "PrintVariable";
+    NodeType[NodeType["NumericValue"] = 17] = "NumericValue";
+    NodeType[NodeType["Boolean"] = 18] = "Boolean";
+    NodeType[NodeType["Indentation"] = 19] = "Indentation";
+    NodeType[NodeType["VariableDeclaration"] = 20] = "VariableDeclaration";
+    NodeType[NodeType["FlowCommand"] = 21] = "FlowCommand";
+    // ...
+    NodeType[NodeType["HexColorValue"] = 22] = "HexColorValue";
+    NodeType[NodeType["CreateVariable"] = 23] = "CreateVariable";
+    NodeType[NodeType["If"] = 24] = "If";
+    NodeType[NodeType["Else"] = 25] = "Else";
+    NodeType[NodeType["For"] = 26] = "For";
+    NodeType[NodeType["Each"] = 27] = "Each";
+    NodeType[NodeType["While"] = 28] = "While";
+    NodeType[NodeType["MixinContent"] = 29] = "MixinContent";
+    NodeType[NodeType["Media"] = 30] = "Media";
+    NodeType[NodeType["Keyframe"] = 31] = "Keyframe";
+    NodeType[NodeType["FontFace"] = 32] = "FontFace";
+    NodeType[NodeType["Import"] = 33] = "Import";
+    NodeType[NodeType["Namespace"] = 34] = "Namespace";
+    NodeType[NodeType["Invocation"] = 35] = "Invocation";
+    NodeType[NodeType["FunctionDeclaration"] = 36] = "FunctionDeclaration";
+    NodeType[NodeType["ReturnStatement"] = 37] = "ReturnStatement";
+    NodeType[NodeType["MediaQuery"] = 38] = "MediaQuery";
+    NodeType[NodeType["FunctionParameter"] = 39] = "FunctionParameter";
+    NodeType[NodeType["FunctionArgument"] = 40] = "FunctionArgument";
+    NodeType[NodeType["KeyframeSelector"] = 41] = "KeyframeSelector";
+    NodeType[NodeType["ViewPort"] = 42] = "ViewPort";
+    NodeType[NodeType["Document"] = 43] = "Document";
+    NodeType[NodeType["AtApplyRule"] = 44] = "AtApplyRule";
+    NodeType[NodeType["CustomPropertyDeclaration"] = 45] = "CustomPropertyDeclaration";
+    NodeType[NodeType["CustomPropertySet"] = 46] = "CustomPropertySet";
+    NodeType[NodeType["ListEntry"] = 47] = "ListEntry";
+    NodeType[NodeType["Supports"] = 48] = "Supports";
+    NodeType[NodeType["SupportsCondition"] = 49] = "SupportsCondition";
+    NodeType[NodeType["NamespacePrefix"] = 50] = "NamespacePrefix";
+    NodeType[NodeType["GridLine"] = 51] = "GridLine";
+    NodeType[NodeType["Plugin"] = 52] = "Plugin";
+    NodeType[NodeType["UnknownAtRule"] = 53] = "UnknownAtRule";
+    NodeType[NodeType["Command"] = 54] = "Command";
+    NodeType[NodeType["StandardCommand"] = 55] = "StandardCommand";
+    NodeType[NodeType["InvalidBuiltin"] = 56] = "InvalidBuiltin";
 })(NodeType || (NodeType = {}));
 export var ReferenceType;
 (function (ReferenceType) {
@@ -140,13 +121,6 @@ export function getNodePath(node, offset) {
         candidate = candidate.parent;
     }
     return path;
-}
-export function getParentDeclaration(node) {
-    var decl = node.findParent(NodeType.Declaration);
-    if (decl && decl.getValue() && decl.getValue().encloses(node)) {
-        return decl;
-    }
-    return null;
 }
 var Node = /** @class */ (function () {
     function Node(offset, len, nodeType) {
@@ -371,6 +345,21 @@ var Nodelist = /** @class */ (function (_super) {
     return Nodelist;
 }(Node));
 export { Nodelist };
+var ChoiceScriptStatement = /** @class */ (function (_super) {
+    __extends(ChoiceScriptStatement, _super);
+    function ChoiceScriptStatement() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Object.defineProperty(ChoiceScriptStatement.prototype, "type", {
+        get: function () {
+            return NodeType.ChoiceScriptStatement;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return ChoiceScriptStatement;
+}(Node));
+export { ChoiceScriptStatement };
 var Identifier = /** @class */ (function (_super) {
     __extends(Identifier, _super);
     function Identifier(offset, length) {
@@ -391,83 +380,99 @@ var Identifier = /** @class */ (function (_super) {
     return Identifier;
 }(Node));
 export { Identifier };
-var Stylesheet = /** @class */ (function (_super) {
-    __extends(Stylesheet, _super);
-    function Stylesheet(offset, length) {
+var Scene = /** @class */ (function (_super) {
+    __extends(Scene, _super);
+    function Scene(offset, length) {
         return _super.call(this, offset, length) || this;
     }
-    Object.defineProperty(Stylesheet.prototype, "type", {
+    Object.defineProperty(Scene.prototype, "type", {
         get: function () {
-            return NodeType.Stylesheet;
+            return NodeType.Scene;
         },
         enumerable: true,
         configurable: true
     });
-    Stylesheet.prototype.setName = function (value) {
+    Scene.prototype.setName = function (value) {
         this.name = value;
     };
-    return Stylesheet;
+    return Scene;
 }(Node));
-export { Stylesheet };
-var Declarations = /** @class */ (function (_super) {
-    __extends(Declarations, _super);
-    function Declarations(offset, length) {
+export { Scene };
+var Command = /** @class */ (function (_super) {
+    __extends(Command, _super);
+    function Command(offset, length) {
         return _super.call(this, offset, length) || this;
     }
-    Object.defineProperty(Declarations.prototype, "type", {
+    Object.defineProperty(Command.prototype, "type", {
         get: function () {
-            return NodeType.Declarations;
+            return NodeType.Command;
         },
         enumerable: true,
         configurable: true
     });
-    return Declarations;
+    return Command;
 }(Node));
-export { Declarations };
-var BodyDeclaration = /** @class */ (function (_super) {
-    __extends(BodyDeclaration, _super);
-    function BodyDeclaration(offset, length) {
+export { Command };
+var StandardCommand = /** @class */ (function (_super) {
+    __extends(StandardCommand, _super);
+    function StandardCommand(offset, length) {
         return _super.call(this, offset, length) || this;
     }
-    BodyDeclaration.prototype.getDeclarations = function () {
-        return this.declarations;
-    };
-    BodyDeclaration.prototype.setDeclarations = function (decls) {
-        return this.setNode('declarations', decls);
-    };
-    return BodyDeclaration;
-}(Node));
-export { BodyDeclaration };
-var Builtin = /** @class */ (function (_super) {
-    __extends(Builtin, _super);
-    function Builtin(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Builtin.prototype, "type", {
+    Object.defineProperty(StandardCommand.prototype, "type", {
         get: function () {
-            return NodeType.Builtin;
+            return NodeType.StandardCommand;
         },
         enumerable: true,
         configurable: true
     });
-    return Builtin;
-}(Node));
-export { Builtin };
-var InvalidBuiltin = /** @class */ (function (_super) {
-    __extends(InvalidBuiltin, _super);
-    function InvalidBuiltin(offset, length) {
+    return StandardCommand;
+}(Command));
+export { StandardCommand };
+var FlowCommand = /** @class */ (function (_super) {
+    __extends(FlowCommand, _super);
+    function FlowCommand(offset, length) {
         return _super.call(this, offset, length) || this;
     }
-    Object.defineProperty(InvalidBuiltin.prototype, "type", {
+    Object.defineProperty(FlowCommand.prototype, "type", {
         get: function () {
-            return NodeType.InvalidBuiltin;
+            return NodeType.FlowCommand;
         },
         enumerable: true,
         configurable: true
     });
-    return InvalidBuiltin;
+    return FlowCommand;
+}(Command));
+export { FlowCommand };
+var ChoiceCommand = /** @class */ (function (_super) {
+    __extends(ChoiceCommand, _super);
+    function ChoiceCommand(offset, length) {
+        return _super.call(this, offset, length) || this;
+    }
+    Object.defineProperty(ChoiceCommand.prototype, "type", {
+        get: function () {
+            return NodeType.ChoiceCommand;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return ChoiceCommand;
+}(StandardCommand));
+export { ChoiceCommand };
+var ChoiceOption = /** @class */ (function (_super) {
+    __extends(ChoiceOption, _super);
+    function ChoiceOption(offset, length) {
+        return _super.call(this, offset, length) || this;
+    }
+    Object.defineProperty(ChoiceOption.prototype, "type", {
+        get: function () {
+            return NodeType.ChoiceOption;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return ChoiceOption;
 }(Node));
-export { InvalidBuiltin };
+export { ChoiceOption };
 var RealWord = /** @class */ (function (_super) {
     __extends(RealWord, _super);
     function RealWord(offset, length) {
@@ -491,60 +496,6 @@ var TextLine = /** @class */ (function (_super) {
     return TextLine;
 }(Node));
 export { TextLine };
-var RuleSet = /** @class */ (function (_super) {
-    __extends(RuleSet, _super);
-    function RuleSet(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(RuleSet.prototype, "type", {
-        get: function () {
-            return NodeType.Ruleset;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    RuleSet.prototype.getSelectors = function () {
-        if (!this.selectors) {
-            this.selectors = new Nodelist(this);
-        }
-        return this.selectors;
-    };
-    RuleSet.prototype.isNested = function () {
-        return !!this.parent && this.parent.findParent(NodeType.Declarations) !== null;
-    };
-    return RuleSet;
-}(BodyDeclaration));
-export { RuleSet };
-var Selector = /** @class */ (function (_super) {
-    __extends(Selector, _super);
-    function Selector(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Selector.prototype, "type", {
-        get: function () {
-            return NodeType.Selector;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return Selector;
-}(Node));
-export { Selector };
-var SimpleSelector = /** @class */ (function (_super) {
-    __extends(SimpleSelector, _super);
-    function SimpleSelector(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(SimpleSelector.prototype, "type", {
-        get: function () {
-            return NodeType.SimpleSelector;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return SimpleSelector;
-}(Node));
-export { SimpleSelector };
 var AtApplyRule = /** @class */ (function (_super) {
     __extends(AtApplyRule, _super);
     function AtApplyRule(offset, length) {
@@ -577,134 +528,6 @@ var AbstractDeclaration = /** @class */ (function (_super) {
     return AbstractDeclaration;
 }(Node));
 export { AbstractDeclaration };
-var CustomPropertyDeclaration = /** @class */ (function (_super) {
-    __extends(CustomPropertyDeclaration, _super);
-    function CustomPropertyDeclaration(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(CustomPropertyDeclaration.prototype, "type", {
-        get: function () {
-            return NodeType.CustomPropertyDeclaration;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    CustomPropertyDeclaration.prototype.setProperty = function (node) {
-        return this.setNode('property', node);
-    };
-    CustomPropertyDeclaration.prototype.getProperty = function () {
-        return this.property;
-    };
-    CustomPropertyDeclaration.prototype.setValue = function (value) {
-        return this.setNode('value', value);
-    };
-    CustomPropertyDeclaration.prototype.getValue = function () {
-        return this.value;
-    };
-    CustomPropertyDeclaration.prototype.setPropertySet = function (value) {
-        return this.setNode('propertySet', value);
-    };
-    CustomPropertyDeclaration.prototype.getPropertySet = function () {
-        return this.propertySet;
-    };
-    return CustomPropertyDeclaration;
-}(AbstractDeclaration));
-export { CustomPropertyDeclaration };
-var CustomPropertySet = /** @class */ (function (_super) {
-    __extends(CustomPropertySet, _super);
-    function CustomPropertySet(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(CustomPropertySet.prototype, "type", {
-        get: function () {
-            return NodeType.CustomPropertySet;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return CustomPropertySet;
-}(BodyDeclaration));
-export { CustomPropertySet };
-var Declaration = /** @class */ (function (_super) {
-    __extends(Declaration, _super);
-    function Declaration(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Declaration.prototype, "type", {
-        get: function () {
-            return NodeType.Declaration;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Declaration.prototype.setProperty = function (node) {
-        return this.setNode('property', node);
-    };
-    Declaration.prototype.getProperty = function () {
-        return this.property;
-    };
-    Declaration.prototype.getFullPropertyName = function () {
-        var propertyName = this.property ? this.property.getName() : 'unknown';
-        if (this.parent instanceof Declarations && this.parent.getParent() instanceof NestedProperties) {
-            var parentDecl = this.parent.getParent().getParent();
-            if (parentDecl instanceof Declaration) {
-                return parentDecl.getFullPropertyName() + propertyName;
-            }
-        }
-        return propertyName;
-    };
-    Declaration.prototype.getNonPrefixedPropertyName = function () {
-        var propertyName = this.getFullPropertyName();
-        if (propertyName && propertyName.charAt(0) === '-') {
-            var vendorPrefixEnd = propertyName.indexOf('-', 1);
-            if (vendorPrefixEnd !== -1) {
-                return propertyName.substring(vendorPrefixEnd + 1);
-            }
-        }
-        return propertyName;
-    };
-    Declaration.prototype.setValue = function (value) {
-        return this.setNode('value', value);
-    };
-    Declaration.prototype.getValue = function () {
-        return this.value;
-    };
-    Declaration.prototype.setNestedProperties = function (value) {
-        return this.setNode('nestedProprties', value);
-    };
-    Declaration.prototype.getNestedProperties = function () {
-        return this.nestedProprties;
-    };
-    return Declaration;
-}(AbstractDeclaration));
-export { Declaration };
-var Property = /** @class */ (function (_super) {
-    __extends(Property, _super);
-    function Property(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Property.prototype, "type", {
-        get: function () {
-            return NodeType.Property;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Property.prototype.setIdentifier = function (value) {
-        return this.setNode('identifier', value);
-    };
-    Property.prototype.getIdentifier = function () {
-        return this.identifier;
-    };
-    Property.prototype.getName = function () {
-        return this.getText();
-    };
-    Property.prototype.isCustomProperty = function () {
-        return this.identifier.isCustomProperty;
-    };
-    return Property;
-}(Node));
-export { Property };
 var Invocation = /** @class */ (function (_super) {
     __extends(Invocation, _super);
     function Invocation(offset, length) {
@@ -726,30 +549,6 @@ var Invocation = /** @class */ (function (_super) {
     return Invocation;
 }(Node));
 export { Invocation };
-var Function = /** @class */ (function (_super) {
-    __extends(Function, _super);
-    function Function(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Function.prototype, "type", {
-        get: function () {
-            return NodeType.Function;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Function.prototype.setIdentifier = function (node) {
-        return this.setNode('identifier', node, 0);
-    };
-    Function.prototype.getIdentifier = function () {
-        return this.identifier;
-    };
-    Function.prototype.getName = function () {
-        return this.identifier ? this.identifier.getText() : '';
-    };
-    return Function;
-}(Invocation));
-export { Function };
 var FunctionParameter = /** @class */ (function (_super) {
     __extends(FunctionParameter, _super);
     function FunctionParameter(offset, length) {
@@ -810,216 +609,6 @@ var FunctionArgument = /** @class */ (function (_super) {
     return FunctionArgument;
 }(Node));
 export { FunctionArgument };
-var IfStatement = /** @class */ (function (_super) {
-    __extends(IfStatement, _super);
-    function IfStatement(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(IfStatement.prototype, "type", {
-        get: function () {
-            return NodeType.If;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    IfStatement.prototype.setExpression = function (node) {
-        return this.setNode('expression', node, 0);
-    };
-    IfStatement.prototype.setElseClause = function (elseClause) {
-        return this.setNode('elseClause', elseClause);
-    };
-    return IfStatement;
-}(BodyDeclaration));
-export { IfStatement };
-var ForStatement = /** @class */ (function (_super) {
-    __extends(ForStatement, _super);
-    function ForStatement(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(ForStatement.prototype, "type", {
-        get: function () {
-            return NodeType.For;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    ForStatement.prototype.setVariable = function (node) {
-        return this.setNode('variable', node, 0);
-    };
-    return ForStatement;
-}(BodyDeclaration));
-export { ForStatement };
-var EachStatement = /** @class */ (function (_super) {
-    __extends(EachStatement, _super);
-    function EachStatement(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(EachStatement.prototype, "type", {
-        get: function () {
-            return NodeType.Each;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    EachStatement.prototype.getVariables = function () {
-        if (!this.variables) {
-            this.variables = new Nodelist(this);
-        }
-        return this.variables;
-    };
-    return EachStatement;
-}(BodyDeclaration));
-export { EachStatement };
-var WhileStatement = /** @class */ (function (_super) {
-    __extends(WhileStatement, _super);
-    function WhileStatement(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(WhileStatement.prototype, "type", {
-        get: function () {
-            return NodeType.While;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return WhileStatement;
-}(BodyDeclaration));
-export { WhileStatement };
-var ElseStatement = /** @class */ (function (_super) {
-    __extends(ElseStatement, _super);
-    function ElseStatement(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(ElseStatement.prototype, "type", {
-        get: function () {
-            return NodeType.Else;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return ElseStatement;
-}(BodyDeclaration));
-export { ElseStatement };
-var FunctionDeclaration = /** @class */ (function (_super) {
-    __extends(FunctionDeclaration, _super);
-    function FunctionDeclaration(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(FunctionDeclaration.prototype, "type", {
-        get: function () {
-            return NodeType.FunctionDeclaration;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    FunctionDeclaration.prototype.setIdentifier = function (node) {
-        return this.setNode('identifier', node, 0);
-    };
-    FunctionDeclaration.prototype.getIdentifier = function () {
-        return this.identifier;
-    };
-    FunctionDeclaration.prototype.getName = function () {
-        return this.identifier ? this.identifier.getText() : '';
-    };
-    FunctionDeclaration.prototype.getParameters = function () {
-        if (!this.parameters) {
-            this.parameters = new Nodelist(this);
-        }
-        return this.parameters;
-    };
-    return FunctionDeclaration;
-}(BodyDeclaration));
-export { FunctionDeclaration };
-var ViewPort = /** @class */ (function (_super) {
-    __extends(ViewPort, _super);
-    function ViewPort(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(ViewPort.prototype, "type", {
-        get: function () {
-            return NodeType.ViewPort;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return ViewPort;
-}(BodyDeclaration));
-export { ViewPort };
-var FontFace = /** @class */ (function (_super) {
-    __extends(FontFace, _super);
-    function FontFace(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(FontFace.prototype, "type", {
-        get: function () {
-            return NodeType.FontFace;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return FontFace;
-}(BodyDeclaration));
-export { FontFace };
-var NestedProperties = /** @class */ (function (_super) {
-    __extends(NestedProperties, _super);
-    function NestedProperties(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(NestedProperties.prototype, "type", {
-        get: function () {
-            return NodeType.NestedProperties;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return NestedProperties;
-}(BodyDeclaration));
-export { NestedProperties };
-var Keyframe = /** @class */ (function (_super) {
-    __extends(Keyframe, _super);
-    function Keyframe(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Keyframe.prototype, "type", {
-        get: function () {
-            return NodeType.Keyframe;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Keyframe.prototype.setKeyword = function (keyword) {
-        return this.setNode('keyword', keyword, 0);
-    };
-    Keyframe.prototype.getKeyword = function () {
-        return this.keyword;
-    };
-    Keyframe.prototype.setIdentifier = function (node) {
-        return this.setNode('identifier', node, 0);
-    };
-    Keyframe.prototype.getIdentifier = function () {
-        return this.identifier;
-    };
-    Keyframe.prototype.getName = function () {
-        return this.identifier ? this.identifier.getText() : '';
-    };
-    return Keyframe;
-}(BodyDeclaration));
-export { Keyframe };
-var KeyframeSelector = /** @class */ (function (_super) {
-    __extends(KeyframeSelector, _super);
-    function KeyframeSelector(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(KeyframeSelector.prototype, "type", {
-        get: function () {
-            return NodeType.KeyframeSelector;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return KeyframeSelector;
-}(BodyDeclaration));
-export { KeyframeSelector };
 var Import = /** @class */ (function (_super) {
     __extends(Import, _super);
     function Import(offset, length) {
@@ -1058,65 +647,6 @@ var Namespace = /** @class */ (function (_super) {
     return Namespace;
 }(Node));
 export { Namespace };
-var Media = /** @class */ (function (_super) {
-    __extends(Media, _super);
-    function Media(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Media.prototype, "type", {
-        get: function () {
-            return NodeType.Media;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return Media;
-}(BodyDeclaration));
-export { Media };
-var Supports = /** @class */ (function (_super) {
-    __extends(Supports, _super);
-    function Supports(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Supports.prototype, "type", {
-        get: function () {
-            return NodeType.Supports;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return Supports;
-}(BodyDeclaration));
-export { Supports };
-var Document = /** @class */ (function (_super) {
-    __extends(Document, _super);
-    function Document(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Document.prototype, "type", {
-        get: function () {
-            return NodeType.Document;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return Document;
-}(BodyDeclaration));
-export { Document };
-var Medialist = /** @class */ (function (_super) {
-    __extends(Medialist, _super);
-    function Medialist(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Medialist.prototype.getMediums = function () {
-        if (!this.mediums) {
-            this.mediums = new Nodelist(this);
-        }
-        return this.mediums;
-    };
-    return Medialist;
-}(Node));
-export { Medialist };
 var MediaQuery = /** @class */ (function (_super) {
     __extends(MediaQuery, _super);
     function MediaQuery(offset, length) {
@@ -1147,36 +677,6 @@ var SupportsCondition = /** @class */ (function (_super) {
     return SupportsCondition;
 }(Node));
 export { SupportsCondition };
-var Page = /** @class */ (function (_super) {
-    __extends(Page, _super);
-    function Page(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Page.prototype, "type", {
-        get: function () {
-            return NodeType.Page;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return Page;
-}(BodyDeclaration));
-export { Page };
-var PageBoxMarginBox = /** @class */ (function (_super) {
-    __extends(PageBoxMarginBox, _super);
-    function PageBoxMarginBox(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(PageBoxMarginBox.prototype, "type", {
-        get: function () {
-            return NodeType.PageBoxMarginBox;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return PageBoxMarginBox;
-}(BodyDeclaration));
-export { PageBoxMarginBox };
 var Expression = /** @class */ (function (_super) {
     __extends(Expression, _super);
     function Expression(offset, length) {
@@ -1252,45 +752,6 @@ var Term = /** @class */ (function (_super) {
     return Term;
 }(Node));
 export { Term };
-var AttributeSelector = /** @class */ (function (_super) {
-    __extends(AttributeSelector, _super);
-    function AttributeSelector(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(AttributeSelector.prototype, "type", {
-        get: function () {
-            return NodeType.AttributeSelector;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    AttributeSelector.prototype.setNamespacePrefix = function (value) {
-        return this.setNode('namespacePrefix', value);
-    };
-    AttributeSelector.prototype.getNamespacePrefix = function () {
-        return this.namespacePrefix;
-    };
-    AttributeSelector.prototype.setIdentifier = function (value) {
-        return this.setNode('identifier', value);
-    };
-    AttributeSelector.prototype.getIdentifier = function () {
-        return this.identifier;
-    };
-    AttributeSelector.prototype.setOperator = function (operator) {
-        return this.setNode('operator', operator);
-    };
-    AttributeSelector.prototype.getOperator = function () {
-        return this.operator;
-    };
-    AttributeSelector.prototype.setValue = function (value) {
-        return this.setNode('value', value);
-    };
-    AttributeSelector.prototype.getValue = function () {
-        return this.value;
-    };
-    return AttributeSelector;
-}(Node));
-export { AttributeSelector };
 var Operator = /** @class */ (function (_super) {
     __extends(Operator, _super);
     function Operator(offset, length) {
@@ -1391,21 +852,6 @@ var VariableDeclaration = /** @class */ (function (_super) {
     return VariableDeclaration;
 }(AbstractDeclaration));
 export { VariableDeclaration };
-var Interpolation = /** @class */ (function (_super) {
-    __extends(Interpolation, _super);
-    function Interpolation(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(Interpolation.prototype, "type", {
-        get: function () {
-            return NodeType.Interpolation;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return Interpolation;
-}(Node));
-export { Interpolation };
 var Variable = /** @class */ (function (_super) {
     __extends(Variable, _super);
     function Variable(offset, length) {
@@ -1413,7 +859,7 @@ var Variable = /** @class */ (function (_super) {
     }
     Object.defineProperty(Variable.prototype, "type", {
         get: function () {
-            return NodeType.VariableName;
+            return NodeType.CreateVariable;
         },
         enumerable: true,
         configurable: true
@@ -1424,127 +870,6 @@ var Variable = /** @class */ (function (_super) {
     return Variable;
 }(Node));
 export { Variable };
-var ExtendsReference = /** @class */ (function (_super) {
-    __extends(ExtendsReference, _super);
-    function ExtendsReference(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(ExtendsReference.prototype, "type", {
-        get: function () {
-            return NodeType.ExtendsReference;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    ExtendsReference.prototype.getSelectors = function () {
-        if (!this.selectors) {
-            this.selectors = new Nodelist(this);
-        }
-        return this.selectors;
-    };
-    return ExtendsReference;
-}(Node));
-export { ExtendsReference };
-var MixinReference = /** @class */ (function (_super) {
-    __extends(MixinReference, _super);
-    function MixinReference(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(MixinReference.prototype, "type", {
-        get: function () {
-            return NodeType.MixinReference;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    MixinReference.prototype.getNamespaces = function () {
-        if (!this.namespaces) {
-            this.namespaces = new Nodelist(this);
-        }
-        return this.namespaces;
-    };
-    MixinReference.prototype.setIdentifier = function (node) {
-        return this.setNode('identifier', node, 0);
-    };
-    MixinReference.prototype.getIdentifier = function () {
-        return this.identifier;
-    };
-    MixinReference.prototype.getName = function () {
-        return this.identifier ? this.identifier.getText() : '';
-    };
-    MixinReference.prototype.getArguments = function () {
-        if (!this.arguments) {
-            this.arguments = new Nodelist(this);
-        }
-        return this.arguments;
-    };
-    MixinReference.prototype.setContent = function (node) {
-        return this.setNode('content', node);
-    };
-    MixinReference.prototype.getContent = function () {
-        return this.content;
-    };
-    return MixinReference;
-}(Node));
-export { MixinReference };
-var MixinDeclaration = /** @class */ (function (_super) {
-    __extends(MixinDeclaration, _super);
-    function MixinDeclaration(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(MixinDeclaration.prototype, "type", {
-        get: function () {
-            return NodeType.MixinDeclaration;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    MixinDeclaration.prototype.setIdentifier = function (node) {
-        return this.setNode('identifier', node, 0);
-    };
-    MixinDeclaration.prototype.getIdentifier = function () {
-        return this.identifier;
-    };
-    MixinDeclaration.prototype.getName = function () {
-        return this.identifier ? this.identifier.getText() : '';
-    };
-    MixinDeclaration.prototype.getParameters = function () {
-        if (!this.parameters) {
-            this.parameters = new Nodelist(this);
-        }
-        return this.parameters;
-    };
-    MixinDeclaration.prototype.setGuard = function (node) {
-        if (node) {
-            node.attachTo(this);
-            this.guard = node;
-        }
-        return false;
-    };
-    return MixinDeclaration;
-}(BodyDeclaration));
-export { MixinDeclaration };
-var UnknownAtRule = /** @class */ (function (_super) {
-    __extends(UnknownAtRule, _super);
-    function UnknownAtRule(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(UnknownAtRule.prototype, "type", {
-        get: function () {
-            return NodeType.UnknownAtRule;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    UnknownAtRule.prototype.setAtRuleName = function (atRuleName) {
-        this.atRuleName = atRuleName;
-    };
-    UnknownAtRule.prototype.getAtRuleName = function (atRuleName) {
-        return this.atRuleName;
-    };
-    return UnknownAtRule;
-}(BodyDeclaration));
-export { UnknownAtRule };
 var ListEntry = /** @class */ (function (_super) {
     __extends(ListEntry, _super);
     function ListEntry() {
