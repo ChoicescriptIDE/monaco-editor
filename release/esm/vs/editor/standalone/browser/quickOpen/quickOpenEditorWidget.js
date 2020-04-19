@@ -2,26 +2,22 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { QuickOpenWidget } from '../../../../base/parts/quickopen/browser/quickOpenWidget.js';
-import { OverlayWidgetPositionPreference } from '../../../browser/editorBrowser.js';
-import { attachQuickOpenStyler } from '../../../../platform/theme/common/styler.js';
-import { foreground } from '../../../../platform/theme/common/colorRegistry.js';
 import { Dimension } from '../../../../base/browser/dom.js';
+import { QuickOpenWidget } from '../../../../base/parts/quickopen/browser/quickOpenWidget.js';
+import { foreground } from '../../../../platform/theme/common/colorRegistry.js';
+import { attachQuickOpenStyler } from '../../../../platform/theme/common/styler.js';
 var QuickOpenEditorWidget = /** @class */ (function () {
     function QuickOpenEditorWidget(codeEditor, onOk, onCancel, onType, configuration, themeService) {
         this.codeEditor = codeEditor;
         this.themeService = themeService;
-        this.create(onOk, onCancel, onType, configuration);
-    }
-    QuickOpenEditorWidget.prototype.create = function (onOk, onCancel, onType, configuration) {
+        this.visible = false;
         this.domNode = document.createElement('div');
         this.quickOpenWidget = new QuickOpenWidget(this.domNode, {
             onOk: onOk,
             onCancel: onCancel,
             onType: onType
         }, {
-            inputPlaceHolder: null,
+            inputPlaceHolder: undefined,
             inputAriaLabel: configuration.inputAriaLabel,
             keyboardSupport: true
         });
@@ -30,7 +26,7 @@ var QuickOpenEditorWidget = /** @class */ (function () {
         });
         this.quickOpenWidget.create();
         this.codeEditor.addOverlayWidget(this);
-    };
+    }
     QuickOpenEditorWidget.prototype.setInput = function (model, focus) {
         this.quickOpenWidget.setInput(model, focus);
     };
@@ -57,7 +53,7 @@ var QuickOpenEditorWidget = /** @class */ (function () {
     QuickOpenEditorWidget.prototype.getPosition = function () {
         if (this.visible) {
             return {
-                preference: OverlayWidgetPositionPreference.TOP_CENTER
+                preference: 2 /* TOP_CENTER */
             };
         }
         return null;

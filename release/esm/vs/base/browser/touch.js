@@ -2,7 +2,19 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -10,7 +22,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import * as arrays from '../common/arrays.js';
-import { dispose } from '../common/lifecycle.js';
+import { Disposable } from '../common/lifecycle.js';
 import * as DomUtils from './dom.js';
 import { memoize } from '../common/decorators.js';
 export var EventType;
@@ -21,25 +33,48 @@ export var EventType;
     EventType.End = '-monaco-gesturesend';
     EventType.Contextmenu = '-monaco-gesturecontextmenu';
 })(EventType || (EventType = {}));
-var Gesture = /** @class */ (function () {
+var Gesture = /** @class */ (function (_super) {
+    __extends(Gesture, _super);
     function Gesture() {
-        var _this = this;
-        this.toDispose = [];
-        this.activeTouches = {};
-        this.handle = null;
-        this.targets = [];
-        this.toDispose.push(DomUtils.addDisposableListener(document, 'touchstart', function (e) { return _this.onTouchStart(e); }));
-        this.toDispose.push(DomUtils.addDisposableListener(document, 'touchend', function (e) { return _this.onTouchEnd(e); }));
-        this.toDispose.push(DomUtils.addDisposableListener(document, 'touchmove', function (e) { return _this.onTouchMove(e); }));
+        var _this = _super.call(this) || this;
+        _this.dispatched = false;
+        _this.activeTouches = {};
+        _this.handle = null;
+        _this.targets = [];
+        _this.ignoreTargets = [];
+        _this._lastSetTapCountTime = 0;
+        _this._register(DomUtils.addDisposableListener(document, 'touchstart', function (e) { return _this.onTouchStart(e); }));
+        _this._register(DomUtils.addDisposableListener(document, 'touchend', function (e) { return _this.onTouchEnd(e); }));
+        _this._register(DomUtils.addDisposableListener(document, 'touchmove', function (e) { return _this.onTouchMove(e); }));
+        return _this;
     }
     Gesture.addTarget = function (element) {
         if (!Gesture.isTouchDevice()) {
-            return;
+            return Disposable.None;
         }
         if (!Gesture.INSTANCE) {
             Gesture.INSTANCE = new Gesture();
         }
         Gesture.INSTANCE.targets.push(element);
+        return {
+            dispose: function () {
+                Gesture.INSTANCE.targets = Gesture.INSTANCE.targets.filter(function (t) { return t !== element; });
+            }
+        };
+    };
+    Gesture.ignoreTarget = function (element) {
+        if (!Gesture.isTouchDevice()) {
+            return Disposable.None;
+        }
+        if (!Gesture.INSTANCE) {
+            Gesture.INSTANCE = new Gesture();
+        }
+        Gesture.INSTANCE.ignoreTargets.push(element);
+        return {
+            dispose: function () {
+                Gesture.INSTANCE.ignoreTargets = Gesture.INSTANCE.ignoreTargets.filter(function (t) { return t !== element; });
+            }
+        };
     };
     Gesture.isTouchDevice = function () {
         return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.navigator.msMaxTouchPoints > 0;
@@ -47,9 +82,9 @@ var Gesture = /** @class */ (function () {
     Gesture.prototype.dispose = function () {
         if (this.handle) {
             this.handle.dispose();
-            dispose(this.toDispose);
             this.handle = null;
         }
+        _super.prototype.dispose.call(this);
     };
     Gesture.prototype.onTouchStart = function (e) {
         var timestamp = Date.now(); // use Date.now() because on FF e.timeStamp is not epoch based.
@@ -137,14 +172,36 @@ var Gesture = /** @class */ (function () {
             this.dispatched = false;
         }
     };
-    Gesture.prototype.newGestureEvent = function (type, intialTarget) {
+    Gesture.prototype.newGestureEvent = function (type, initialTarget) {
         var event = document.createEvent('CustomEvent');
         event.initEvent(type, false, true);
-        event.initialTarget = intialTarget;
+        event.initialTarget = initialTarget;
+        event.tapCount = 0;
         return event;
     };
     Gesture.prototype.dispatchEvent = function (event) {
         var _this = this;
+        if (event.type === EventType.Tap) {
+            var currentTime = (new Date()).getTime();
+            var setTapCount = 0;
+            if (currentTime - this._lastSetTapCountTime > Gesture.CLEAR_TAP_COUNT_TIME) {
+                setTapCount = 1;
+            }
+            else {
+                setTapCount = 2;
+            }
+            this._lastSetTapCountTime = currentTime;
+            event.tapCount = setTapCount;
+        }
+        else if (event.type === EventType.Change || event.type === EventType.Contextmenu) {
+            // tap is canceled by scrolling or context menu
+            this._lastSetTapCountTime = 0;
+        }
+        for (var i = 0; i < this.ignoreTargets.length; i++) {
+            if (event.initialTarget instanceof Node && this.ignoreTargets[i].contains(event.initialTarget)) {
+                return;
+            }
+        }
         this.targets.forEach(function (target) {
             if (event.initialTarget instanceof Node && target.contains(event.initialTarget)) {
                 target.dispatchEvent(event);
@@ -211,9 +268,10 @@ var Gesture = /** @class */ (function () {
     };
     Gesture.SCROLL_FRICTION = -0.005;
     Gesture.HOLD_DELAY = 700;
+    Gesture.CLEAR_TAP_COUNT_TIME = 400; // ms
     __decorate([
         memoize
     ], Gesture, "isTouchDevice", null);
     return Gesture;
-}());
+}(Disposable));
 export { Gesture };

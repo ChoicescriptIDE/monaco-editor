@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -15,18 +17,19 @@ var __extends = (this && this.__extends) || (function () {
 })();
 import './overlayWidgets.css';
 import { createFastDomNode } from '../../../../base/browser/fastDomNode.js';
-import { OverlayWidgetPositionPreference } from '../../editorBrowser.js';
-import { ViewPart, PartFingerprints } from '../../view/viewPart.js';
+import { PartFingerprints, ViewPart } from '../../view/viewPart.js';
 var ViewOverlayWidgets = /** @class */ (function (_super) {
     __extends(ViewOverlayWidgets, _super);
     function ViewOverlayWidgets(context) {
         var _this = _super.call(this, context) || this;
+        var options = _this._context.configuration.options;
+        var layoutInfo = options.get(107 /* layoutInfo */);
         _this._widgets = {};
-        _this._verticalScrollbarWidth = _this._context.configuration.editor.layoutInfo.verticalScrollbarWidth;
-        _this._minimapWidth = _this._context.configuration.editor.layoutInfo.minimapWidth;
-        _this._horizontalScrollbarHeight = _this._context.configuration.editor.layoutInfo.horizontalScrollbarHeight;
-        _this._editorHeight = _this._context.configuration.editor.layoutInfo.height;
-        _this._editorWidth = _this._context.configuration.editor.layoutInfo.width;
+        _this._verticalScrollbarWidth = layoutInfo.verticalScrollbarWidth;
+        _this._minimapWidth = layoutInfo.minimapWidth;
+        _this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
+        _this._editorHeight = layoutInfo.height;
+        _this._editorWidth = layoutInfo.width;
         _this._domNode = createFastDomNode(document.createElement('div'));
         PartFingerprints.write(_this._domNode, 4 /* OverlayWidgets */);
         _this._domNode.setClassName('overlayWidgets');
@@ -34,22 +37,21 @@ var ViewOverlayWidgets = /** @class */ (function (_super) {
     }
     ViewOverlayWidgets.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
-        this._widgets = null;
+        this._widgets = {};
     };
     ViewOverlayWidgets.prototype.getDomNode = function () {
         return this._domNode;
     };
     // ---- begin view event handlers
     ViewOverlayWidgets.prototype.onConfigurationChanged = function (e) {
-        if (e.layoutInfo) {
-            this._verticalScrollbarWidth = this._context.configuration.editor.layoutInfo.verticalScrollbarWidth;
-            this._minimapWidth = this._context.configuration.editor.layoutInfo.minimapWidth;
-            this._horizontalScrollbarHeight = this._context.configuration.editor.layoutInfo.horizontalScrollbarHeight;
-            this._editorHeight = this._context.configuration.editor.layoutInfo.height;
-            this._editorWidth = this._context.configuration.editor.layoutInfo.width;
-            return true;
-        }
-        return false;
+        var options = this._context.configuration.options;
+        var layoutInfo = options.get(107 /* layoutInfo */);
+        this._verticalScrollbarWidth = layoutInfo.verticalScrollbarWidth;
+        this._minimapWidth = layoutInfo.minimapWidth;
+        this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
+        this._editorHeight = layoutInfo.height;
+        this._editorWidth = layoutInfo.width;
+        return true;
     };
     // ---- end view event handlers
     ViewOverlayWidgets.prototype.addWidget = function (widget) {
@@ -90,16 +92,16 @@ var ViewOverlayWidgets = /** @class */ (function (_super) {
             domNode.unsetTop();
             return;
         }
-        if (widgetData.preference === OverlayWidgetPositionPreference.TOP_RIGHT_CORNER) {
+        if (widgetData.preference === 0 /* TOP_RIGHT_CORNER */) {
             domNode.setTop(0);
             domNode.setRight((2 * this._verticalScrollbarWidth) + this._minimapWidth);
         }
-        else if (widgetData.preference === OverlayWidgetPositionPreference.BOTTOM_RIGHT_CORNER) {
+        else if (widgetData.preference === 1 /* BOTTOM_RIGHT_CORNER */) {
             var widgetHeight = domNode.domNode.clientHeight;
             domNode.setTop((this._editorHeight - widgetHeight - 2 * this._horizontalScrollbarHeight));
             domNode.setRight((2 * this._verticalScrollbarWidth) + this._minimapWidth);
         }
-        else if (widgetData.preference === OverlayWidgetPositionPreference.TOP_CENTER) {
+        else if (widgetData.preference === 2 /* TOP_CENTER */) {
             domNode.setTop(0);
             domNode.domNode.style.right = '50%';
         }

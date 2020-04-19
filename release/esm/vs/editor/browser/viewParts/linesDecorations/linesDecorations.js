@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -20,24 +22,25 @@ var LinesDecorationsOverlay = /** @class */ (function (_super) {
     function LinesDecorationsOverlay(context) {
         var _this = _super.call(this) || this;
         _this._context = context;
-        _this._decorationsLeft = _this._context.configuration.editor.layoutInfo.decorationsLeft;
-        _this._decorationsWidth = _this._context.configuration.editor.layoutInfo.decorationsWidth;
+        var options = _this._context.configuration.options;
+        var layoutInfo = options.get(107 /* layoutInfo */);
+        _this._decorationsLeft = layoutInfo.decorationsLeft;
+        _this._decorationsWidth = layoutInfo.decorationsWidth;
         _this._renderResult = null;
         _this._context.addEventHandler(_this);
         return _this;
     }
     LinesDecorationsOverlay.prototype.dispose = function () {
         this._context.removeEventHandler(this);
-        this._context = null;
         this._renderResult = null;
         _super.prototype.dispose.call(this);
     };
     // --- begin event handlers
     LinesDecorationsOverlay.prototype.onConfigurationChanged = function (e) {
-        if (e.layoutInfo) {
-            this._decorationsLeft = this._context.configuration.editor.layoutInfo.decorationsLeft;
-            this._decorationsWidth = this._context.configuration.editor.layoutInfo.decorationsWidth;
-        }
+        var options = this._context.configuration.options;
+        var layoutInfo = options.get(107 /* layoutInfo */);
+        this._decorationsLeft = layoutInfo.decorationsLeft;
+        this._decorationsWidth = layoutInfo.decorationsWidth;
         return true;
     };
     LinesDecorationsOverlay.prototype.onDecorationsChanged = function (e) {

@@ -2,11 +2,19 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+var SpacesDiffResult = /** @class */ (function () {
+    function SpacesDiffResult() {
+        this.spacesDiff = 0;
+        this.looksLikeAlignment = false;
+    }
+    return SpacesDiffResult;
+}());
 /**
  * Compute the diff in spaces between two line's indentation.
  */
-function spacesDiff(a, aLength, b, bLength) {
+function spacesDiff(a, aLength, b, bLength, result) {
+    result.spacesDiff = 0;
+    result.looksLikeAlignment = false;
     // This can go both ways (e.g.):
     //  - a: "\t"
     //  - b: "\t    "
@@ -40,20 +48,33 @@ function spacesDiff(a, aLength, b, bLength) {
         }
     }
     if (aSpacesCnt > 0 && aTabsCount > 0) {
-        return 0;
+        return;
     }
     if (bSpacesCnt > 0 && bTabsCount > 0) {
-        return 0;
+        return;
     }
     var tabsDiff = Math.abs(aTabsCount - bTabsCount);
     var spacesDiff = Math.abs(aSpacesCnt - bSpacesCnt);
     if (tabsDiff === 0) {
-        return spacesDiff;
+        // check if the indentation difference might be caused by alignment reasons
+        // sometime folks like to align their code, but this should not be used as a hint
+        result.spacesDiff = spacesDiff;
+        if (spacesDiff > 0 && 0 <= bSpacesCnt - 1 && bSpacesCnt - 1 < a.length && bSpacesCnt < b.length) {
+            if (b.charCodeAt(bSpacesCnt) !== 32 /* Space */ && a.charCodeAt(bSpacesCnt - 1) === 32 /* Space */) {
+                if (a.charCodeAt(a.length - 1) === 44 /* Comma */) {
+                    // This looks like an alignment desire: e.g.
+                    // const a = b + c,
+                    //       d = b - c;
+                    result.looksLikeAlignment = true;
+                }
+            }
+        }
+        return;
     }
     if (spacesDiff % tabsDiff === 0) {
-        return spacesDiff / tabsDiff;
+        result.spacesDiff = spacesDiff / tabsDiff;
+        return;
     }
-    return 0;
 }
 export function guessIndentation(source, defaultTabSize, defaultInsertSpaces) {
     // Look at most at the first 10k lines
@@ -62,9 +83,10 @@ export function guessIndentation(source, defaultTabSize, defaultInsertSpaces) {
     var linesIndentedWithSpacesCount = 0; // number of lines that contain only spaces in indentation
     var previousLineText = ''; // content of latest line that contained non-whitespace chars
     var previousLineIndentation = 0; // index at which latest line contained the first non-whitespace char
-    var ALLOWED_TAB_SIZE_GUESSES = [2, 4, 6, 8]; // limit guesses for `tabSize` to 2, 4, 6 or 8.
-    var MAX_ALLOWED_TAB_SIZE_GUESS = 8; // max(2,4,6,8) = 8
+    var ALLOWED_TAB_SIZE_GUESSES = [2, 4, 6, 8, 3, 5, 7]; // prefer even guesses for `tabSize`, limit to [2, 8].
+    var MAX_ALLOWED_TAB_SIZE_GUESS = 8; // max(ALLOWED_TAB_SIZE_GUESSES) = 8
     var spacesDiffCount = [0, 0, 0, 0, 0, 0, 0, 0, 0]; // `tabSize` scores
+    var tmp = new SpacesDiffResult();
     for (var lineNumber = 1; lineNumber <= linesCount; lineNumber++) {
         var currentLineLength = source.getLineLength(lineNumber);
         var currentLineText = source.getLineContent(lineNumber);
@@ -100,7 +122,22 @@ export function guessIndentation(source, defaultTabSize, defaultInsertSpaces) {
         else if (currentLineSpacesCount > 1) {
             linesIndentedWithSpacesCount++;
         }
-        var currentSpacesDiff = spacesDiff(previousLineText, previousLineIndentation, currentLineText, currentLineIndentation);
+        spacesDiff(previousLineText, previousLineIndentation, currentLineText, currentLineIndentation, tmp);
+        if (tmp.looksLikeAlignment) {
+            // if defaultInsertSpaces === true && the spaces count == tabSize, we may want to count it as valid indentation
+            //
+            // - item1
+            //   - item2
+            //
+            // otherwise skip this line entirely
+            //
+            // const a = 1,
+            //       b = 2;
+            if (!(defaultInsertSpaces && defaultTabSize === tmp.spacesDiff)) {
+                continue;
+            }
+        }
+        var currentSpacesDiff = tmp.spacesDiff;
         if (currentSpacesDiff <= MAX_ALLOWED_TAB_SIZE_GUESS) {
             spacesDiffCount[currentSpacesDiff]++;
         }
@@ -112,15 +149,23 @@ export function guessIndentation(source, defaultTabSize, defaultInsertSpaces) {
         insertSpaces = (linesIndentedWithTabsCount < linesIndentedWithSpacesCount);
     }
     var tabSize = defaultTabSize;
-    var tabSizeScore = (insertSpaces ? 0 : 0.1 * linesCount);
-    // console.log("score threshold: " + tabSizeScore);
-    ALLOWED_TAB_SIZE_GUESSES.forEach(function (possibleTabSize) {
-        var possibleTabSizeScore = spacesDiffCount[possibleTabSize];
-        if (possibleTabSizeScore > tabSizeScore) {
-            tabSizeScore = possibleTabSizeScore;
-            tabSize = possibleTabSize;
+    // Guess tabSize only if inserting spaces...
+    if (insertSpaces) {
+        var tabSizeScore_1 = (insertSpaces ? 0 : 0.1 * linesCount);
+        // console.log("score threshold: " + tabSizeScore);
+        ALLOWED_TAB_SIZE_GUESSES.forEach(function (possibleTabSize) {
+            var possibleTabSizeScore = spacesDiffCount[possibleTabSize];
+            if (possibleTabSizeScore > tabSizeScore_1) {
+                tabSizeScore_1 = possibleTabSizeScore;
+                tabSize = possibleTabSize;
+            }
+        });
+        // Let a tabSize of 2 win even if it is not the maximum
+        // (only in case 4 was guessed)
+        if (tabSize === 4 && spacesDiffCount[4] > 0 && spacesDiffCount[2] > 0 && spacesDiffCount[2] >= spacesDiffCount[4] / 2) {
+            tabSize = 2;
         }
-    });
+    }
     // console.log('--------------------------');
     // console.log('linesIndentedWithTabsCount: ' + linesIndentedWithTabsCount + ', linesIndentedWithSpacesCount: ' + linesIndentedWithSpacesCount);
     // console.log('spacesDiffCount: ' + spacesDiffCount);

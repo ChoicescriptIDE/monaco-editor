@@ -2,11 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as strings from '../../../../base/common/strings.js';
-import { DefaultEndOfLine } from '../../model.js';
-import { PieceTreeTextBuffer } from './pieceTreeTextBuffer.js';
 import { StringBuffer, createLineStarts, createLineStartsFast } from './pieceTreeBase.js';
+import { PieceTreeTextBuffer } from './pieceTreeTextBuffer.js';
 var PieceTreeTextBufferFactory = /** @class */ (function () {
     function PieceTreeTextBufferFactory(_chunks, _bom, _cr, _lf, _crlf, _containsRTL, _isBasicASCII, _normalizeEOL) {
         this._chunks = _chunks;
@@ -23,7 +21,7 @@ var PieceTreeTextBufferFactory = /** @class */ (function () {
         var totalCRCount = this._cr + this._crlf;
         if (totalEOLCount === 0) {
             // This is an empty file or a file with precisely one line
-            return (defaultEOL === DefaultEndOfLine.LF ? '\n' : '\r\n');
+            return (defaultEOL === 1 /* LF */ ? '\n' : '\r\n');
         }
         if (totalCRCount > totalEOLCount / 2) {
             // More than half of the file contains \r\n ending lines
@@ -74,7 +72,7 @@ var PieceTreeTextBufferBuilder = /** @class */ (function () {
             }
         }
         var lastChar = chunk.charCodeAt(chunk.length - 1);
-        if (lastChar === 13 /* CarriageReturn */ || (lastChar >= 0xd800 && lastChar <= 0xdbff)) {
+        if (lastChar === 13 /* CarriageReturn */ || (lastChar >= 0xD800 && lastChar <= 0xDBFF)) {
             // last character is \r or a high surrogate => keep it back
             this._acceptChunk1(chunk.substr(0, chunk.length - 1), false);
             this._hasPreviousChar = true;

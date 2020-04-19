@@ -2,10 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+import * as browser from './browser.js';
 import { KeyCodeUtils, SimpleKeybinding } from '../common/keyCodes.js';
 import * as platform from '../common/platform.js';
-import * as browser from './browser.js';
 var KEY_CODE_MAP = new Array(230);
 var INVERSE_KEY_CODE_MAP = new Array(112 /* MAX_VALUE */);
 (function () {
@@ -167,6 +166,7 @@ var shiftKeyMod = 1024 /* Shift */;
 var metaKeyMod = (platform.isMacintosh ? 2048 /* CtrlCmd */ : 256 /* WinCtrl */);
 var StandardKeyboardEvent = /** @class */ (function () {
     function StandardKeyboardEvent(source) {
+        this._standardKeyboardEventBrand = true;
         var e = source;
         this.browserEvent = e;
         this.target = e.target;

@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { HorizontalRange } from '../../../common/view/renderingContext.js';
 var FloatHorizontalRange = /** @class */ (function () {
     function FloatHorizontalRange(left, width) {
@@ -98,7 +97,7 @@ var RangeUtil = /** @class */ (function () {
         if (startChildIndex !== endChildIndex) {
             if (endChildIndex > 0 && endOffset === 0) {
                 endChildIndex--;
-                endOffset = Number.MAX_VALUE;
+                endOffset = 1073741824 /* MAX_SAFE_SMALL_INTEGER */;
             }
         }
         var startElement = domNode.children[startChildIndex].firstChild;

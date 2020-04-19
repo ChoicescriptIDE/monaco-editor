@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { createFastDomNode } from '../../../base/browser/fastDomNode.js';
 import { createStringBuilder } from '../../common/core/stringBuilder.js';
 var RenderedLinesCollection = /** @class */ (function () {
@@ -193,7 +192,10 @@ var VisibleLinesCollection = /** @class */ (function () {
     };
     // ---- begin view event handlers
     VisibleLinesCollection.prototype.onConfigurationChanged = function (e) {
-        return e.layoutInfo;
+        if (e.hasChanged(107 /* layoutInfo */)) {
+            return true;
+        }
+        return false;
     };
     VisibleLinesCollection.prototype.onFlushed = function (e) {
         this._linesCollection.flush();

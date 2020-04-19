@@ -38,7 +38,7 @@ var ChoiceScriptValidation = /** @class */ (function () {
         var entries = [];
         entries.push.apply(entries, nodes.ParseErrorCollector.entries(scene));
         if (settings && settings.spellCheckSettings.enabled === true) {
-            entries.push.apply(entries, SpellCheckVisitor.entries(scene, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+            entries.push.apply(entries, SpellCheckVisitor.entries(scene, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo, settings.spellCheckSettings.userDictionaries));
         }
         var ruleIds = [];
         for (var r in Rules) {

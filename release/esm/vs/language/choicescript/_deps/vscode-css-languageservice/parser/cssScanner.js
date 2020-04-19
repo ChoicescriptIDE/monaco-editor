@@ -52,6 +52,7 @@ export var TokenType;
     TokenType[TokenType["Builtin"] = 44] = "Builtin";
     TokenType[TokenType["Invalid"] = 45] = "Invalid";
     TokenType[TokenType["Word"] = 46] = "Word";
+    TokenType[TokenType["Dollar"] = 47] = "Dollar";
 })(TokenType || (TokenType = {}));
 var MultiLineStream = /** @class */ (function () {
     function MultiLineStream(source) {
@@ -166,6 +167,7 @@ var _BRR = ']'.charCodeAt(0);
 var _CMA = ','.charCodeAt(0);
 var _DOT = '.'.charCodeAt(0);
 var _BNG = '!'.charCodeAt(0);
+var _AST = '*'.charCodeAt(0);
 var staticTokenTable = {};
 staticTokenTable[_SEM] = TokenType.SemiColon;
 staticTokenTable[_COL] = TokenType.Colon;
@@ -176,6 +178,7 @@ staticTokenTable[_BRL] = TokenType.BracketL;
 staticTokenTable[_LPA] = TokenType.ParenthesisL;
 staticTokenTable[_RPA] = TokenType.ParenthesisR;
 staticTokenTable[_CMA] = TokenType.Comma;
+staticTokenTable[_DLR] = TokenType.Dollar;
 var staticUnitTable = {};
 staticUnitTable['em'] = TokenType.EMS;
 staticUnitTable['ex'] = TokenType.EXS;
@@ -232,7 +235,7 @@ var Scanner = /** @class */ (function () {
         return null;
     };
     Scanner.prototype.scan = function () {
-        // processes all whitespaces and comments... BUT NOT NEW LINES
+        // processes all whitespaces and comments... BUT NOT NEW LINES (or does it now?! CJW)
         var triviaToken = this.trivia();
         if (triviaToken !== null) {
             return triviaToken;
@@ -245,6 +248,11 @@ var Scanner = /** @class */ (function () {
         return this.scanNext(offset);
     };
     Scanner.prototype.scanNext = function (offset) {
+        var content = [];
+        // newlines
+        if (this._newline(content)) {
+            return this.finishToken(offset, TokenType.EOL, content.join(''));
+        }
         // Comment
         if (this.stream.advanceIfChars([_MUL, _c, _o, _m, _m, _e, _n, _t])) {
             var n = this.stream.advanceWhileChar(function (ch) {
@@ -253,7 +261,7 @@ var Scanner = /** @class */ (function () {
             var t = this.finishToken(offset, TokenType.SingleLineComment);
             return (n > 0) ? t : null;
         }
-        var content = [];
+        // Command
         if (this.stream.advanceIfChar(_MUL)) {
             content = ['*'];
             if (this._name(content)) {
@@ -266,9 +274,19 @@ var Scanner = /** @class */ (function () {
                 return this.finishToken(offset, TokenType.Invalid, content.join(''));
             }
         }
-        // newlines
-        if (this._newline(content)) {
-            return this.finishToken(offset, TokenType.EOL, content.join(''));
+        else {
+            if (this.ident(content)) {
+                return this.finishToken(offset, TokenType.Ident, content.join(''));
+            }
+            else if (this._word()) {
+                return this.finishToken(offset, TokenType.Word);
+            }
+        }
+        // String, BadString
+        content = [];
+        var tokenType = this._string(content);
+        if (tokenType !== null) {
+            return this.finishToken(offset, tokenType, content.join(''));
         }
         // hash
         if (this.stream.advanceIfChar(_HSH)) {
@@ -302,9 +320,11 @@ var Scanner = /** @class */ (function () {
             }
             return this.finishToken(offset, TokenType.Num);
         }
-        // Word
-        if (this._word()) {
-            return this.finishToken(offset, TokenType.Word);
+        // Brackets, commas, etc.
+        tokenType = staticTokenTable[this.stream.peekChar()];
+        if (typeof tokenType !== 'undefined') {
+            this.stream.advance(1);
+            return this.finishToken(offset, tokenType);
         }
         // Delim
         this.stream.nextChar();
@@ -381,10 +401,13 @@ var Scanner = /** @class */ (function () {
     Scanner.prototype._word = function () {
         var npeek = 0, ch;
         ch = this.stream.peekChar(npeek);
-        if ((ch >= _A && ch <= _Z) || (ch >= _a && ch <= _z)) {
+        if ((ch >= _A && ch <= _Z) ||
+            (ch >= _a && ch <= _z)) {
             this.stream.advance(npeek + 1);
             this.stream.advanceWhileChar(function (ch) {
-                return ((ch >= _A && ch <= _Z) || (ch >= _a && ch <= _z));
+                return ((ch >= _A && ch <= _Z) ||
+                    (ch >= _a && ch <= _z) ||
+                    (ch === _SQO)); // FIXME: Handle apostrophes with some measure of grace
             });
             return true;
         }

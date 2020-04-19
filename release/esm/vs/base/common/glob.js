@@ -2,12 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as arrays from './arrays.js';
 import * as strings from './strings.js';
-import * as paths from './paths.js';
+import * as extpath from './extpath.js';
+import * as paths from './path.js';
 import { LRUCache } from './map.js';
-import { TPromise } from './winjs.base.js';
+import { isThenable } from './async.js';
 var GLOBSTAR = '**';
 var GLOB_SPLIT = '/';
 var PATH_REGEX = '[/\\\\]'; // any slash or backslash
@@ -33,10 +33,9 @@ export function splitGlobAware(pattern, splitChar) {
     var segments = [];
     var inBraces = false;
     var inBrackets = false;
-    var char;
     var curVal = '';
-    for (var i = 0; i < pattern.length; i++) {
-        char = pattern[i];
+    for (var _i = 0, pattern_1 = pattern; _i < pattern_1.length; _i++) {
+        var char = pattern_1[_i];
         switch (char) {
             case splitChar:
                 if (!inBraces && !inBrackets) {
@@ -95,9 +94,8 @@ function parseRegExp(pattern) {
             var braceVal = '';
             var inBrackets = false;
             var bracketVal = '';
-            var char;
-            for (var i = 0; i < segment.length; i++) {
-                char = segment[i];
+            for (var _i = 0, segment_1 = segment; _i < segment_1.length; _i++) {
+                var char = segment_1[_i];
                 // Support brace expansion
                 if (char !== '}' && inBraces) {
                     braceVal += char;
@@ -209,7 +207,7 @@ function parsePattern(arg1, options) {
     if (T1.test(pattern)) { // common pattern: **/*.txt just need endsWith check
         var base_1 = pattern.substr(4); // '**/*'.length === 4
         parsedPattern = function (path, basename) {
-            return path && strings.endsWith(path, base_1) ? pattern : null;
+            return typeof path === 'string' && strings.endsWith(path, base_1) ? pattern : null;
         };
     }
     else if (match = T2.exec(trimForExclusions(pattern, options))) { // common pattern: **/some.txt just need basename check
@@ -237,10 +235,10 @@ function wrapRelativePattern(parsedPattern, arg2) {
         return parsedPattern;
     }
     return function (path, basename) {
-        if (!paths.isEqualOrParent(path, arg2.base)) {
+        if (!extpath.isEqualOrParent(path, arg2.base)) {
             return null;
         }
-        return parsedPattern(paths.normalize(arg2.pathToRelative(arg2.base, path)), basename);
+        return parsedPattern(paths.relative(arg2.base, path), basename);
     };
 }
 function trimForExclusions(pattern, options) {
@@ -251,7 +249,7 @@ function trivia2(base, originalPattern) {
     var slashBase = "/" + base;
     var backslashBase = "\\" + base;
     var parsedPattern = function (path, basename) {
-        if (!path) {
+        if (typeof path !== 'string') {
             return null;
         }
         if (basename) {
@@ -297,12 +295,12 @@ function trivia3(pattern, options) {
 }
 // common patterns: **/something/else just need endsWith check, something/else just needs and equals check
 function trivia4and5(path, pattern, matchPathEnds) {
-    var nativePath = paths.nativeSep !== paths.sep ? path.replace(ALL_FORWARD_SLASHES, paths.nativeSep) : path;
-    var nativePathEnd = paths.nativeSep + nativePath;
+    var nativePath = paths.sep !== paths.posix.sep ? path.replace(ALL_FORWARD_SLASHES, paths.sep) : path;
+    var nativePathEnd = paths.sep + nativePath;
     var parsedPattern = matchPathEnds ? function (path, basename) {
-        return path && (path === nativePath || strings.endsWith(path, nativePathEnd)) ? pattern : null;
+        return typeof path === 'string' && (path === nativePath || strings.endsWith(path, nativePathEnd)) ? pattern : null;
     } : function (path, basename) {
-        return path && path === nativePath ? pattern : null;
+        return typeof path === 'string' && path === nativePath ? pattern : null;
     };
     parsedPattern.allPaths = [(matchPathEnds ? '*/' : './') + path];
     return parsedPattern;
@@ -312,7 +310,7 @@ function toRegExp(pattern) {
         var regExp_1 = new RegExp("^" + parseRegExp(pattern) + "$");
         return function (path, basename) {
             regExp_1.lastIndex = 0; // reset RegExp to its initial state to reuse it!
-            return path && regExp_1.test(path) ? pattern : null;
+            return typeof path === 'string' && regExp_1.test(path) ? pattern : null;
         };
     }
     catch (error) {
@@ -320,7 +318,7 @@ function toRegExp(pattern) {
     }
 }
 export function match(arg1, path, hasSibling) {
-    if (!arg1 || !path) {
+    if (!arg1 || typeof path !== 'string') {
         return false;
     }
     return parse(arg1)(path, undefined, hasSibling);
@@ -352,7 +350,7 @@ export function parse(arg1, options) {
 }
 export function isRelativePattern(obj) {
     var rp = obj;
-    return rp && typeof rp.base === 'string' && typeof rp.pattern === 'string' && typeof rp.pathToRelative === 'function';
+    return rp && typeof rp.base === 'string' && typeof rp.pattern === 'string';
 }
 function parsedExpression(expression, options) {
     var parsedPatterns = aggregateBasenameMatches(Object.getOwnPropertyNames(expression)
@@ -362,7 +360,7 @@ function parsedExpression(expression, options) {
     if (!n) {
         return NULL;
     }
-    if (!parsedPatterns.some(function (parsedPattern) { return parsedPattern.requiresSiblings; })) {
+    if (!parsedPatterns.some(function (parsedPattern) { return !!parsedPattern.requiresSiblings; })) {
         if (n === 1) {
             return parsedPatterns[0];
         }
@@ -387,7 +385,7 @@ function parsedExpression(expression, options) {
         return resultExpression_1;
     }
     var resultExpression = function (path, basename, hasSibling) {
-        var name;
+        var name = undefined;
         for (var i = 0, n_3 = parsedPatterns.length; i < n_3; i++) {
             // Pattern matches path
             var parsedPattern = parsedPatterns[i];
@@ -438,7 +436,7 @@ function parseExpressionPattern(pattern, value, options) {
                 }
                 var clausePattern = when_1.replace('$(basename)', name);
                 var matched = hasSibling(clausePattern);
-                return TPromise.is(matched) ?
+                return isThenable(matched) ?
                     matched.then(function (m) { return m ? pattern : null; }) :
                     matched ? pattern : null;
             };
@@ -454,7 +452,10 @@ function aggregateBasenameMatches(parsedPatterns, result) {
     if (basenamePatterns.length < 2) {
         return parsedPatterns;
     }
-    var basenames = basenamePatterns.reduce(function (all, current) { return all.concat(current.basenames); }, []);
+    var basenames = basenamePatterns.reduce(function (all, current) {
+        var basenames = current.basenames;
+        return basenames ? all.concat(basenames) : all;
+    }, []);
     var patterns;
     if (result) {
         patterns = [];
@@ -463,10 +464,13 @@ function aggregateBasenameMatches(parsedPatterns, result) {
         }
     }
     else {
-        patterns = basenamePatterns.reduce(function (all, current) { return all.concat(current.patterns); }, []);
+        patterns = basenamePatterns.reduce(function (all, current) {
+            var patterns = current.patterns;
+            return patterns ? all.concat(patterns) : all;
+        }, []);
     }
     var aggregate = function (path, basename) {
-        if (!path) {
+        if (typeof path !== 'string') {
             return null;
         }
         if (!basename) {

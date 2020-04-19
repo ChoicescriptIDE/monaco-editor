@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -16,8 +18,8 @@ var __extends = (this && this.__extends) || (function () {
 import './scrollDecoration.css';
 import { createFastDomNode } from '../../../../base/browser/fastDomNode.js';
 import { ViewPart } from '../../view/viewPart.js';
-import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 import { scrollbarShadow } from '../../../../platform/theme/common/colorRegistry.js';
+import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 var ScrollDecorationViewPart = /** @class */ (function (_super) {
     __extends(ScrollDecorationViewPart, _super);
     function ScrollDecorationViewPart(context) {
@@ -26,7 +28,9 @@ var ScrollDecorationViewPart = /** @class */ (function (_super) {
         _this._width = 0;
         _this._updateWidth();
         _this._shouldShow = false;
-        _this._useShadows = _this._context.configuration.editor.viewInfo.scrollbar.useShadows;
+        var options = _this._context.configuration.options;
+        var scrollbar = options.get(78 /* scrollbar */);
+        _this._useShadows = scrollbar.useShadows;
         _this._domNode = createFastDomNode(document.createElement('div'));
         _this._domNode.setAttribute('role', 'presentation');
         _this._domNode.setAttribute('aria-hidden', 'true');
@@ -47,30 +51,23 @@ var ScrollDecorationViewPart = /** @class */ (function (_super) {
         return this._domNode;
     };
     ScrollDecorationViewPart.prototype._updateWidth = function () {
-        var layoutInfo = this._context.configuration.editor.layoutInfo;
-        var newWidth = 0;
+        var options = this._context.configuration.options;
+        var layoutInfo = options.get(107 /* layoutInfo */);
         if (layoutInfo.renderMinimap === 0 || (layoutInfo.minimapWidth > 0 && layoutInfo.minimapLeft === 0)) {
-            newWidth = layoutInfo.width;
+            this._width = layoutInfo.width;
         }
         else {
-            newWidth = layoutInfo.width - layoutInfo.minimapWidth - layoutInfo.verticalScrollbarWidth;
+            this._width = layoutInfo.width - layoutInfo.minimapWidth - layoutInfo.verticalScrollbarWidth;
         }
-        if (this._width !== newWidth) {
-            this._width = newWidth;
-            return true;
-        }
-        return false;
     };
     // --- begin event handlers
     ScrollDecorationViewPart.prototype.onConfigurationChanged = function (e) {
-        var shouldRender = false;
-        if (e.viewInfo) {
-            this._useShadows = this._context.configuration.editor.viewInfo.scrollbar.useShadows;
-        }
-        if (e.layoutInfo) {
-            shouldRender = this._updateWidth();
-        }
-        return this._updateShouldShow() || shouldRender;
+        var options = this._context.configuration.options;
+        var scrollbar = options.get(78 /* scrollbar */);
+        this._useShadows = scrollbar.useShadows;
+        this._updateWidth();
+        this._updateShouldShow();
+        return true;
     };
     ScrollDecorationViewPart.prototype.onScrollChanged = function (e) {
         this._scrollTop = e.scrollTop;

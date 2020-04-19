@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { Position } from './position.js';
 /**
  * A range in the editor. (startLineNumber,startColumn) is <= (endLineNumber,endColumn)
@@ -75,6 +74,30 @@ var Range = /** @class */ (function () {
             return false;
         }
         if (otherRange.endLineNumber === range.endLineNumber && otherRange.endColumn > range.endColumn) {
+            return false;
+        }
+        return true;
+    };
+    /**
+     * Test if `range` is strictly in this range. `range` must start after and end before this range for the result to be true.
+     */
+    Range.prototype.strictContainsRange = function (range) {
+        return Range.strictContainsRange(this, range);
+    };
+    /**
+     * Test if `otherRange` is strinctly in `range` (must start after, and end before). If the ranges are equal, will return false.
+     */
+    Range.strictContainsRange = function (range, otherRange) {
+        if (otherRange.startLineNumber < range.startLineNumber || otherRange.endLineNumber < range.startLineNumber) {
+            return false;
+        }
+        if (otherRange.startLineNumber > range.endLineNumber || otherRange.endLineNumber > range.endLineNumber) {
+            return false;
+        }
+        if (otherRange.startLineNumber === range.startLineNumber && otherRange.startColumn <= range.startColumn) {
+            return false;
+        }
+        if (otherRange.endLineNumber === range.endLineNumber && otherRange.endColumn >= range.endColumn) {
             return false;
         }
         return true;
@@ -226,9 +249,6 @@ var Range = /** @class */ (function () {
         if (end === void 0) { end = start; }
         return new Range(start.lineNumber, start.column, end.lineNumber, end.column);
     };
-    /**
-     * Create a `Range` from an `IRange`.
-     */
     Range.lift = function (range) {
         if (!range) {
             return null;
@@ -280,24 +300,29 @@ var Range = /** @class */ (function () {
      * It will first compare ranges on the startPosition and then on the endPosition
      */
     Range.compareRangesUsingStarts = function (a, b) {
-        var aStartLineNumber = a.startLineNumber | 0;
-        var bStartLineNumber = b.startLineNumber | 0;
-        if (aStartLineNumber === bStartLineNumber) {
-            var aStartColumn = a.startColumn | 0;
-            var bStartColumn = b.startColumn | 0;
-            if (aStartColumn === bStartColumn) {
-                var aEndLineNumber = a.endLineNumber | 0;
-                var bEndLineNumber = b.endLineNumber | 0;
-                if (aEndLineNumber === bEndLineNumber) {
-                    var aEndColumn = a.endColumn | 0;
-                    var bEndColumn = b.endColumn | 0;
-                    return aEndColumn - bEndColumn;
+        if (a && b) {
+            var aStartLineNumber = a.startLineNumber | 0;
+            var bStartLineNumber = b.startLineNumber | 0;
+            if (aStartLineNumber === bStartLineNumber) {
+                var aStartColumn = a.startColumn | 0;
+                var bStartColumn = b.startColumn | 0;
+                if (aStartColumn === bStartColumn) {
+                    var aEndLineNumber = a.endLineNumber | 0;
+                    var bEndLineNumber = b.endLineNumber | 0;
+                    if (aEndLineNumber === bEndLineNumber) {
+                        var aEndColumn = a.endColumn | 0;
+                        var bEndColumn = b.endColumn | 0;
+                        return aEndColumn - bEndColumn;
+                    }
+                    return aEndLineNumber - bEndLineNumber;
                 }
-                return aEndLineNumber - bEndLineNumber;
+                return aStartColumn - bStartColumn;
             }
-            return aStartColumn - bStartColumn;
+            return aStartLineNumber - bStartLineNumber;
         }
-        return aStartLineNumber - bStartLineNumber;
+        var aExists = (a ? 1 : 0);
+        var bExists = (b ? 1 : 0);
+        return aExists - bExists;
     };
     /**
      * A function that compares ranges, useful for sorting ranges

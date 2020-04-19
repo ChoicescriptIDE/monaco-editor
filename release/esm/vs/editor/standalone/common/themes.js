@@ -2,10 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var _a, _b, _c;
-import { editorBackground, editorForeground, editorSelectionHighlight, editorInactiveSelection } from '../../../platform/theme/common/colorRegistry.js';
-import { editorIndentGuides, editorActiveIndentGuides } from '../../common/view/editorColorRegistry.js';
+import { editorActiveIndentGuides, editorIndentGuides } from '../../common/view/editorColorRegistry.js';
+import { editorBackground, editorForeground, editorInactiveSelection, editorSelectionHighlight } from '../../../platform/theme/common/colorRegistry.js';
 /* -------------------------------- Begin vs theme -------------------------------- */
 export var vs = {
     base: 'vs',
@@ -19,7 +18,7 @@ export var vs = {
         { token: 'variable.predefined', foreground: '4864AA' },
         { token: 'constant', foreground: 'dd0000' },
         { token: 'comment', foreground: '008000' },
-        { token: 'number', foreground: '09885A' },
+        { token: 'number', foreground: '098658' },
         { token: 'number.hex', foreground: '3030c0' },
         { token: 'regexp', foreground: '800000' },
         { token: 'annotation', foreground: '808080' },
@@ -41,8 +40,8 @@ export var vs = {
         { token: 'string.value.json', foreground: '0451A5' },
         { token: 'attribute.name', foreground: 'FF0000' },
         { token: 'attribute.value', foreground: '0451A5' },
-        { token: 'attribute.value.number', foreground: '09885A' },
-        { token: 'attribute.value.unit', foreground: '09885A' },
+        { token: 'attribute.value.number', foreground: '098658' },
+        { token: 'attribute.value.unit', foreground: '098658' },
         { token: 'attribute.value.html', foreground: '0000FF' },
         { token: 'attribute.value.xml', foreground: '0000FF' },
         { token: 'string', foreground: 'A31515' },
@@ -178,3 +177,4 @@ export var hc_black = {
         _c[editorActiveIndentGuides] = '#FFFFFF',
         _c)
 };
+/* -------------------------------- End hc-black theme -------------------------------- */

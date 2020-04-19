@@ -2,11 +2,10 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { isFalsyOrEmpty } from '../../../base/common/arrays.js';
 import { Schemas } from '../../../base/common/network.js';
 import { isEmptyObject } from '../../../base/common/types.js';
-import { Emitter, debounceEvent } from '../../../base/common/event.js';
+import { Event, Emitter } from '../../../base/common/event.js';
 import { MarkerSeverity } from './markers.js';
 var MapMap;
 (function (MapMap) {
@@ -51,6 +50,9 @@ var MarkerStats = /** @class */ (function () {
         this._data = undefined;
     };
     MarkerStats.prototype._update = function (resources) {
+        if (!this._data) {
+            return;
+        }
         for (var _i = 0, resources_1 = resources; _i < resources_1.length; _i++) {
             var resource = resources_1[_i];
             var key = resource.toString();
@@ -103,7 +105,7 @@ var MarkerStats = /** @class */ (function () {
 var MarkerService = /** @class */ (function () {
     function MarkerService() {
         this._onMarkerChanged = new Emitter();
-        this._onMarkerChangedEvent = debounceEvent(this._onMarkerChanged.event, MarkerService._debouncer, 0);
+        this._onMarkerChangedEvent = Event.debounce(this._onMarkerChanged.event, MarkerService._debouncer, 0);
         this._byResource = Object.create(null);
         this._byOwner = Object.create(null);
         this._stats = new MarkerStats(this);
@@ -119,11 +121,9 @@ var MarkerService = /** @class */ (function () {
         configurable: true
     });
     MarkerService.prototype.remove = function (owner, resources) {
-        if (!isFalsyOrEmpty(resources)) {
-            for (var _i = 0, resources_2 = resources; _i < resources_2.length; _i++) {
-                var resource = resources_2[_i];
-                this.changeOne(owner, resource, undefined);
-            }
+        for (var _i = 0, _a = resources || []; _i < _a.length; _i++) {
+            var resource = _a[_i];
+            this.changeOne(owner, resource, []);
         }
     };
     MarkerService.prototype.changeOne = function (owner, resource, markerData) {
@@ -159,7 +159,6 @@ var MarkerService = /** @class */ (function () {
             return undefined;
         }
         // santize data
-        code = code || null;
         startLineNumber = startLineNumber > 0 ? startLineNumber : 1;
         startColumn = startColumn > 0 ? startColumn : 1;
         endLineNumber = endLineNumber >= startLineNumber ? endLineNumber : startLineNumber;
@@ -227,7 +226,7 @@ var MarkerService = /** @class */ (function () {
             // of one resource OR owner
             var map = owner
                 ? this._byOwner[owner]
-                : this._byResource[resource.toString()];
+                : resource ? this._byResource[resource.toString()] : undefined;
             if (!map) {
                 return [];
             }
@@ -247,7 +246,7 @@ var MarkerService = /** @class */ (function () {
         }
     };
     MarkerService._accept = function (marker, severities) {
-        return severities === void 0 || (severities & marker.severity) === marker.severity;
+        return severities === undefined || (severities & marker.severity) === marker.severity;
     };
     MarkerService._debouncer = function (last, event) {
         if (!last) {
@@ -256,7 +255,7 @@ var MarkerService = /** @class */ (function () {
         }
         for (var _i = 0, event_1 = event; _i < event_1.length; _i++) {
             var uri = event_1[_i];
-            if (MarkerService._dedupeMap[uri.toString()] === void 0) {
+            if (MarkerService._dedupeMap[uri.toString()] === undefined) {
                 MarkerService._dedupeMap[uri.toString()] = true;
                 last.push(uri);
             }

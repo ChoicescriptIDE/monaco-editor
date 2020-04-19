@@ -2,40 +2,46 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 import { toggleClass } from '../../../base/browser/dom.js';
-import { Position } from '../../common/core/position.js';
-import * as editorBrowser from '../../browser/editorBrowser.js';
-import { Widget } from '../../../base/browser/ui/widget.js';
 import { DomScrollableElement } from '../../../base/browser/ui/scrollbar/scrollableElement.js';
-import { dispose } from '../../../base/common/lifecycle.js';
+import { Widget } from '../../../base/browser/ui/widget.js';
 var ContentHoverWidget = /** @class */ (function (_super) {
     __extends(ContentHoverWidget, _super);
     function ContentHoverWidget(id, editor) {
         var _this = _super.call(this) || this;
-        _this.disposables = [];
         // Editor.IContentWidget.allowEditorOverflow
         _this.allowEditorOverflow = true;
         _this._id = id;
         _this._editor = editor;
         _this._isVisible = false;
+        _this._stoleFocus = false;
         _this._containerDomNode = document.createElement('div');
         _this._containerDomNode.className = 'monaco-editor-hover hidden';
         _this._containerDomNode.tabIndex = 0;
         _this._domNode = document.createElement('div');
         _this._domNode.className = 'monaco-editor-hover-content';
         _this.scrollbar = new DomScrollableElement(_this._domNode, {});
-        _this.disposables.push(_this.scrollbar);
+        _this._register(_this.scrollbar);
         _this._containerDomNode.appendChild(_this.scrollbar.getDomNode());
         _this.onkeydown(_this._containerDomNode, function (e) {
             if (e.equals(9 /* Escape */)) {
@@ -43,14 +49,16 @@ var ContentHoverWidget = /** @class */ (function (_super) {
             }
         });
         _this._register(_this._editor.onDidChangeConfiguration(function (e) {
-            if (e.fontInfo) {
+            if (e.hasChanged(34 /* fontInfo */)) {
                 _this.updateFont();
             }
         }));
-        _this._editor.onDidLayoutChange(function (e) { return _this.updateMaxHeight(); });
-        _this.updateMaxHeight();
+        _this._editor.onDidLayoutChange(function (e) { return _this.layout(); });
+        _this.layout();
         _this._editor.addContentWidget(_this);
         _this._showAtPosition = null;
+        _this._showAtRange = null;
+        _this._stoleFocus = false;
         return _this;
     }
     Object.defineProperty(ContentHoverWidget.prototype, "isVisible", {
@@ -70,9 +78,10 @@ var ContentHoverWidget = /** @class */ (function (_super) {
     ContentHoverWidget.prototype.getDomNode = function () {
         return this._containerDomNode;
     };
-    ContentHoverWidget.prototype.showAt = function (position, focus) {
+    ContentHoverWidget.prototype.showAt = function (position, range, focus) {
         // Position has changed
-        this._showAtPosition = new Position(position.lineNumber, position.column);
+        this._showAtPosition = position;
+        this._showAtRange = range;
         this.isVisible = true;
         this._editor.layoutContentWidget(this);
         // Simply force a synchronous render on the editor
@@ -97,9 +106,10 @@ var ContentHoverWidget = /** @class */ (function (_super) {
         if (this.isVisible) {
             return {
                 position: this._showAtPosition,
+                range: this._showAtRange,
                 preference: [
-                    editorBrowser.ContentWidgetPositionPreference.ABOVE,
-                    editorBrowser.ContentWidgetPositionPreference.BELOW
+                    1 /* ABOVE */,
+                    2 /* BELOW */
                 ]
             };
         }
@@ -107,7 +117,6 @@ var ContentHoverWidget = /** @class */ (function (_super) {
     };
     ContentHoverWidget.prototype.dispose = function () {
         this._editor.removeContentWidget(this);
-        this.disposables = dispose(this.disposables);
         _super.prototype.dispose.call(this);
     };
     ContentHoverWidget.prototype.updateFont = function () {
@@ -125,12 +134,13 @@ var ContentHoverWidget = /** @class */ (function (_super) {
     ContentHoverWidget.prototype.onContentsChange = function () {
         this.scrollbar.scanDomNode();
     };
-    ContentHoverWidget.prototype.updateMaxHeight = function () {
+    ContentHoverWidget.prototype.layout = function () {
         var height = Math.max(this._editor.getLayoutInfo().height / 4, 250);
-        var _a = this._editor.getConfiguration().fontInfo, fontSize = _a.fontSize, lineHeight = _a.lineHeight;
+        var _a = this._editor.getOption(34 /* fontInfo */), fontSize = _a.fontSize, lineHeight = _a.lineHeight;
         this._domNode.style.fontSize = fontSize + "px";
         this._domNode.style.lineHeight = lineHeight + "px";
         this._domNode.style.maxHeight = height + "px";
+        this._domNode.style.maxWidth = Math.max(this._editor.getLayoutInfo().width * 0.66, 500) + "px";
     };
     return ContentHoverWidget;
 }(Widget));
@@ -148,7 +158,7 @@ var GlyphHoverWidget = /** @class */ (function (_super) {
         _this._domNode.setAttribute('role', 'presentation');
         _this._showAtLineNumber = -1;
         _this._register(_this._editor.onDidChangeConfiguration(function (e) {
-            if (e.fontInfo) {
+            if (e.hasChanged(34 /* fontInfo */)) {
                 _this.updateFont();
             }
         }));
@@ -180,7 +190,7 @@ var GlyphHoverWidget = /** @class */ (function (_super) {
         var editorLayout = this._editor.getLayoutInfo();
         var topForLineNumber = this._editor.getTopForLineNumber(this._showAtLineNumber);
         var editorScrollTop = this._editor.getScrollTop();
-        var lineHeight = this._editor.getConfiguration().lineHeight;
+        var lineHeight = this._editor.getOption(49 /* lineHeight */);
         var nodeHeight = this._domNode.clientHeight;
         var top = topForLineNumber - editorScrollTop - ((nodeHeight - lineHeight) / 2);
         this._domNode.style.left = editorLayout.glyphMarginLeft + editorLayout.glyphMarginWidth + "px";
@@ -203,7 +213,7 @@ var GlyphHoverWidget = /** @class */ (function (_super) {
         var _this = this;
         var codeTags = Array.prototype.slice.call(this._domNode.getElementsByTagName('code'));
         var codeClasses = Array.prototype.slice.call(this._domNode.getElementsByClassName('code'));
-        codeTags.concat(codeClasses).forEach(function (node) { return _this._editor.applyFontInfo(node); });
+        __spreadArrays(codeTags, codeClasses).forEach(function (node) { return _this._editor.applyFontInfo(node); });
     };
     GlyphHoverWidget.prototype.updateContents = function (node) {
         this._domNode.textContent = '';

@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,13 +16,12 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as dom from '../../../base/browser/dom.js';
+import { CaseSensitiveCheckbox, RegexCheckbox, WholeWordsCheckbox } from '../../../base/browser/ui/findinput/findInputCheckboxes.js';
 import { Widget } from '../../../base/browser/ui/widget.js';
-import { OverlayWidgetPositionPreference } from '../../browser/editorBrowser.js';
-import { FIND_IDS } from './findModel.js';
-import { CaseSensitiveCheckbox, WholeWordsCheckbox, RegexCheckbox } from '../../../base/browser/ui/findinput/findInputCheckboxes.js';
 import { RunOnceScheduler } from '../../../base/common/async.js';
+import { FIND_IDS } from './findModel.js';
+import { contrastBorder, editorWidgetBackground, inputActiveOptionBorder, inputActiveOptionBackground, widgetShadow, editorWidgetForeground } from '../../../platform/theme/common/colorRegistry.js';
 import { registerThemingParticipant } from '../../../platform/theme/common/themeService.js';
-import { inputActiveOptionBorder, editorWidgetBackground, contrastBorder, widgetShadow } from '../../../platform/theme/common/colorRegistry.js';
 var FindOptionsWidget = /** @class */ (function (_super) {
     __extends(FindOptionsWidget, _super);
     function FindOptionsWidget(editor, state, keybindingService, themeService) {
@@ -37,10 +38,12 @@ var FindOptionsWidget = /** @class */ (function (_super) {
         _this._domNode.setAttribute('role', 'presentation');
         _this._domNode.setAttribute('aria-hidden', 'true');
         var inputActiveOptionBorderColor = themeService.getTheme().getColor(inputActiveOptionBorder);
+        var inputActiveOptionBackgroundColor = themeService.getTheme().getColor(inputActiveOptionBackground);
         _this.caseSensitive = _this._register(new CaseSensitiveCheckbox({
             appendTitle: _this._keybindingLabelFor(FIND_IDS.ToggleCaseSensitiveCommand),
             isChecked: _this._state.matchCase,
-            inputActiveOptionBorder: inputActiveOptionBorderColor
+            inputActiveOptionBorder: inputActiveOptionBorderColor,
+            inputActiveOptionBackground: inputActiveOptionBackgroundColor
         }));
         _this._domNode.appendChild(_this.caseSensitive.domNode);
         _this._register(_this.caseSensitive.onChange(function () {
@@ -51,7 +54,8 @@ var FindOptionsWidget = /** @class */ (function (_super) {
         _this.wholeWords = _this._register(new WholeWordsCheckbox({
             appendTitle: _this._keybindingLabelFor(FIND_IDS.ToggleWholeWordCommand),
             isChecked: _this._state.wholeWord,
-            inputActiveOptionBorder: inputActiveOptionBorderColor
+            inputActiveOptionBorder: inputActiveOptionBorderColor,
+            inputActiveOptionBackground: inputActiveOptionBackgroundColor
         }));
         _this._domNode.appendChild(_this.wholeWords.domNode);
         _this._register(_this.wholeWords.onChange(function () {
@@ -62,7 +66,8 @@ var FindOptionsWidget = /** @class */ (function (_super) {
         _this.regex = _this._register(new RegexCheckbox({
             appendTitle: _this._keybindingLabelFor(FIND_IDS.ToggleRegexCommand),
             isChecked: _this._state.isRegex,
-            inputActiveOptionBorder: inputActiveOptionBorderColor
+            inputActiveOptionBorder: inputActiveOptionBorderColor,
+            inputActiveOptionBackground: inputActiveOptionBackgroundColor
         }));
         _this._domNode.appendChild(_this.regex.domNode);
         _this._register(_this.regex.onChange(function () {
@@ -115,7 +120,7 @@ var FindOptionsWidget = /** @class */ (function (_super) {
     };
     FindOptionsWidget.prototype.getPosition = function () {
         return {
-            preference: OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
+            preference: 0 /* TOP_RIGHT_CORNER */
         };
     };
     FindOptionsWidget.prototype.highlightFindOptions = function () {
@@ -146,7 +151,10 @@ var FindOptionsWidget = /** @class */ (function (_super) {
         this._domNode.style.display = 'none';
     };
     FindOptionsWidget.prototype._applyTheme = function (theme) {
-        var inputStyles = { inputActiveOptionBorder: theme.getColor(inputActiveOptionBorder) };
+        var inputStyles = {
+            inputActiveOptionBorder: theme.getColor(inputActiveOptionBorder),
+            inputActiveOptionBackground: theme.getColor(inputActiveOptionBackground)
+        };
         this.caseSensitive.style(inputStyles);
         this.wholeWords.style(inputStyles);
         this.regex.style(inputStyles);
@@ -159,6 +167,10 @@ registerThemingParticipant(function (theme, collector) {
     var widgetBackground = theme.getColor(editorWidgetBackground);
     if (widgetBackground) {
         collector.addRule(".monaco-editor .findOptionsWidget { background-color: " + widgetBackground + "; }");
+    }
+    var widgetForeground = theme.getColor(editorWidgetForeground);
+    if (widgetForeground) {
+        collector.addRule(".monaco-editor .findOptionsWidget { color: " + widgetForeground + "; }");
     }
     var widgetShadowColor = theme.getColor(widgetShadow);
     if (widgetShadowColor) {

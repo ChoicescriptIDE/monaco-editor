@@ -2,26 +2,25 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 import './contextview.css';
-import { $ } from '../../builder.js';
 import * as DOM from '../../dom.js';
-import { dispose, toDisposable } from '../../../common/lifecycle.js';
-export var AnchorAlignment;
-(function (AnchorAlignment) {
-    AnchorAlignment[AnchorAlignment["LEFT"] = 0] = "LEFT";
-    AnchorAlignment[AnchorAlignment["RIGHT"] = 1] = "RIGHT";
-})(AnchorAlignment || (AnchorAlignment = {}));
-export var AnchorPosition;
-(function (AnchorPosition) {
-    AnchorPosition[AnchorPosition["BELOW"] = 0] = "BELOW";
-    AnchorPosition[AnchorPosition["ABOVE"] = 1] = "ABOVE";
-})(AnchorPosition || (AnchorPosition = {}));
-export var LayoutAnchorPosition;
-(function (LayoutAnchorPosition) {
-    LayoutAnchorPosition[LayoutAnchorPosition["Before"] = 0] = "Before";
-    LayoutAnchorPosition[LayoutAnchorPosition["After"] = 1] = "After";
-})(LayoutAnchorPosition || (LayoutAnchorPosition = {}));
+import * as platform from '../../../common/platform.js';
+import { toDisposable, Disposable, DisposableStore } from '../../../common/lifecycle.js';
+import { Range } from '../../../common/range.js';
+import { BrowserFeatures } from '../../canIUse.js';
 /**
  * Lays out a one dimensional view next to an anchor in a viewport.
  *
@@ -29,7 +28,7 @@ export var LayoutAnchorPosition;
  */
 export function layout(viewportSize, viewSize, anchor) {
     var anchorEnd = anchor.offset + anchor.size;
-    if (anchor.position === LayoutAnchorPosition.Before) {
+    if (anchor.position === 0 /* Before */) {
         if (viewSize <= viewportSize - anchorEnd) {
             return anchorEnd; // happy case, lay it out after the anchor
         }
@@ -48,33 +47,42 @@ export function layout(viewportSize, viewSize, anchor) {
         return 0; // sad case, lay it over the anchor
     }
 }
-var ContextView = /** @class */ (function () {
+var ContextView = /** @class */ (function (_super) {
+    __extends(ContextView, _super);
     function ContextView(container) {
-        var _this = this;
-        this.$view = $('.context-view').hide();
-        this.setContainer(container);
-        this.toDispose = [toDisposable(function () {
-                _this.setContainer(null);
-            })];
-        this.toDisposeOnClean = null;
+        var _this = _super.call(this) || this;
+        _this.container = null;
+        _this.delegate = null;
+        _this.toDisposeOnClean = Disposable.None;
+        _this.toDisposeOnSetContainer = Disposable.None;
+        _this.view = DOM.$('.context-view');
+        DOM.hide(_this.view);
+        _this.setContainer(container);
+        _this._register(toDisposable(function () { return _this.setContainer(null); }));
+        return _this;
     }
     ContextView.prototype.setContainer = function (container) {
         var _this = this;
-        if (this.$container) {
-            this.$container.getHTMLElement().removeChild(this.$view.getHTMLElement());
-            this.$container.off(ContextView.BUBBLE_UP_EVENTS);
-            this.$container.off(ContextView.BUBBLE_DOWN_EVENTS, true);
-            this.$container = null;
+        if (this.container) {
+            this.toDisposeOnSetContainer.dispose();
+            this.container.removeChild(this.view);
+            this.container = null;
         }
         if (container) {
-            this.$container = $(container);
-            this.$view.appendTo(this.$container);
-            this.$container.on(ContextView.BUBBLE_UP_EVENTS, function (e) {
-                _this.onDOMEvent(e, document.activeElement, false);
+            this.container = container;
+            this.container.appendChild(this.view);
+            var toDisposeOnSetContainer_1 = new DisposableStore();
+            ContextView.BUBBLE_UP_EVENTS.forEach(function (event) {
+                toDisposeOnSetContainer_1.add(DOM.addStandardDisposableListener(_this.container, event, function (e) {
+                    _this.onDOMEvent(e, false);
+                }));
             });
-            this.$container.on(ContextView.BUBBLE_DOWN_EVENTS, function (e) {
-                _this.onDOMEvent(e, document.activeElement, true);
-            }, null, true);
+            ContextView.BUBBLE_DOWN_EVENTS.forEach(function (event) {
+                toDisposeOnSetContainer_1.add(DOM.addStandardDisposableListener(_this.container, event, function (e) {
+                    _this.onDOMEvent(e, true);
+                }, true));
+            });
+            this.toDisposeOnSetContainer = toDisposeOnSetContainer_1;
         }
     };
     ContextView.prototype.show = function (delegate) {
@@ -82,19 +90,27 @@ var ContextView = /** @class */ (function () {
             this.hide();
         }
         // Show static box
-        this.$view.setClass('context-view').empty().style({ top: '0px', left: '0px' }).show();
+        DOM.clearNode(this.view);
+        this.view.className = 'context-view';
+        this.view.style.top = '0px';
+        this.view.style.left = '0px';
+        DOM.show(this.view);
         // Render content
-        this.toDisposeOnClean = delegate.render(this.$view.getHTMLElement());
+        this.toDisposeOnClean = delegate.render(this.view) || Disposable.None;
         // Set active delegate
         this.delegate = delegate;
         // Layout
         this.doLayout();
+        // Focus
+        if (this.delegate.focus) {
+            this.delegate.focus();
+        }
     };
     ContextView.prototype.layout = function () {
         if (!this.isVisible()) {
             return;
         }
-        if (this.delegate.canRelayout === false) {
+        if (this.delegate.canRelayout === false && !(platform.isIOS && BrowserFeatures.pointerEvents)) {
             this.hide();
             return;
         }
@@ -104,6 +120,10 @@ var ContextView = /** @class */ (function () {
         this.doLayout();
     };
     ContextView.prototype.doLayout = function () {
+        // Check that we still have a delegate - this.delegate.layout may have hidden
+        if (!this.isVisible()) {
+            return;
+        }
         // Get anchor
         var anchor = this.delegate.getAnchor();
         // Compute around
@@ -119,63 +139,70 @@ var ContextView = /** @class */ (function () {
             };
         }
         else {
-            var realAnchor = anchor;
             around = {
-                top: realAnchor.y,
-                left: realAnchor.x,
-                width: realAnchor.width || 0,
-                height: realAnchor.height || 0
+                top: anchor.y,
+                left: anchor.x,
+                width: anchor.width || 1,
+                height: anchor.height || 2
             };
         }
-        var viewSize = this.$view.getTotalSize();
-        var anchorPosition = this.delegate.anchorPosition || AnchorPosition.BELOW;
-        var anchorAlignment = this.delegate.anchorAlignment || AnchorAlignment.LEFT;
-        var verticalAnchor = { offset: around.top, size: around.height, position: anchorPosition === AnchorPosition.BELOW ? LayoutAnchorPosition.Before : LayoutAnchorPosition.After };
+        var viewSizeWidth = DOM.getTotalWidth(this.view);
+        var viewSizeHeight = DOM.getTotalHeight(this.view);
+        var anchorPosition = this.delegate.anchorPosition || 0 /* BELOW */;
+        var anchorAlignment = this.delegate.anchorAlignment || 0 /* LEFT */;
+        var verticalAnchor = { offset: around.top - window.pageYOffset, size: around.height, position: anchorPosition === 0 /* BELOW */ ? 0 /* Before */ : 1 /* After */ };
         var horizontalAnchor;
-        if (anchorAlignment === AnchorAlignment.LEFT) {
-            horizontalAnchor = { offset: around.left, size: 0, position: LayoutAnchorPosition.Before };
+        if (anchorAlignment === 0 /* LEFT */) {
+            horizontalAnchor = { offset: around.left, size: 0, position: 0 /* Before */ };
         }
         else {
-            horizontalAnchor = { offset: around.left + around.width, size: 0, position: LayoutAnchorPosition.After };
+            horizontalAnchor = { offset: around.left + around.width, size: 0, position: 1 /* After */ };
         }
-        var containerPosition = DOM.getDomNodePagePosition(this.$container.getHTMLElement());
-        var top = layout(window.innerHeight, viewSize.height, verticalAnchor) - containerPosition.top;
-        var left = layout(window.innerWidth, viewSize.width, horizontalAnchor) - containerPosition.left;
-        this.$view.removeClass('top', 'bottom', 'left', 'right');
-        this.$view.addClass(anchorPosition === AnchorPosition.BELOW ? 'bottom' : 'top');
-        this.$view.addClass(anchorAlignment === AnchorAlignment.LEFT ? 'left' : 'right');
-        this.$view.style({ top: top + "px", left: left + "px", width: 'initial' });
+        var top = layout(window.innerHeight, viewSizeHeight, verticalAnchor) + window.pageYOffset;
+        // if view intersects vertically with anchor, shift it horizontally
+        if (Range.intersects({ start: top, end: top + viewSizeHeight }, { start: verticalAnchor.offset, end: verticalAnchor.offset + verticalAnchor.size })) {
+            horizontalAnchor.size = around.width;
+            if (anchorAlignment === 1 /* RIGHT */) {
+                horizontalAnchor.offset = around.left;
+            }
+        }
+        var left = layout(window.innerWidth, viewSizeWidth, horizontalAnchor);
+        DOM.removeClasses(this.view, 'top', 'bottom', 'left', 'right');
+        DOM.addClass(this.view, anchorPosition === 0 /* BELOW */ ? 'bottom' : 'top');
+        DOM.addClass(this.view, anchorAlignment === 0 /* LEFT */ ? 'left' : 'right');
+        var containerPosition = DOM.getDomNodePagePosition(this.container);
+        this.view.style.top = top - containerPosition.top + "px";
+        this.view.style.left = left - containerPosition.left + "px";
+        this.view.style.width = 'initial';
     };
     ContextView.prototype.hide = function (data) {
-        if (this.delegate && this.delegate.onHide) {
-            this.delegate.onHide(data);
-        }
+        var delegate = this.delegate;
         this.delegate = null;
-        if (this.toDisposeOnClean) {
-            this.toDisposeOnClean.dispose();
-            this.toDisposeOnClean = null;
+        if (delegate === null || delegate === void 0 ? void 0 : delegate.onHide) {
+            delegate.onHide(data);
         }
-        this.$view.hide();
+        this.toDisposeOnClean.dispose();
+        DOM.hide(this.view);
     };
     ContextView.prototype.isVisible = function () {
         return !!this.delegate;
     };
-    ContextView.prototype.onDOMEvent = function (e, element, onCapture) {
+    ContextView.prototype.onDOMEvent = function (e, onCapture) {
         if (this.delegate) {
             if (this.delegate.onDOMEvent) {
                 this.delegate.onDOMEvent(e, document.activeElement);
             }
-            else if (onCapture && !DOM.isAncestor(e.target, this.$container.getHTMLElement())) {
+            else if (onCapture && !DOM.isAncestor(e.target, this.container)) {
                 this.hide();
             }
         }
     };
     ContextView.prototype.dispose = function () {
         this.hide();
-        this.toDispose = dispose(this.toDispose);
+        _super.prototype.dispose.call(this);
     };
     ContextView.BUBBLE_UP_EVENTS = ['click', 'keydown', 'focus', 'blur'];
     ContextView.BUBBLE_DOWN_EVENTS = ['click'];
     return ContextView;
-}());
+}(Disposable));
 export { ContextView };

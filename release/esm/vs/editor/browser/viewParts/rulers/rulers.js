@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -16,8 +18,8 @@ var __extends = (this && this.__extends) || (function () {
 import './rulers.css';
 import { createFastDomNode } from '../../../../base/browser/fastDomNode.js';
 import { ViewPart } from '../../view/viewPart.js';
-import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 import { editorRuler } from '../../../common/view/editorColorRegistry.js';
+import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 var Rulers = /** @class */ (function (_super) {
     __extends(Rulers, _super);
     function Rulers(context) {
@@ -27,8 +29,9 @@ var Rulers = /** @class */ (function (_super) {
         _this.domNode.setAttribute('aria-hidden', 'true');
         _this.domNode.setClassName('view-rulers');
         _this._renderedRulers = [];
-        _this._rulers = _this._context.configuration.editor.viewInfo.rulers;
-        _this._typicalHalfwidthCharacterWidth = _this._context.configuration.editor.fontInfo.typicalHalfwidthCharacterWidth;
+        var options = _this._context.configuration.options;
+        _this._rulers = options.get(77 /* rulers */);
+        _this._typicalHalfwidthCharacterWidth = options.get(34 /* fontInfo */).typicalHalfwidthCharacterWidth;
         return _this;
     }
     Rulers.prototype.dispose = function () {
@@ -36,12 +39,10 @@ var Rulers = /** @class */ (function (_super) {
     };
     // --- begin event handlers
     Rulers.prototype.onConfigurationChanged = function (e) {
-        if (e.viewInfo || e.layoutInfo || e.fontInfo) {
-            this._rulers = this._context.configuration.editor.viewInfo.rulers;
-            this._typicalHalfwidthCharacterWidth = this._context.configuration.editor.fontInfo.typicalHalfwidthCharacterWidth;
-            return true;
-        }
-        return false;
+        var options = this._context.configuration.options;
+        this._rulers = options.get(77 /* rulers */);
+        this._typicalHalfwidthCharacterWidth = options.get(34 /* fontInfo */).typicalHalfwidthCharacterWidth;
+        return true;
     };
     Rulers.prototype.onScrollChanged = function (e) {
         return e.scrollHeightChanged;
@@ -58,7 +59,8 @@ var Rulers = /** @class */ (function (_super) {
             return;
         }
         if (currentCount < desiredCount) {
-            var rulerWidth = this._context.model.getTabSize();
+            var tabSize = this._context.model.getOptions().tabSize;
+            var rulerWidth = tabSize;
             var addCount = desiredCount - currentCount;
             while (addCount > 0) {
                 var node = createFastDomNode(document.createElement('div'));

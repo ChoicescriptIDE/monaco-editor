@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,12 +16,11 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as nls from '../../../nls.js';
-import { isLowSurrogate, isHighSurrogate } from '../../../base/common/strings.js';
-import { Range } from '../../common/core/range.js';
-import { Position } from '../../common/core/position.js';
-import { EditorContextKeys } from '../../common/editorContextKeys.js';
-import { registerEditorAction, EditorAction } from '../../browser/editorExtensions.js';
+import { EditorAction, registerEditorAction } from '../../browser/editorExtensions.js';
 import { ReplaceCommand } from '../../common/commands/replaceCommand.js';
+import { Range } from '../../common/core/range.js';
+import { EditorContextKeys } from '../../common/editorContextKeys.js';
+import { MoveOperations } from '../../common/controller/cursorMoveOperations.js';
 var TransposeLettersAction = /** @class */ (function (_super) {
     __extends(TransposeLettersAction, _super);
     function TransposeLettersAction() {
@@ -38,43 +39,10 @@ var TransposeLettersAction = /** @class */ (function (_super) {
             }
         }) || this;
     }
-    TransposeLettersAction.prototype.positionLeftOf = function (start, model) {
-        var column = start.column;
-        var lineNumber = start.lineNumber;
-        if (column > model.getLineMinColumn(lineNumber)) {
-            if (isLowSurrogate(model.getLineContent(lineNumber).charCodeAt(column - 2))) {
-                // character before column is a low surrogate
-                column = column - 2;
-            }
-            else {
-                column = column - 1;
-            }
-        }
-        else if (lineNumber > 1) {
-            lineNumber = lineNumber - 1;
-            column = model.getLineMaxColumn(lineNumber);
-        }
-        return new Position(lineNumber, column);
-    };
-    TransposeLettersAction.prototype.positionRightOf = function (start, model) {
-        var column = start.column;
-        var lineNumber = start.lineNumber;
-        if (column < model.getLineMaxColumn(lineNumber)) {
-            if (isHighSurrogate(model.getLineContent(lineNumber).charCodeAt(column - 1))) {
-                // character after column is a high surrogate
-                column = column + 2;
-            }
-            else {
-                column = column + 1;
-            }
-        }
-        else if (lineNumber < model.getLineCount()) {
-            lineNumber = lineNumber + 1;
-            column = 0;
-        }
-        return new Position(lineNumber, column);
-    };
     TransposeLettersAction.prototype.run = function (accessor, editor) {
+        if (!editor.hasModel()) {
+            return;
+        }
         var model = editor.getModel();
         var commands = [];
         var selections = editor.getSelections();
@@ -94,9 +62,9 @@ var TransposeLettersAction = /** @class */ (function (_super) {
             // otherwise, transpose left and right chars
             var endPosition = (column === lastColumn) ?
                 selection.getPosition() :
-                this.positionRightOf(selection.getPosition(), model);
-            var middlePosition = this.positionLeftOf(endPosition, model);
-            var beginPosition = this.positionLeftOf(middlePosition, model);
+                MoveOperations.rightPosition(model, selection.getPosition().lineNumber, selection.getPosition().column);
+            var middlePosition = MoveOperations.leftPosition(model, endPosition.lineNumber, endPosition.column);
+            var beginPosition = MoveOperations.leftPosition(model, middlePosition.lineNumber, middlePosition.column);
             var leftChar = model.getValueInRange(Range.fromPositions(beginPosition, middlePosition));
             var rightChar = model.getValueInRange(Range.fromPositions(middlePosition, endPosition));
             var replaceRange = Range.fromPositions(beginPosition, endPosition);

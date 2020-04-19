@@ -2,12 +2,15 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { Range } from '../../common/core/range.js';
 var MoveCaretCommand = /** @class */ (function () {
     function MoveCaretCommand(selection, isMovingLeft) {
         this._selection = selection;
         this._isMovingLeft = isMovingLeft;
+        this._cutStartIndex = -1;
+        this._cutEndIndex = -1;
+        this._moved = false;
+        this._selectionId = null;
     }
     MoveCaretCommand.prototype.getEditOperations = function (model, builder) {
         var s = this._selection;

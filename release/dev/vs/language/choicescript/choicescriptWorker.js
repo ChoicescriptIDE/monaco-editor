@@ -62,6 +62,7 @@
         TokenType[TokenType["Builtin"] = 44] = "Builtin";
         TokenType[TokenType["Invalid"] = 45] = "Invalid";
         TokenType[TokenType["Word"] = 46] = "Word";
+        TokenType[TokenType["Dollar"] = 47] = "Dollar";
     })(TokenType = exports.TokenType || (exports.TokenType = {}));
     var MultiLineStream = /** @class */ (function () {
         function MultiLineStream(source) {
@@ -176,6 +177,7 @@
     var _CMA = ','.charCodeAt(0);
     var _DOT = '.'.charCodeAt(0);
     var _BNG = '!'.charCodeAt(0);
+    var _AST = '*'.charCodeAt(0);
     var staticTokenTable = {};
     staticTokenTable[_SEM] = TokenType.SemiColon;
     staticTokenTable[_COL] = TokenType.Colon;
@@ -186,6 +188,7 @@
     staticTokenTable[_LPA] = TokenType.ParenthesisL;
     staticTokenTable[_RPA] = TokenType.ParenthesisR;
     staticTokenTable[_CMA] = TokenType.Comma;
+    staticTokenTable[_DLR] = TokenType.Dollar;
     var staticUnitTable = {};
     staticUnitTable['em'] = TokenType.EMS;
     staticUnitTable['ex'] = TokenType.EXS;
@@ -242,7 +245,7 @@
             return null;
         };
         Scanner.prototype.scan = function () {
-            // processes all whitespaces and comments... BUT NOT NEW LINES
+            // processes all whitespaces and comments... BUT NOT NEW LINES (or does it now?! CJW)
             var triviaToken = this.trivia();
             if (triviaToken !== null) {
                 return triviaToken;
@@ -255,6 +258,11 @@
             return this.scanNext(offset);
         };
         Scanner.prototype.scanNext = function (offset) {
+            var content = [];
+            // newlines
+            if (this._newline(content)) {
+                return this.finishToken(offset, TokenType.EOL, content.join(''));
+            }
             // Comment
             if (this.stream.advanceIfChars([_MUL, _c, _o, _m, _m, _e, _n, _t])) {
                 var n = this.stream.advanceWhileChar(function (ch) {
@@ -263,7 +271,7 @@
                 var t = this.finishToken(offset, TokenType.SingleLineComment);
                 return (n > 0) ? t : null;
             }
-            var content = [];
+            // Command
             if (this.stream.advanceIfChar(_MUL)) {
                 content = ['*'];
                 if (this._name(content)) {
@@ -276,9 +284,19 @@
                     return this.finishToken(offset, TokenType.Invalid, content.join(''));
                 }
             }
-            // newlines
-            if (this._newline(content)) {
-                return this.finishToken(offset, TokenType.EOL, content.join(''));
+            else {
+                if (this.ident(content)) {
+                    return this.finishToken(offset, TokenType.Ident, content.join(''));
+                }
+                else if (this._word()) {
+                    return this.finishToken(offset, TokenType.Word);
+                }
+            }
+            // String, BadString
+            content = [];
+            var tokenType = this._string(content);
+            if (tokenType !== null) {
+                return this.finishToken(offset, tokenType, content.join(''));
             }
             // hash
             if (this.stream.advanceIfChar(_HSH)) {
@@ -312,9 +330,11 @@
                 }
                 return this.finishToken(offset, TokenType.Num);
             }
-            // Word
-            if (this._word()) {
-                return this.finishToken(offset, TokenType.Word);
+            // Brackets, commas, etc.
+            tokenType = staticTokenTable[this.stream.peekChar()];
+            if (typeof tokenType !== 'undefined') {
+                this.stream.advance(1);
+                return this.finishToken(offset, tokenType);
             }
             // Delim
             this.stream.nextChar();
@@ -391,10 +411,13 @@
         Scanner.prototype._word = function () {
             var npeek = 0, ch;
             ch = this.stream.peekChar(npeek);
-            if ((ch >= _A && ch <= _Z) || (ch >= _a && ch <= _z)) {
+            if ((ch >= _A && ch <= _Z) ||
+                (ch >= _a && ch <= _z)) {
                 this.stream.advance(npeek + 1);
                 this.stream.advanceWhileChar(function (ch) {
-                    return ((ch >= _A && ch <= _Z) || (ch >= _a && ch <= _z));
+                    return ((ch >= _A && ch <= _Z) ||
+                        (ch >= _a && ch <= _z) ||
+                        (ch === _SQO)); // FIXME: Handle apostrophes with some measure of grace
                 });
                 return true;
             }
@@ -609,72 +632,74 @@ var __extends = (this && this.__extends) || (function () {
     var NodeType;
     (function (NodeType) {
         NodeType[NodeType["Undefined"] = 0] = "Undefined";
-        NodeType[NodeType["Identifier"] = 1] = "Identifier";
-        NodeType[NodeType["Scene"] = 2] = "Scene";
-        NodeType[NodeType["Line"] = 3] = "Line";
-        NodeType[NodeType["ChoiceScriptStatement"] = 4] = "ChoiceScriptStatement";
-        NodeType[NodeType["StringLiteral"] = 5] = "StringLiteral";
-        NodeType[NodeType["Operator"] = 6] = "Operator";
-        NodeType[NodeType["Expression"] = 7] = "Expression";
-        NodeType[NodeType["BinaryExpression"] = 8] = "BinaryExpression";
-        NodeType[NodeType["Term"] = 9] = "Term";
-        NodeType[NodeType["Value"] = 10] = "Value";
-        NodeType[NodeType["RealWord"] = 11] = "RealWord";
-        NodeType[NodeType["TextLine"] = 12] = "TextLine";
-        NodeType[NodeType["ChoiceCommand"] = 13] = "ChoiceCommand";
-        NodeType[NodeType["ChoiceOption"] = 14] = "ChoiceOption";
-        NodeType[NodeType["MultiReplace"] = 15] = "MultiReplace";
-        NodeType[NodeType["PrintVariable"] = 16] = "PrintVariable";
-        NodeType[NodeType["NumericValue"] = 17] = "NumericValue";
-        NodeType[NodeType["Boolean"] = 18] = "Boolean";
-        NodeType[NodeType["Indentation"] = 19] = "Indentation";
-        NodeType[NodeType["VariableDeclaration"] = 20] = "VariableDeclaration";
-        NodeType[NodeType["FlowCommand"] = 21] = "FlowCommand";
+        NodeType[NodeType["ChoiceScriptComment"] = 1] = "ChoiceScriptComment";
+        NodeType[NodeType["Identifier"] = 2] = "Identifier";
+        NodeType[NodeType["Scene"] = 3] = "Scene";
+        NodeType[NodeType["Line"] = 4] = "Line";
+        NodeType[NodeType["Label"] = 5] = "Label";
+        NodeType[NodeType["ChoiceScriptLine"] = 6] = "ChoiceScriptLine";
+        NodeType[NodeType["ChoiceScriptStatement"] = 7] = "ChoiceScriptStatement";
+        NodeType[NodeType["TextLine"] = 8] = "TextLine";
+        NodeType[NodeType["StringLiteral"] = 9] = "StringLiteral";
+        NodeType[NodeType["Operator"] = 10] = "Operator";
+        NodeType[NodeType["Expression"] = 11] = "Expression";
+        NodeType[NodeType["BinaryExpression"] = 12] = "BinaryExpression";
+        NodeType[NodeType["Term"] = 13] = "Term";
+        NodeType[NodeType["Value"] = 14] = "Value";
+        NodeType[NodeType["RealWord"] = 15] = "RealWord";
+        NodeType[NodeType["ChoiceCommand"] = 16] = "ChoiceCommand";
+        NodeType[NodeType["ChoiceOption"] = 17] = "ChoiceOption";
+        NodeType[NodeType["MultiReplace"] = 18] = "MultiReplace";
+        NodeType[NodeType["PrintVariable"] = 19] = "PrintVariable";
+        NodeType[NodeType["NumericValue"] = 20] = "NumericValue";
+        NodeType[NodeType["Boolean"] = 21] = "Boolean";
+        NodeType[NodeType["Indentation"] = 22] = "Indentation";
+        NodeType[NodeType["VariableDeclaration"] = 23] = "VariableDeclaration";
+        NodeType[NodeType["LabelDeclaration"] = 24] = "LabelDeclaration";
+        NodeType[NodeType["FlowCommand"] = 25] = "FlowCommand";
         // ...
-        NodeType[NodeType["HexColorValue"] = 22] = "HexColorValue";
-        NodeType[NodeType["CreateVariable"] = 23] = "CreateVariable";
-        NodeType[NodeType["If"] = 24] = "If";
-        NodeType[NodeType["Else"] = 25] = "Else";
-        NodeType[NodeType["For"] = 26] = "For";
-        NodeType[NodeType["Each"] = 27] = "Each";
-        NodeType[NodeType["While"] = 28] = "While";
-        NodeType[NodeType["MixinContent"] = 29] = "MixinContent";
-        NodeType[NodeType["Media"] = 30] = "Media";
-        NodeType[NodeType["Keyframe"] = 31] = "Keyframe";
-        NodeType[NodeType["FontFace"] = 32] = "FontFace";
-        NodeType[NodeType["Import"] = 33] = "Import";
-        NodeType[NodeType["Namespace"] = 34] = "Namespace";
-        NodeType[NodeType["Invocation"] = 35] = "Invocation";
-        NodeType[NodeType["FunctionDeclaration"] = 36] = "FunctionDeclaration";
-        NodeType[NodeType["ReturnStatement"] = 37] = "ReturnStatement";
-        NodeType[NodeType["MediaQuery"] = 38] = "MediaQuery";
-        NodeType[NodeType["FunctionParameter"] = 39] = "FunctionParameter";
-        NodeType[NodeType["FunctionArgument"] = 40] = "FunctionArgument";
-        NodeType[NodeType["KeyframeSelector"] = 41] = "KeyframeSelector";
-        NodeType[NodeType["ViewPort"] = 42] = "ViewPort";
-        NodeType[NodeType["Document"] = 43] = "Document";
-        NodeType[NodeType["AtApplyRule"] = 44] = "AtApplyRule";
-        NodeType[NodeType["CustomPropertyDeclaration"] = 45] = "CustomPropertyDeclaration";
-        NodeType[NodeType["CustomPropertySet"] = 46] = "CustomPropertySet";
-        NodeType[NodeType["ListEntry"] = 47] = "ListEntry";
-        NodeType[NodeType["Supports"] = 48] = "Supports";
-        NodeType[NodeType["SupportsCondition"] = 49] = "SupportsCondition";
-        NodeType[NodeType["NamespacePrefix"] = 50] = "NamespacePrefix";
-        NodeType[NodeType["GridLine"] = 51] = "GridLine";
-        NodeType[NodeType["Plugin"] = 52] = "Plugin";
-        NodeType[NodeType["UnknownAtRule"] = 53] = "UnknownAtRule";
-        NodeType[NodeType["Command"] = 54] = "Command";
-        NodeType[NodeType["StandardCommand"] = 55] = "StandardCommand";
-        NodeType[NodeType["InvalidBuiltin"] = 56] = "InvalidBuiltin";
+        NodeType[NodeType["HexColorValue"] = 26] = "HexColorValue";
+        NodeType[NodeType["Variable"] = 27] = "Variable";
+        NodeType[NodeType["CreateVariable"] = 28] = "CreateVariable";
+        NodeType[NodeType["If"] = 29] = "If";
+        NodeType[NodeType["Else"] = 30] = "Else";
+        NodeType[NodeType["For"] = 31] = "For";
+        NodeType[NodeType["Each"] = 32] = "Each";
+        NodeType[NodeType["While"] = 33] = "While";
+        NodeType[NodeType["MixinContent"] = 34] = "MixinContent";
+        NodeType[NodeType["Media"] = 35] = "Media";
+        NodeType[NodeType["Keyframe"] = 36] = "Keyframe";
+        NodeType[NodeType["FontFace"] = 37] = "FontFace";
+        NodeType[NodeType["Import"] = 38] = "Import";
+        NodeType[NodeType["Namespace"] = 39] = "Namespace";
+        NodeType[NodeType["Invocation"] = 40] = "Invocation";
+        NodeType[NodeType["FunctionDeclaration"] = 41] = "FunctionDeclaration";
+        NodeType[NodeType["ReturnStatement"] = 42] = "ReturnStatement";
+        NodeType[NodeType["MediaQuery"] = 43] = "MediaQuery";
+        NodeType[NodeType["FunctionParameter"] = 44] = "FunctionParameter";
+        NodeType[NodeType["FunctionArgument"] = 45] = "FunctionArgument";
+        NodeType[NodeType["KeyframeSelector"] = 46] = "KeyframeSelector";
+        NodeType[NodeType["ViewPort"] = 47] = "ViewPort";
+        NodeType[NodeType["Document"] = 48] = "Document";
+        NodeType[NodeType["AtApplyRule"] = 49] = "AtApplyRule";
+        NodeType[NodeType["CustomPropertyDeclaration"] = 50] = "CustomPropertyDeclaration";
+        NodeType[NodeType["CustomPropertySet"] = 51] = "CustomPropertySet";
+        NodeType[NodeType["ListEntry"] = 52] = "ListEntry";
+        NodeType[NodeType["Supports"] = 53] = "Supports";
+        NodeType[NodeType["SupportsCondition"] = 54] = "SupportsCondition";
+        NodeType[NodeType["NamespacePrefix"] = 55] = "NamespacePrefix";
+        NodeType[NodeType["GridLine"] = 56] = "GridLine";
+        NodeType[NodeType["Plugin"] = 57] = "Plugin";
+        NodeType[NodeType["UnknownAtRule"] = 58] = "UnknownAtRule";
+        NodeType[NodeType["Command"] = 59] = "Command";
+        NodeType[NodeType["StandardCommand"] = 60] = "StandardCommand";
+        NodeType[NodeType["InvalidBuiltin"] = 61] = "InvalidBuiltin";
     })(NodeType = exports.NodeType || (exports.NodeType = {}));
     var ReferenceType;
     (function (ReferenceType) {
-        ReferenceType[ReferenceType["Mixin"] = 0] = "Mixin";
-        ReferenceType[ReferenceType["Rule"] = 1] = "Rule";
-        ReferenceType[ReferenceType["Variable"] = 2] = "Variable";
-        ReferenceType[ReferenceType["Function"] = 3] = "Function";
-        ReferenceType[ReferenceType["Keyframe"] = 4] = "Keyframe";
-        ReferenceType[ReferenceType["Unknown"] = 5] = "Unknown";
+        ReferenceType[ReferenceType["Label"] = 0] = "Label";
+        ReferenceType[ReferenceType["Variable"] = 1] = "Variable";
+        ReferenceType[ReferenceType["Unknown"] = 2] = "Unknown";
     })(ReferenceType = exports.ReferenceType || (exports.ReferenceType = {}));
     function getNodeAtOffset(node, offset) {
         var candidate = null;
@@ -948,6 +973,21 @@ var __extends = (this && this.__extends) || (function () {
         return ChoiceScriptStatement;
     }(Node));
     exports.ChoiceScriptStatement = ChoiceScriptStatement;
+    var ChoiceScriptComment = /** @class */ (function (_super) {
+        __extends(ChoiceScriptComment, _super);
+        function ChoiceScriptComment() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        Object.defineProperty(ChoiceScriptComment.prototype, "type", {
+            get: function () {
+                return NodeType.ChoiceScriptComment;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return ChoiceScriptComment;
+    }(Node));
+    exports.ChoiceScriptComment = ChoiceScriptComment;
     var Identifier = /** @class */ (function (_super) {
         __extends(Identifier, _super);
         function Identifier(offset, length) {
@@ -988,6 +1028,7 @@ var __extends = (this && this.__extends) || (function () {
     exports.Scene = Scene;
     var Command = /** @class */ (function (_super) {
         __extends(Command, _super);
+        // FIXME could we get a clever way of generic handling/modelling of params/args here?
         function Command(offset, length) {
             return _super.call(this, offset, length) || this;
         }
@@ -1001,6 +1042,24 @@ var __extends = (this && this.__extends) || (function () {
         return Command;
     }(Node));
     exports.Command = Command;
+    var Label = /** @class */ (function (_super) {
+        __extends(Label, _super);
+        function Label(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Label.prototype, "type", {
+            get: function () {
+                return NodeType.Label;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Label.prototype.getName = function () {
+            return this.name || this.getText();
+        };
+        return Label;
+    }(Command));
+    exports.Label = Label;
     var StandardCommand = /** @class */ (function (_super) {
         __extends(StandardCommand, _super);
         function StandardCommand(offset, length) {
@@ -1031,8 +1090,41 @@ var __extends = (this && this.__extends) || (function () {
         return FlowCommand;
     }(Command));
     exports.FlowCommand = FlowCommand;
+    var SetCommand = /** @class */ (function (_super) {
+        __extends(SetCommand, _super);
+        // FIXME: Getters?
+        function SetCommand(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        SetCommand.prototype.setVariable = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.variable = node;
+                return true;
+            }
+            return false;
+        };
+        SetCommand.prototype.setValue = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.value = node;
+                return true;
+            }
+            return false;
+        };
+        Object.defineProperty(SetCommand.prototype, "type", {
+            get: function () {
+                return NodeType.FlowCommand;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return SetCommand;
+    }(Command));
+    exports.SetCommand = SetCommand;
     var ChoiceCommand = /** @class */ (function (_super) {
         __extends(ChoiceCommand, _super);
+        // FIXME member array for choice options?
         function ChoiceCommand(offset, length) {
             return _super.call(this, offset, length) || this;
         }
@@ -1076,14 +1168,40 @@ var __extends = (this && this.__extends) || (function () {
         return RealWord;
     }(Node));
     exports.RealWord = RealWord;
+    var Line = /** @class */ (function (_super) {
+        __extends(Line, _super);
+        function Line(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Line.prototype.getLineNum = function () {
+            return this.lineNumber;
+        };
+        Line.prototype.setLineNum = function (lineNum) {
+            if (lineNum > 0) {
+                this.lineNumber = lineNum;
+                return true;
+            }
+            return false;
+        };
+        return Line;
+    }(Node));
+    exports.Line = Line;
     var TextLine = /** @class */ (function (_super) {
         __extends(TextLine, _super);
         function TextLine(offset, length) {
             return _super.call(this, offset, length) || this;
         }
         return TextLine;
-    }(Node));
+    }(Line));
     exports.TextLine = TextLine;
+    var ChoiceScriptLine = /** @class */ (function (_super) {
+        __extends(ChoiceScriptLine, _super);
+        function ChoiceScriptLine(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        return ChoiceScriptLine;
+    }(Line));
+    exports.ChoiceScriptLine = ChoiceScriptLine;
     var AtApplyRule = /** @class */ (function (_super) {
         __extends(AtApplyRule, _super);
         function AtApplyRule(offset, length) {
@@ -1440,6 +1558,32 @@ var __extends = (this && this.__extends) || (function () {
         return VariableDeclaration;
     }(AbstractDeclaration));
     exports.VariableDeclaration = VariableDeclaration;
+    var LabelDeclaration = /** @class */ (function (_super) {
+        __extends(LabelDeclaration, _super);
+        function LabelDeclaration(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(LabelDeclaration.prototype, "type", {
+            get: function () {
+                return NodeType.LabelDeclaration;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LabelDeclaration.prototype.setLabel = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.label = node;
+                return true;
+            }
+            return false;
+        };
+        LabelDeclaration.prototype.getLabel = function () {
+            return this.label;
+        };
+        return LabelDeclaration;
+    }(AbstractDeclaration));
+    exports.LabelDeclaration = LabelDeclaration;
     var Variable = /** @class */ (function (_super) {
         __extends(Variable, _super);
         function Variable(offset, length) {
@@ -1454,6 +1598,9 @@ var __extends = (this && this.__extends) || (function () {
         });
         Variable.prototype.getName = function () {
             return this.getText();
+        };
+        Variable.prototype.getValue = function () {
+            return this.value;
         };
         return Variable;
     }(Node));
@@ -1802,6 +1949,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         PercentageExpected: new CSSIssueType('css-percentageexpected', localize('expected.percentage', "percentage expected")),
         URIOrStringExpected: new CSSIssueType('css-uriorstringexpected', localize('expected.uriorstring', "uri or string expected")),
         URIExpected: new CSSIssueType('css-uriexpected', localize('expected.uri', "URI expected")),
+        LabelNameExpected: new CSSIssueType('cs-labelnamexpected', localize('expected.labelname', "label name expected")),
         VariableNameExpected: new CSSIssueType('css-varnameexpected', localize('expected.varname', "variable name expected")),
         VariableValueExpected: new CSSIssueType('css-varvalueexpected', localize('expected.varvalue', "variable value expected")),
         PropertyValueExpected: new CSSIssueType('css-propertyvalueexpected', localize('expected.propvalue', "property value expected")),
@@ -2020,6 +2168,16 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             }
             return false;
         };
+        Parser.prototype.acceptFromRawTextList = function (keywords) {
+            for (var _i = 0, keywords_2 = keywords; _i < keywords_2.length; _i++) {
+                var keyword = keywords_2[_i];
+                if (keyword.length === this.token.text.length && keyword === this.token.text.toLowerCase()) {
+                    this.consumeToken();
+                    return true;
+                }
+            }
+            return false;
+        };
         Parser.prototype.acceptDelim = function (text) {
             if (this.peekDelim(text)) {
                 this.consumeToken();
@@ -2114,6 +2272,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             return node;
         };
         Parser.prototype._parseScene = function () {
+            var lineNum = 1;
             var node = this.create(nodes.Scene);
             do {
                 var hasMatch = false;
@@ -2122,6 +2281,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
                     var line = this._parseLine();
                     // Hmm...
                     if (line) {
+                        line.setLineNum(lineNum++);
                         node.addChild(line);
                         while (!this.accept(cssScanner_1.TokenType.EOL) && !this.accept(cssScanner_1.TokenType.EOF)) {
                             this.consumeToken();
@@ -2137,28 +2297,47 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             return this.finish(node);
         };
         Parser.prototype._parseLine = function () {
+            var line;
             if (this.peek(cssScanner_1.TokenType.SingleLineComment)) {
-                var node = this.create(nodes.Node);
+                line = this.create(nodes.Line);
+                var comment = this.create(nodes.ChoiceScriptComment);
                 this.consumeToken();
-                return this.finish(node);
+                line.addChild(comment);
             }
             else if (this.peek(cssScanner_1.TokenType.Builtin) || this.peek(cssScanner_1.TokenType.Invalid)) {
-                return this._parseChoiceScriptStatement();
+                line = this.create(nodes.ChoiceScriptLine);
+                line.addChild(this._parseChoiceScriptStatement());
             }
             else {
-                return this._parseTextLine();
+                line = this._parseTextLine();
             }
+            if (line.hasChildren()) {
+                return line;
+            }
+            return null;
         };
         Parser.prototype._parseTextLine = function () {
-            var node = this.createNode(nodes.NodeType.TextLine);
-            while (this.peek(cssScanner_1.TokenType.Word)) {
-                var noder = this.createNode(nodes.NodeType.RealWord);
-                node.addChild(noder);
-                this.consumeToken();
-                this.finish(noder);
+            var textLine = this.create(nodes.TextLine);
+            while (true) {
+                if (textLine.addChild(this._parseWord())) {
+                    continue;
+                }
+                else if (!this.peek(cssScanner_1.TokenType.EOL) && !this.peek(cssScanner_1.TokenType.EOF)) {
+                    // FIXME: Consider adding more than words to the node tree?
+                    this.consumeToken();
+                }
+                else {
+                    break;
+                }
             }
-            if (node.hasChildren()) {
-                return this.finish(node);
+            return textLine;
+        };
+        Parser.prototype._parseWord = function () {
+            // FIXME: Differentiate words and identifiers
+            if (this.peek(cssScanner_1.TokenType.Word) || this.peek(cssScanner_1.TokenType.Ident)) {
+                var word = this.createNode(nodes.NodeType.RealWord);
+                this.consumeToken();
+                return this.finish(word);
             }
             return null;
         };
@@ -2166,10 +2345,72 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             return this._parseChoiceScriptCommand();
         };
         Parser.prototype._parseChoiceScriptCommand = function () {
-            return this._parseChoiceCommand()
+            return this._parseVariableDeclaration()
+                || this._parseLabelDeclaration()
+                || this._parseSetCommand()
+                || this._parseChoiceCommand()
                 || this._parseFlowCommand()
                 || this._parseStandardCommand()
                 || this._parseInvalidCommand();
+        };
+        Parser.prototype._parseLabelDeclaration = function () {
+            var declaration = this.create(nodes.LabelDeclaration);
+            var command = this.create(nodes.FlowCommand);
+            if (!this.acceptOneKeyword(["*label"])) {
+                return null;
+            }
+            declaration.addChild(this.finish(command));
+            if (!declaration.setLabel(this._parseLabel())) {
+                return this.finish(declaration, cssErrors_1.ParseError.LabelNameExpected);
+            }
+            return this.finish(declaration);
+        };
+        Parser.prototype._parseVariableDeclaration = function () {
+            var declaration = this.create(nodes.VariableDeclaration);
+            var command = this.create(nodes.StandardCommand);
+            if (!this.acceptOneKeyword(["*create", "*temp"])) {
+                return null;
+            }
+            declaration.addChild(this.finish(command));
+            if (!declaration.setVariable(this._parseVariable())) {
+                return this.finish(declaration, cssErrors_1.ParseError.VariableNameExpected);
+            }
+            if (!declaration.setValue(this._parseExpr())) {
+                return this.finish(declaration, cssErrors_1.ParseError.VariableValueExpected);
+            }
+            return this.finish(declaration);
+        };
+        Parser.prototype._parseVariable = function () {
+            var node = this.create(nodes.Variable);
+            if (!this.accept(cssScanner_1.TokenType.Ident)) {
+                return null;
+            }
+            return node; // feel like this should be this.finish, but LESS example says otherwise;
+        };
+        Parser.prototype._parseLabel = function () {
+            var node = this.create(nodes.Label);
+            if (!this.accept(cssScanner_1.TokenType.Ident)) {
+                return null;
+            }
+            return node; // feel like this should be this.finish, but LESS example says otherwise;
+        };
+        Parser.prototype._parsePrintVariable = function () {
+            var node = this.create(nodes.Variable);
+            var mark = this.mark();
+            if (!this.accept(cssScanner_1.TokenType.Dollar)) {
+                return null;
+            }
+            if (!this.accept(cssScanner_1.TokenType.CurlyL)) {
+                this.restoreAtMark(mark); // not a print var statement
+                return null;
+            }
+            if (!this.accept(cssScanner_1.TokenType.Ident)) {
+                return this.finish(node, cssErrors_1.ParseError.VariableNameExpected);
+            }
+            if (!this.accept(cssScanner_1.TokenType.CurlyR)) {
+                return this.finish(node, cssErrors_1.ParseError.RightCurlyExpected);
+            }
+            return this.finish(node); // feel like this should be this.finish, but LESS example says otherwise;
         };
         Parser.prototype._parseFlowCommand = function () {
             var node = this.create(nodes.FlowCommand);
@@ -2177,6 +2418,24 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
                 return this.finish(node);
             }
             return null;
+        };
+        Parser.prototype._parseIfCommand = function () {
+            var node = this.create(nodes.Node);
+            if (!this.acceptFromRawTextList(["*if", "*selectable_if"])) {
+                return null;
+            }
+            else {
+                while (!this.peek(cssScanner_1.TokenType.EOL) && !this.peek(cssScanner_1.TokenType.EOF)) {
+                    this.consumeToken();
+                }
+                this.accept(cssScanner_1.TokenType.EOL);
+                return this.finish(node);
+            }
+        };
+        Parser.prototype._parseChoiceLine = function () {
+            // FIXME actually build IF/Option node structure properly.
+            this._parseIfCommand();
+            return this._parseChoiceOption();
         };
         Parser.prototype._parseChoiceOption = function () {
             if (!this.peek(cssScanner_1.TokenType.Hash) && !this.peekDelim('#')) {
@@ -2198,7 +2457,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             var node = this.create(nodes.ChoiceCommand);
             if (this.acceptOneKeyword(["*choice"])) {
                 if (this.accept(cssScanner_1.TokenType.EOL)) {
-                    while (node.addChild(this._parseChoiceOption())) {
+                    while (node.addChild(this._parseChoiceLine())) {
                         this.accept(cssScanner_1.TokenType.EOL); // EOL
                     }
                     if (node.hasChildren()) {
@@ -2211,6 +2470,20 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
                 return this.finish(node, cssErrors_1.ParseError.NoChoiceOption);
             }
             return null;
+        };
+        Parser.prototype._parseSetCommand = function () {
+            var command = this.create(nodes.SetCommand);
+            if (!this.acceptOneKeyword(["*set"])) { // FIXME: not sure a function for every command is scalable
+                return null;
+            }
+            // this is VERY similar to create/temp commands (VariableDeclaration) can they share the logic? FIXME
+            if (!command.setVariable(this._parseVariable())) {
+                return this.finish(command, cssErrors_1.ParseError.VariableNameExpected);
+            }
+            if (!command.setValue(this._parseVariable() || this._parseExpr())) {
+                return this.finish(command, cssErrors_1.ParseError.VariableValueExpected);
+            }
+            return this.finish(command);
         };
         Parser.prototype._parseStandardCommand = function () {
             var node = this.create(nodes.StandardCommand);
@@ -2387,22 +2660,12 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         };
         Parser.prototype._parseExpr = function (stopOnComma) {
             if (stopOnComma === void 0) { stopOnComma = false; }
-            var node = this.create(nodes.Expression);
-            if (!node.addChild(this._parseBinaryExpr())) {
-                return null;
-            }
-            while (true) {
-                if (this.peek(cssScanner_1.TokenType.Comma)) { // optional
-                    if (stopOnComma) {
-                        return this.finish(node);
-                    }
-                    this.consumeToken();
-                }
-                if (!node.addChild(this._parseBinaryExpr())) {
-                    break;
-                }
-            }
-            return this.finish(node);
+            var expr = this._parseStringLiteral()
+                || this._parseNumeric()
+                || this._parseBinaryExpr()
+                || null;
+            return expr;
+            // FIXME support actual expressions, not simple value
         };
         Parser.prototype._parseNamedLine = function () {
             // https://www.w3.org/TR/css-grid-1/#named-lines
@@ -2463,17 +2726,15 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             }
             return this.finish(node);
         };
+        Parser.prototype._parseBoolean = function () {
+            var node = this.create(nodes.BinaryExpression);
+            if (!this.acceptFromRawTextList(["true", "false"])) {
+                return null;
+            }
+            return this.finish(node);
+        };
         Parser.prototype._parseNumeric = function () {
-            if (this.peek(cssScanner_1.TokenType.Num) ||
-                this.peek(cssScanner_1.TokenType.Percentage) ||
-                this.peek(cssScanner_1.TokenType.Resolution) ||
-                this.peek(cssScanner_1.TokenType.Length) ||
-                this.peek(cssScanner_1.TokenType.EMS) ||
-                this.peek(cssScanner_1.TokenType.EXS) ||
-                this.peek(cssScanner_1.TokenType.Angle) ||
-                this.peek(cssScanner_1.TokenType.Time) ||
-                this.peek(cssScanner_1.TokenType.Dimension) ||
-                this.peek(cssScanner_1.TokenType.Freq)) {
+            if (this.peek(cssScanner_1.TokenType.Num)) {
                 var node = this.create(nodes.NumericValue);
                 this.consumeToken();
                 return this.finish(node);
@@ -2503,25 +2764,6 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             if (referenceTypes) {
                 node.referenceTypes = referenceTypes;
             }
-            node.isCustomProperty = this.peekRegExp(cssScanner_1.TokenType.Ident, /^--/);
-            this.consumeToken();
-            return this.finish(node);
-        };
-        Parser.prototype._parseFunctionIdentifier = function () {
-            if (!this.peek(cssScanner_1.TokenType.Ident)) {
-                return null;
-            }
-            var node = this.create(nodes.Identifier);
-            node.referenceTypes = [nodes.ReferenceType.Function];
-            if (this.acceptIdent('progid')) {
-                // support for IE7 specific filters: 'progid:DXImageTransform.Microsoft.MotionBlur(strength=13, direction=310)'
-                if (this.accept(cssScanner_1.TokenType.Colon)) {
-                    while (this.accept(cssScanner_1.TokenType.Ident) && this.acceptDelim('.')) {
-                        // loop
-                    }
-                }
-                return this.finish(node);
-            }
             this.consumeToken();
             return this.finish(node);
         };
@@ -2547,6 +2789,341 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
     exports.Parser = Parser;
 });
 //# sourceMappingURL=cssParser.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/utils/arrays',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * Takes a sorted array and a function p. The array is sorted in such a way that all elements where p(x) is false
+     * are located before all elements where p(x) is true.
+     * @returns the least x for which p(x) is true or array.length if no element fullfills the given function.
+     */
+    function findFirst(array, p) {
+        var low = 0, high = array.length;
+        if (high === 0) {
+            return 0; // no children
+        }
+        while (low < high) {
+            var mid = Math.floor((low + high) / 2);
+            if (p(array[mid])) {
+                high = mid;
+            }
+            else {
+                low = mid + 1;
+            }
+        }
+        return low;
+    }
+    exports.findFirst = findFirst;
+});
+//# sourceMappingURL=arrays.js.map;
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/parser/choicescriptSymbolScope',["require", "exports", "./cssNodes", "../utils/arrays"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("./cssNodes");
+    var arrays_1 = require("../utils/arrays");
+    var Scope = /** @class */ (function () {
+        function Scope(offset, length) {
+            this.offset = offset;
+            this.length = length;
+            this.symbols = [];
+            this.parent = null;
+            this.children = [];
+        }
+        Scope.prototype.addChild = function (scope) {
+            this.children.push(scope);
+            scope.setParent(this);
+        };
+        Scope.prototype.setParent = function (scope) {
+            this.parent = scope;
+        };
+        Scope.prototype.findScope = function (offset, length) {
+            if (length === void 0) { length = 0; }
+            if (this.offset <= offset && this.offset + this.length > offset + length || this.offset === offset && this.length === length) {
+                return this.findInScope(offset, length);
+            }
+            return null;
+        };
+        Scope.prototype.findInScope = function (offset, length) {
+            if (length === void 0) { length = 0; }
+            // find the first scope child that has an offset larger than offset + length
+            var end = offset + length;
+            var idx = arrays_1.findFirst(this.children, function (s) { return s.offset > end; });
+            if (idx === 0) {
+                // all scopes have offsets larger than our end
+                return this;
+            }
+            var res = this.children[idx - 1];
+            if (res.offset <= offset && res.offset + res.length >= offset + length) {
+                return res.findInScope(offset, length);
+            }
+            return this;
+        };
+        Scope.prototype.addSymbol = function (symbol) {
+            this.symbols.push(symbol);
+        };
+        Scope.prototype.getSymbol = function (name, type) {
+            for (var index = 0; index < this.symbols.length; index++) {
+                var symbol = this.symbols[index];
+                if (symbol.name === name && symbol.type === type) {
+                    return symbol;
+                }
+            }
+            return null;
+        };
+        Scope.prototype.getSymbols = function () {
+            return this.symbols;
+        };
+        return Scope;
+    }());
+    exports.Scope = Scope;
+    var GlobalScope = /** @class */ (function (_super) {
+        __extends(GlobalScope, _super);
+        function GlobalScope() {
+            return _super.call(this, 0, Number.MAX_VALUE) || this;
+        }
+        return GlobalScope;
+    }(Scope));
+    exports.GlobalScope = GlobalScope;
+    var Symbol = /** @class */ (function () {
+        function Symbol(name, value, node, type) {
+            this.name = name;
+            this.value = value;
+            this.node = node;
+            this.type = type;
+        }
+        return Symbol;
+    }());
+    exports.Symbol = Symbol;
+    var ScopeBuilder = /** @class */ (function () {
+        function ScopeBuilder(scope) {
+            this.scope = scope;
+        }
+        ScopeBuilder.prototype.addSymbol = function (node, name, value, type) {
+            if (node.offset !== -1) {
+                var current = this.scope.findScope(node.offset, node.length);
+                if (current) {
+                    current.addSymbol(new Symbol(name, value, node, type));
+                }
+            }
+        };
+        ScopeBuilder.prototype.addScope = function (node) {
+            if (node.offset !== -1) {
+                var current = this.scope.findScope(node.offset, node.length);
+                if (current && (current.offset !== node.offset || current.length !== node.length)) { // scope already known?
+                    var newScope = new Scope(node.offset, node.length);
+                    current.addChild(newScope);
+                    return newScope;
+                }
+                return current;
+            }
+            return null;
+        };
+        ScopeBuilder.prototype.addSymbolToChildScope = function (scopeNode, node, name, value, type) {
+            if (scopeNode && scopeNode.offset !== -1) {
+                var current = this.addScope(scopeNode); // create the scope or gets the existing one
+                if (current) {
+                    current.addSymbol(new Symbol(name, value, node, type));
+                }
+            }
+        };
+        ScopeBuilder.prototype.visitNode = function (node) {
+            switch (node.type) {
+                // achievement, scene_list ...
+                case nodes.NodeType.FlowCommand:
+                case nodes.NodeType.ChoiceCommand:
+                    this.addScope(node);
+                    return true;
+                case nodes.NodeType.VariableDeclaration:
+                    return this.visitVariableDeclarationNode(node);
+                case nodes.NodeType.LabelDeclaration:
+                    return this.visitLabelDeclarationNode(node);
+                /*case nodes.NodeType.FunctionParameter: {
+                    return this.visitFunctionParameterNode(<nodes.FunctionParameter>node);
+                }*/
+            }
+            return true;
+        };
+        ScopeBuilder.prototype.visitVariableDeclarationNode = function (node) {
+            var value = node.getValue() ? node.getValue().getText() : void 0;
+            this.addSymbol(node, node.getName(), value, nodes.ReferenceType.Variable);
+            return true;
+        };
+        ScopeBuilder.prototype.visitLabelDeclarationNode = function (node) {
+            this.addSymbol(node, node.getLabel().getName(), null, nodes.ReferenceType.Label);
+            return true;
+        };
+        ScopeBuilder.prototype.visitFunctionParameterNode = function (node) {
+            // parameters are part of the body scope
+            var scopeNode = node.getParent().getDeclarations();
+            if (scopeNode) {
+                var valueNode = node.getDefaultValue();
+                var value = valueNode ? valueNode.getText() : void 0;
+                this.addSymbolToChildScope(scopeNode, node, node.getName(), value, nodes.ReferenceType.Variable);
+            }
+            return true;
+        };
+        ScopeBuilder.prototype.addCSSVariable = function (node, name, value, type) {
+            if (node.offset !== -1) {
+                this.scope.addSymbol(new Symbol(name, value, node, type));
+            }
+        };
+        return ScopeBuilder;
+    }());
+    exports.ScopeBuilder = ScopeBuilder;
+    var Symbols = /** @class */ (function () {
+        function Symbols(node) {
+            this.global = new GlobalScope();
+            node.acceptVisitor(new ScopeBuilder(this.global));
+        }
+        Symbols.prototype.findSymbolsAtOffset = function (offset, referenceType) {
+            var scope = this.global.findScope(offset, 0);
+            var result = [];
+            var names = {};
+            while (scope) {
+                var symbols = scope.getSymbols();
+                for (var i = 0; i < symbols.length; i++) {
+                    var symbol = symbols[i];
+                    if (symbol.type === referenceType && !names[symbol.name]) {
+                        result.push(symbol);
+                        names[symbol.name] = true;
+                    }
+                }
+                scope = scope.parent;
+            }
+            return result;
+        };
+        Symbols.prototype.internalFindSymbol = function (node, referenceTypes) {
+            var scopeNode = node;
+            if (!scopeNode) {
+                return null;
+            }
+            var name = node.getText();
+            var scope = this.global.findScope(scopeNode.offset, scopeNode.length);
+            console.log("internalFindSymbol", node, referenceTypes, name, scope);
+            while (scope) {
+                for (var index = 0; index < referenceTypes.length; index++) {
+                    var type = referenceTypes[index];
+                    var symbol = scope.getSymbol(name, type);
+                    if (symbol) {
+                        return symbol;
+                    }
+                }
+                scope = scope.parent;
+            }
+            return null;
+        };
+        Symbols.prototype.evaluateReferenceTypes = function (node) {
+            /*if (node instanceof nodes.Identifier) {
+                let referenceTypes = (<nodes.Identifier>node).referenceTypes;
+                if (referenceTypes) {
+                    return referenceTypes;
+                } else {
+                    if (node.isCustomProperty) {
+                        return [nodes.ReferenceType.Variable];
+                    }
+                    // are a reference to a keyframe?
+                    let decl = nodes.getParentDeclaration(node);
+                    if (decl) {
+                        let propertyName = decl.getNonPrefixedPropertyName();
+                        if ((propertyName === 'animation' || propertyName === 'animation-name')
+                            && decl.getValue() && decl.getValue().offset === node.offset) {
+                            return [nodes.ReferenceType.Keyframe];
+                        }
+                    }
+                }
+            } else */
+            if (node instanceof nodes.Label) {
+                return [nodes.ReferenceType.Label];
+            }
+            if (node instanceof nodes.Variable) {
+                return [nodes.ReferenceType.Variable];
+            }
+            return null;
+        };
+        Symbols.prototype.findSymbolFromNode = function (node) {
+            if (!node) {
+                return null;
+            }
+            var referenceTypes = this.evaluateReferenceTypes(node);
+            console.log(node, referenceTypes);
+            if (referenceTypes) {
+                return this.internalFindSymbol(node, referenceTypes);
+            }
+            return null;
+        }; /*
+    
+        public matchesSymbol(node: nodes.Node, symbol: Symbol): boolean {
+            if (!node) {
+                return false;
+            }
+            while (node.type === nodes.NodeType.Interpolation) {
+                node = node.getParent();
+            }
+            if (symbol.name.length !== node.length || symbol.name !== node.getText()) {
+                return false;
+            }
+    
+            let referenceTypes = this.evaluateReferenceTypes(node);
+            if (!referenceTypes || referenceTypes.indexOf(symbol.type) === -1) {
+                return false;
+            }
+    
+            let nodeSymbol = this.internalFindSymbol(node, referenceTypes);
+            return nodeSymbol === symbol;
+        }*/
+        Symbols.prototype.findSymbol = function (name, type, offset) {
+            var scope = this.global.findScope(offset);
+            while (scope) {
+                var symbol = scope.getSymbol(name, type);
+                if (symbol) {
+                    return symbol;
+                }
+                scope = scope.parent;
+            }
+            return null;
+        };
+        return Symbols;
+    }());
+    exports.Symbols = Symbols;
+});
+//# sourceMappingURL=choicescriptSymbolScope.js.map;
 (function (factory) {
     if (typeof module === "object" && typeof module.exports === "object") {
         var v = factory(require, exports);
@@ -3202,6 +3779,105 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/utils/strings',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function startsWith(haystack, needle) {
+        if (haystack.length < needle.length) {
+            return false;
+        }
+        for (var i = 0; i < needle.length; i++) {
+            if (haystack[i] !== needle[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    exports.startsWith = startsWith;
+    /**
+     * Determines if haystack ends with needle.
+     */
+    function endsWith(haystack, needle) {
+        var diff = haystack.length - needle.length;
+        if (diff > 0) {
+            return haystack.lastIndexOf(needle) === diff;
+        }
+        else if (diff === 0) {
+            return haystack === needle;
+        }
+        else {
+            return false;
+        }
+    }
+    exports.endsWith = endsWith;
+    /**
+     * Computes the difference score for two strings. More similar strings have a higher score.
+     * We use largest common subsequence dynamic programming approach but penalize in the end for length differences.
+     * Strings that have a large length difference will get a bad default score 0.
+     * Complexity - both time and space O(first.length * second.length)
+     * Dynamic programming LCS computation http://en.wikipedia.org/wiki/Longest_common_subsequence_problem
+     *
+     * @param first a string
+     * @param second a string
+     */
+    function difference(first, second, maxLenDelta) {
+        if (maxLenDelta === void 0) { maxLenDelta = 4; }
+        var lengthDifference = Math.abs(first.length - second.length);
+        // We only compute score if length of the currentWord and length of entry.name are similar.
+        if (lengthDifference > maxLenDelta) {
+            return 0;
+        }
+        // Initialize LCS (largest common subsequence) matrix.
+        var LCS = [];
+        var zeroArray = [];
+        var i, j;
+        for (i = 0; i < second.length + 1; ++i) {
+            zeroArray.push(0);
+        }
+        for (i = 0; i < first.length + 1; ++i) {
+            LCS.push(zeroArray);
+        }
+        for (i = 1; i < first.length + 1; ++i) {
+            for (j = 1; j < second.length + 1; ++j) {
+                if (first[i - 1] === second[j - 1]) {
+                    LCS[i][j] = LCS[i - 1][j - 1] + 1;
+                }
+                else {
+                    LCS[i][j] = Math.max(LCS[i - 1][j], LCS[i][j - 1]);
+                }
+            }
+        }
+        return LCS[first.length][second.length] - Math.sqrt(lengthDifference);
+    }
+    exports.difference = difference;
+    /**
+     * Limit of string length.
+     */
+    function getLimitedString(str, ellipsis) {
+        if (ellipsis === void 0) { ellipsis = true; }
+        if (!str) {
+            return '';
+        }
+        if (str.length < 140) {
+            return str;
+        }
+        return str.slice(0, 140) + (ellipsis ? '\u2026' : '');
+    }
+    exports.getLimitedString = getLimitedString;
+});
+//# sourceMappingURL=strings.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
         define('vscode-languageserver-types/main',["require", "exports"], factory);
     }
 })(function (require, exports) {
@@ -3286,6 +3962,34 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         }
         Location.is = is;
     })(Location = exports.Location || (exports.Location = {}));
+    /**
+     * The LocationLink namespace provides helper functions to work with
+     * [LocationLink](#LocationLink) literals.
+     */
+    var LocationLink;
+    (function (LocationLink) {
+        /**
+         * Creates a LocationLink literal.
+         * @param targetUri The definition's uri.
+         * @param targetRange The full range of the definition.
+         * @param targetSelectionRange The span of the symbol definition at the target.
+         * @param originSelectionRange The span of the symbol being defined in the originating source file.
+         */
+        function create(targetUri, targetRange, targetSelectionRange, originSelectionRange) {
+            return { targetUri: targetUri, targetRange: targetRange, targetSelectionRange: targetSelectionRange, originSelectionRange: originSelectionRange };
+        }
+        LocationLink.create = create;
+        /**
+         * Checks whether the given literal conforms to the [LocationLink](#LocationLink) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Range.is(candidate.targetRange) && Is.string(candidate.targetUri)
+                && (Range.is(candidate.targetSelectionRange) || Is.undefined(candidate.targetSelectionRange))
+                && (Range.is(candidate.originSelectionRange) || Is.undefined(candidate.originSelectionRange));
+        }
+        LocationLink.is = is;
+    })(LocationLink = exports.LocationLink || (exports.LocationLink = {}));
     /**
      * The Color namespace provides helper functions to work with
      * [Color](#Color) literals.
@@ -3473,6 +4177,27 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         DiagnosticSeverity.Hint = 4;
     })(DiagnosticSeverity = exports.DiagnosticSeverity || (exports.DiagnosticSeverity = {}));
     /**
+     * The diagnostic tags.
+     *
+     * @since 3.15.0
+     */
+    var DiagnosticTag;
+    (function (DiagnosticTag) {
+        /**
+         * Unused or unnecessary code.
+         *
+         * Clients are allowed to render diagnostics with this tag faded out instead of having
+         * an error squiggle.
+         */
+        DiagnosticTag.Unnecessary = 1;
+        /**
+         * Deprecated or obsolete code.
+         *
+         * Clients are allowed to rendered diagnostics with this tag strike through.
+         */
+        DiagnosticTag.Deprecated = 2;
+    })(DiagnosticTag = exports.DiagnosticTag || (exports.DiagnosticTag = {}));
+    /**
      * The Diagnostic namespace provides helper functions to work with
      * [Diagnostic](#Diagnostic) literals.
      */
@@ -3604,13 +4329,84 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         }
         TextDocumentEdit.is = is;
     })(TextDocumentEdit = exports.TextDocumentEdit || (exports.TextDocumentEdit = {}));
+    var CreateFile;
+    (function (CreateFile) {
+        function create(uri, options) {
+            var result = {
+                kind: 'create',
+                uri: uri
+            };
+            if (options !== void 0 && (options.overwrite !== void 0 || options.ignoreIfExists !== void 0)) {
+                result.options = options;
+            }
+            return result;
+        }
+        CreateFile.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate && candidate.kind === 'create' && Is.string(candidate.uri) &&
+                (candidate.options === void 0 ||
+                    ((candidate.options.overwrite === void 0 || Is.boolean(candidate.options.overwrite)) && (candidate.options.ignoreIfExists === void 0 || Is.boolean(candidate.options.ignoreIfExists))));
+        }
+        CreateFile.is = is;
+    })(CreateFile = exports.CreateFile || (exports.CreateFile = {}));
+    var RenameFile;
+    (function (RenameFile) {
+        function create(oldUri, newUri, options) {
+            var result = {
+                kind: 'rename',
+                oldUri: oldUri,
+                newUri: newUri
+            };
+            if (options !== void 0 && (options.overwrite !== void 0 || options.ignoreIfExists !== void 0)) {
+                result.options = options;
+            }
+            return result;
+        }
+        RenameFile.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate && candidate.kind === 'rename' && Is.string(candidate.oldUri) && Is.string(candidate.newUri) &&
+                (candidate.options === void 0 ||
+                    ((candidate.options.overwrite === void 0 || Is.boolean(candidate.options.overwrite)) && (candidate.options.ignoreIfExists === void 0 || Is.boolean(candidate.options.ignoreIfExists))));
+        }
+        RenameFile.is = is;
+    })(RenameFile = exports.RenameFile || (exports.RenameFile = {}));
+    var DeleteFile;
+    (function (DeleteFile) {
+        function create(uri, options) {
+            var result = {
+                kind: 'delete',
+                uri: uri
+            };
+            if (options !== void 0 && (options.recursive !== void 0 || options.ignoreIfNotExists !== void 0)) {
+                result.options = options;
+            }
+            return result;
+        }
+        DeleteFile.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate && candidate.kind === 'delete' && Is.string(candidate.uri) &&
+                (candidate.options === void 0 ||
+                    ((candidate.options.recursive === void 0 || Is.boolean(candidate.options.recursive)) && (candidate.options.ignoreIfNotExists === void 0 || Is.boolean(candidate.options.ignoreIfNotExists))));
+        }
+        DeleteFile.is = is;
+    })(DeleteFile = exports.DeleteFile || (exports.DeleteFile = {}));
     var WorkspaceEdit;
     (function (WorkspaceEdit) {
         function is(value) {
             var candidate = value;
             return candidate &&
                 (candidate.changes !== void 0 || candidate.documentChanges !== void 0) &&
-                (candidate.documentChanges === void 0 || Is.typedArray(candidate.documentChanges, TextDocumentEdit.is));
+                (candidate.documentChanges === void 0 || candidate.documentChanges.every(function (change) {
+                    if (Is.string(change.kind)) {
+                        return CreateFile.is(change) || RenameFile.is(change) || DeleteFile.is(change);
+                    }
+                    else {
+                        return TextDocumentEdit.is(change);
+                    }
+                }));
         }
         WorkspaceEdit.is = is;
     })(WorkspaceEdit = exports.WorkspaceEdit || (exports.WorkspaceEdit = {}));
@@ -3648,9 +4444,11 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             if (workspaceEdit) {
                 this._workspaceEdit = workspaceEdit;
                 if (workspaceEdit.documentChanges) {
-                    workspaceEdit.documentChanges.forEach(function (textDocumentEdit) {
-                        var textEditChange = new TextEditChangeImpl(textDocumentEdit.edits);
-                        _this._textEditChanges[textDocumentEdit.textDocument.uri] = textEditChange;
+                    workspaceEdit.documentChanges.forEach(function (change) {
+                        if (TextDocumentEdit.is(change)) {
+                            var textEditChange = new TextEditChangeImpl(change.edits);
+                            _this._textEditChanges[change.textDocument.uri] = textEditChange;
+                        }
                     });
                 }
                 else if (workspaceEdit.changes) {
@@ -3680,7 +4478,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
                     };
                 }
                 if (!this._workspaceEdit.documentChanges) {
-                    throw new Error('Workspace edit is not configured for versioned document changes.');
+                    throw new Error('Workspace edit is not configured for document changes.');
                 }
                 var textDocument = key;
                 var result = this._textEditChanges[textDocument.uri];
@@ -3713,6 +4511,23 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
                     this._textEditChanges[key] = result;
                 }
                 return result;
+            }
+        };
+        WorkspaceChange.prototype.createFile = function (uri, options) {
+            this.checkDocumentChanges();
+            this._workspaceEdit.documentChanges.push(CreateFile.create(uri, options));
+        };
+        WorkspaceChange.prototype.renameFile = function (oldUri, newUri, options) {
+            this.checkDocumentChanges();
+            this._workspaceEdit.documentChanges.push(RenameFile.create(oldUri, newUri, options));
+        };
+        WorkspaceChange.prototype.deleteFile = function (uri, options) {
+            this.checkDocumentChanges();
+            this._workspaceEdit.documentChanges.push(DeleteFile.create(uri, options));
+        };
+        WorkspaceChange.prototype.checkDocumentChanges = function () {
+            if (!this._workspaceEdit || !this._workspaceEdit.documentChanges) {
+                throw new Error('Workspace edit is not configured for document changes.');
             }
         };
         return WorkspaceChange;
@@ -3761,7 +4576,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
          */
         function is(value) {
             var candidate = value;
-            return Is.defined(candidate) && Is.string(candidate.uri) && Is.number(candidate.version);
+            return Is.defined(candidate) && Is.string(candidate.uri) && (candidate.version === null || Is.number(candidate.version));
         }
         VersionedTextDocumentIdentifier.is = is;
     })(VersionedTextDocumentIdentifier = exports.VersionedTextDocumentIdentifier || (exports.VersionedTextDocumentIdentifier = {}));
@@ -3884,6 +4699,19 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         InsertTextFormat.Snippet = 2;
     })(InsertTextFormat = exports.InsertTextFormat || (exports.InsertTextFormat = {}));
     /**
+     * Completion item tags are extra annotations that tweak the rendering of a completion
+     * item.
+     *
+     * @since 3.15.0
+     */
+    var CompletionItemTag;
+    (function (CompletionItemTag) {
+        /**
+         * Render a completion as obsolete, usually using a strike-out.
+         */
+        CompletionItemTag.Deprecated = 1;
+    })(CompletionItemTag = exports.CompletionItemTag || (exports.CompletionItemTag = {}));
+    /**
      * The CompletionItem namespace provides functions to deal with
      * completion items.
      */
@@ -3923,7 +4751,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
          * @param plainText The plain text.
          */
         function fromPlainText(plainText) {
-            return plainText.replace(/[\\`*_{}[\]()#+\-.!]/g, "\\$&"); // escape markdown syntax tokens: http://daringfireball.net/projects/markdown/syntax#backslash
+            return plainText.replace(/[\\`*_{}[\]()#+\-.!]/g, '\\$&'); // escape markdown syntax tokens: http://daringfireball.net/projects/markdown/syntax#backslash
         }
         MarkedString.fromPlainText = fromPlainText;
         /**
@@ -3942,7 +4770,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
          */
         function is(value) {
             var candidate = value;
-            return Is.objectLiteral(candidate) && (MarkupContent.is(candidate.contents) ||
+            return !!candidate && Is.objectLiteral(candidate) && (MarkupContent.is(candidate.contents) ||
                 MarkedString.is(candidate.contents) ||
                 Is.typedArray(candidate.contents, MarkedString.is)) && (value.range === void 0 || Range.is(value.range));
         }
@@ -3964,7 +4792,6 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             return documentation ? { label: label, documentation: documentation } : { label: label };
         }
         ParameterInformation.create = create;
-        ;
     })(ParameterInformation = exports.ParameterInformation || (exports.ParameterInformation = {}));
     /**
      * The SignatureInformation namespace provides helper functions to work with
@@ -4060,6 +4887,17 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         SymbolKind.Operator = 25;
         SymbolKind.TypeParameter = 26;
     })(SymbolKind = exports.SymbolKind || (exports.SymbolKind = {}));
+    /**
+     * Symbol tags are extra annotations that tweak the rendering of a symbol.
+     * @since 3.15
+     */
+    var SymbolTag;
+    (function (SymbolTag) {
+        /**
+         * Render a symbol as obsolete, usually using a strike-out.
+         */
+        SymbolTag.Deprecated = 1;
+    })(SymbolTag = exports.SymbolTag || (exports.SymbolTag = {}));
     var SymbolInformation;
     (function (SymbolInformation) {
         /**
@@ -4084,18 +4922,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         }
         SymbolInformation.create = create;
     })(SymbolInformation = exports.SymbolInformation || (exports.SymbolInformation = {}));
-    /**
-     * Represents programming constructs like variables, classes, interfaces etc.
-     * that appear in a document. Document symbols can be hierarchical and they
-     * have two ranges: one that encloses its definition and one that points to
-     * its most interesting range, e.g. the range of an identifier.
-     */
-    var DocumentSymbol = /** @class */ (function () {
-        function DocumentSymbol() {
-        }
-        return DocumentSymbol;
-    }());
-    exports.DocumentSymbol = DocumentSymbol;
+    var DocumentSymbol;
     (function (DocumentSymbol) {
         /**
          * Creates a new symbol information literal.
@@ -4127,19 +4954,23 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         function is(value) {
             var candidate = value;
             return candidate &&
-                Is.string(candidate.name) && Is.string(candidate.detail) && Is.number(candidate.kind) &&
+                Is.string(candidate.name) && Is.number(candidate.kind) &&
                 Range.is(candidate.range) && Range.is(candidate.selectionRange) &&
+                (candidate.detail === void 0 || Is.string(candidate.detail)) &&
                 (candidate.deprecated === void 0 || Is.boolean(candidate.deprecated)) &&
                 (candidate.children === void 0 || Array.isArray(candidate.children));
         }
         DocumentSymbol.is = is;
     })(DocumentSymbol = exports.DocumentSymbol || (exports.DocumentSymbol = {}));
-    exports.DocumentSymbol = DocumentSymbol;
     /**
      * A set of predefined code action kinds
      */
     var CodeActionKind;
     (function (CodeActionKind) {
+        /**
+         * Empty kind.
+         */
+        CodeActionKind.Empty = '';
         /**
          * Base kind for quickfix actions: 'quickfix'
          */
@@ -4194,6 +5025,15 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
          * Base kind for an organize imports source action: `source.organizeImports`
          */
         CodeActionKind.SourceOrganizeImports = 'source.organizeImports';
+        /**
+         * Base kind for auto-fix source actions: `source.fixAll`.
+         *
+         * Fix all actions automatically fix errors that have a clear fix that do not require user input.
+         * They should not suppress errors or perform unsafe fixes such as generating new types or classes.
+         *
+         * @since 3.15.0
+         */
+        CodeActionKind.SourceFixAll = 'source.fixAll';
     })(CodeActionKind = exports.CodeActionKind || (exports.CodeActionKind = {}));
     /**
      * The CodeActionContext namespace provides helper functions to work with
@@ -4231,7 +5071,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             else {
                 result.edit = commandOrEdit;
             }
-            if (kind !== void null) {
+            if (kind !== void 0) {
                 result.kind = kind;
             }
             return result;
@@ -4244,6 +5084,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
                 (candidate.kind === void 0 || Is.string(candidate.kind)) &&
                 (candidate.edit !== void 0 || candidate.command !== void 0) &&
                 (candidate.command === void 0 || Command.is(candidate.command)) &&
+                (candidate.isPreferred === void 0 || Is.boolean(candidate.isPreferred)) &&
                 (candidate.edit === void 0 || WorkspaceEdit.is(candidate.edit));
         }
         CodeAction.is = is;
@@ -4259,8 +5100,9 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
          */
         function create(range, data) {
             var result = { range: range };
-            if (Is.defined(data))
+            if (Is.defined(data)) {
                 result.data = data;
+            }
             return result;
         }
         CodeLens.create = create;
@@ -4296,19 +5138,10 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         FormattingOptions.is = is;
     })(FormattingOptions = exports.FormattingOptions || (exports.FormattingOptions = {}));
     /**
-     * A document link is a range in a text document that links to an internal or external resource, like another
-     * text document or a web site.
-     */
-    var DocumentLink = /** @class */ (function () {
-        function DocumentLink() {
-        }
-        return DocumentLink;
-    }());
-    exports.DocumentLink = DocumentLink;
-    /**
      * The DocumentLink namespace provides helper functions to work with
      * [DocumentLink](#DocumentLink) literals.
      */
+    var DocumentLink;
     (function (DocumentLink) {
         /**
          * Creates a new DocumentLink literal.
@@ -4326,8 +5159,31 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         }
         DocumentLink.is = is;
     })(DocumentLink = exports.DocumentLink || (exports.DocumentLink = {}));
-    exports.DocumentLink = DocumentLink;
+    /**
+     * The SelectionRange namespace provides helper function to work with
+     * SelectionRange literals.
+     */
+    var SelectionRange;
+    (function (SelectionRange) {
+        /**
+         * Creates a new SelectionRange
+         * @param range the range.
+         * @param parent an optional parent.
+         */
+        function create(range, parent) {
+            return { range: range, parent: parent };
+        }
+        SelectionRange.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate !== undefined && Range.is(candidate.range) && (candidate.parent === undefined || SelectionRange.is(candidate.parent));
+        }
+        SelectionRange.is = is;
+    })(SelectionRange = exports.SelectionRange || (exports.SelectionRange = {}));
     exports.EOL = ['\n', '\r\n', '\r'];
+    /**
+     * @deprecated Use the text document from the new vscode-languageserver-textdocument package.
+     */
     var TextDocument;
     (function (TextDocument) {
         /**
@@ -4367,7 +5223,7 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
                     text = text.substring(0, startOffset) + e.newText + text.substring(endOffset, text.length);
                 }
                 else {
-                    throw new Error('Ovelapping edit');
+                    throw new Error('Overlapping edit');
                 }
                 lastModifiedOffset = startOffset;
             }
@@ -4407,32 +5263,13 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
             return data;
         }
     })(TextDocument = exports.TextDocument || (exports.TextDocument = {}));
-    /**
-     * Represents reasons why a text document is saved.
-     */
-    var TextDocumentSaveReason;
-    (function (TextDocumentSaveReason) {
-        /**
-         * Manually triggered, e.g. by the user pressing save, by starting debugging,
-         * or by an API call.
-         */
-        TextDocumentSaveReason.Manual = 1;
-        /**
-         * Automatic after a delay.
-         */
-        TextDocumentSaveReason.AfterDelay = 2;
-        /**
-         * When the editor lost focus.
-         */
-        TextDocumentSaveReason.FocusOut = 3;
-    })(TextDocumentSaveReason = exports.TextDocumentSaveReason || (exports.TextDocumentSaveReason = {}));
     var FullTextDocument = /** @class */ (function () {
         function FullTextDocument(uri, languageId, version, content) {
             this._uri = uri;
             this._languageId = languageId;
             this._version = version;
             this._content = content;
-            this._lineOffsets = null;
+            this._lineOffsets = undefined;
         }
         Object.defineProperty(FullTextDocument.prototype, "uri", {
             get: function () {
@@ -4466,10 +5303,10 @@ define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; }
         FullTextDocument.prototype.update = function (event, version) {
             this._content = event.text;
             this._version = version;
-            this._lineOffsets = null;
+            this._lineOffsets = undefined;
         };
         FullTextDocument.prototype.getLineOffsets = function () {
-            if (this._lineOffsets === null) {
+            if (this._lineOffsets === undefined) {
                 var lineOffsets = [];
                 var text = this._content;
                 var isLineStart = true;
@@ -5360,7 +6197,7 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/services/cssCompletion',["require", "exports", "../parser/cssNodes", "../parser/cssErrors", "./languageFacts", "vscode-languageserver-types", "./typo/typo", "vscode-nls"], factory);
+        define('vscode-css-languageservice/services/cssCompletion',["require", "exports", "../parser/cssNodes", "../parser/cssErrors", "../parser/choicescriptSymbolScope", "./languageFacts", "../utils/strings", "vscode-languageserver-types", "./typo/typo", "vscode-nls"], factory);
     }
 })(function (require, exports) {
     /*---------------------------------------------------------------------------------------------
@@ -5371,8 +6208,9 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
     Object.defineProperty(exports, "__esModule", { value: true });
     var nodes = require("../parser/cssNodes");
     var cssErrors_1 = require("../parser/cssErrors");
-    //import { Symbols, Symbol } from '../parser/cssSymbolScope';
+    var choicescriptSymbolScope_1 = require("../parser/choicescriptSymbolScope");
     var languageFacts = require("./languageFacts");
+    var strings = require("../utils/strings");
     var vscode_languageserver_types_1 = require("vscode-languageserver-types");
     var typo_1 = require("./typo/typo");
     var nls = require("vscode-nls");
@@ -5396,29 +6234,36 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
             });
             this.variablePrefix = variablePrefix;
         }
-        /*protected getSymbolContext(): Symbols {
+        CSSCompletion.prototype.getSymbolContext = function () {
             if (!this.symbolContext) {
-                this.symbolContext = new Symbols(this.scene);
+                this.symbolContext = new choicescriptSymbolScope_1.Symbols(this.scene);
             }
             return this.symbolContext;
-        }*/
+        };
         CSSCompletion.prototype.setCompletionParticipants = function (registeredCompletionParticipants) {
             this.completionParticipants = registeredCompletionParticipants || [];
         };
-        CSSCompletion.prototype.doComplete = function (document, position, styleSheet) {
+        CSSCompletion.prototype.doComplete = function (document, position, scene) {
             var _this = this;
             this.offset = document.offsetAt(position);
             this.position = position;
             this.currentWord = getCurrentWord(document, this.offset);
             this.defaultReplaceRange = vscode_languageserver_types_1.Range.create(vscode_languageserver_types_1.Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);
             this.textDocument = document;
-            this.scene = styleSheet;
+            this.scene = scene;
             try {
                 var result_1 = { isIncomplete: false, items: [] };
                 this.nodePath = nodes.getNodePath(this.scene, this.offset);
                 for (var i = this.nodePath.length - 1; i >= 0; i--) {
                     var node = this.nodePath[i];
-                    if (node.hasIssue(cssErrors_1.ParseError.UnknownCommand)) {
+                    var parentRef = node.findParent(nodes.NodeType.VariableDeclaration);
+                    if (parentRef) {
+                        this.getCompletionsForVariableDeclaration(parentRef, result_1);
+                        return new Promise(function (resolve, reject) {
+                            resolve(_this.finalize(result_1));
+                        });
+                    }
+                    else if (node.hasIssue(cssErrors_1.ParseError.UnknownCommand)) {
                         this.getCompletionsForCommands(result_1);
                         return new Promise(function (resolve, reject) {
                             resolve(_this.finalize(result_1));
@@ -5534,12 +6379,13 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
                                 filterText: word,
                                 sortText: 'c',
                                 insertText: { value: word },
-                                kind: vscode_languageserver_types_1.CompletionItemKind.Property
+                                kind: vscode_languageserver_types_1.CompletionItemKind.Property,
+                                command: 'close-selected-scene'
                             });
                             result.items = result.items.concat(suggestions.map(function (suggestion) {
                                 return {
-                                    label: "Correct to: " + suggestion,
-                                    documentation: "",
+                                    label: suggestion,
+                                    detail: "spelling suggestion",
                                     textEdit: null,
                                     filterText: word,
                                     sortText: 'a',
@@ -5565,29 +6411,29 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
             }
             return result;
         };
-        /*public getVariableProposals(existingNode: nodes.Node, result: CompletionList): CompletionList {
-            let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
-            for (let symbol of symbols) {
-                let insertText = strings.startsWith(symbol.name, '--') ? `var(${symbol.name})` : symbol.name;
-                const suggest: CompletionItem = {
+        CSSCompletion.prototype.getVariableProposals = function (existingNode, result) {
+            var symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
+            console.log("debug var sug", symbols);
+            for (var _b = 0, symbols_1 = symbols; _b < symbols_1.length; _b++) {
+                var symbol = symbols_1[_b];
+                var insertText = strings.startsWith(symbol.name, '--') ? "var(" + symbol.name + ")" : symbol.name;
+                var suggest = {
                     label: symbol.name,
                     documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
-                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
-                    kind: CompletionItemKind.Variable,
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Variable,
                     sortText: 'z'
                 };
-    
-                if (symbol.node.type === nodes.NodeType.FunctionParameter) {
+                /*if (symbol.node.type === nodes.NodeType.FunctionParameter) {
                     const mixinNode = <nodes.MixinDeclaration>(symbol.node.getParent());
                     if (mixinNode.type === nodes.NodeType.MixinDeclaration) {
                         suggest.detail = localize('completion.argument', 'argument from \'{0}\'', mixinNode.getName());
                     }
-                }
-    
+                }*/
                 result.items.push(suggest);
             }
             return result;
-        }*/
+        };
         /*public getVariableProposalsForCSSVarFunction(result: CompletionList): CompletionList {
             let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
             symbols = symbols.filter((symbol): boolean => {
@@ -5788,12 +6634,12 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
             }
             return result;
         };
-        /*public getCompletionsForVariableDeclaration(declaration: nodes.VariableDeclaration, result: CompletionList): CompletionList {
-            if (this.offset > declaration.colonPosition) {
+        CSSCompletion.prototype.getCompletionsForVariableDeclaration = function (declaration, result) {
+            if (declaration.hasIssue(cssErrors_1.ParseError.VariableNameExpected)) {
                 this.getVariableProposals(declaration.getValue(), result);
             }
             return result;
-        }*/
+        };
         CSSCompletion.prototype.getCompletionForUriLiteralValue = function (uriLiteralNode, result) {
             var uriValue;
             var position;
@@ -5948,6 +6794,158 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/choicescriptNavigation',["require", "exports", "vscode-languageserver-types", "vscode-nls", "../parser/cssNodes", "../parser/choicescriptSymbolScope"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var nls = require("vscode-nls");
+    var nodes = require("../parser/cssNodes");
+    var choicescriptSymbolScope_1 = require("../parser/choicescriptSymbolScope");
+    var localize = nls.loadMessageBundle();
+    var ChoiceScriptNavigation = /** @class */ (function () {
+        function ChoiceScriptNavigation() {
+        }
+        ChoiceScriptNavigation.prototype.findDefinition = function (document, position, scene) {
+            var symbols = new choicescriptSymbolScope_1.Symbols(scene);
+            var offset = document.offsetAt(position);
+            var node = nodes.getNodeAtOffset(scene, offset);
+            if (!node) {
+                return null;
+            }
+            var symbol = symbols.findSymbolFromNode(node);
+            if (!symbol) {
+                return null;
+            }
+            return {
+                uri: document.uri,
+                range: getRange(symbol.node, document)
+            };
+        };
+        /*
+            public findReferences(document: TextDocument, position: Position, scene: nodes.Scene): Location[] {
+                let highlights = this.findDocumentHighlights(document, position, scene);
+                return highlights.map(h => {
+                    return {
+                        uri: document.uri,
+                        range: h.range
+                    };
+                });
+            }
+        */
+        /*
+        public findDocumentHighlights(document: TextDocument, position: Position, scene: nodes.Scene): DocumentHighlight[] {
+            let result: DocumentHighlight[] = [];
+    
+            let offset = document.offsetAt(position);
+            let node = nodes.getNodeAtOffset(scene, offset);
+            if (!node || node.type === nodes.NodeType.Scene || node.type === nodes.NodeType.VariableDeclaration) {
+                return result;
+            }
+            if (node.type === nodes.NodeType.Identifier && node.parent && node.parent.type === nodes.NodeType.ClassSelector) {
+                node = node.parent;
+            }
+    
+            let symbols = new Symbols(scene);
+            let symbol = symbols.findSymbolFromNode(node);
+            let name = node.getText();
+    
+            scene.accept(candidate => {
+                if (symbol) {
+                    if (symbols.matchesSymbol(candidate, symbol)) {
+                        result.push({
+                            kind: getHighlightKind(candidate),
+                            range: getRange(candidate, document)
+                        });
+                        return false;
+                    }
+                } else if (node.type === candidate.type && node.length === candidate.length && name === candidate.getText()) {
+                    // Same node type and data
+                    result.push({
+                        kind: getHighlightKind(candidate),
+                        range: getRange(candidate, document)
+                    });
+                }
+                return true;
+            });
+    
+            return result;
+        }*/
+        ChoiceScriptNavigation.prototype.findDocumentSymbols = function (document, scene) {
+            var result = [];
+            scene.accept(function (node) {
+                var entry = {
+                    name: null,
+                    kind: vscode_languageserver_types_1.SymbolKind.Class,
+                    location: null
+                };
+                var locationNode = node;
+                if (node instanceof nodes.VariableDeclaration) {
+                    entry.name = node.getName();
+                    entry.kind = vscode_languageserver_types_1.SymbolKind.Variable;
+                }
+                else if (node instanceof nodes.LabelDeclaration) {
+                    entry.name = node.getLabel().getName();
+                    entry.kind = vscode_languageserver_types_1.SymbolKind.Function;
+                }
+                if (entry.name) {
+                    entry.location = vscode_languageserver_types_1.Location.create(document.uri, getRange(locationNode, document));
+                    result.push(entry);
+                }
+                return true;
+            });
+            return result;
+        };
+        return ChoiceScriptNavigation;
+    }());
+    exports.ChoiceScriptNavigation = ChoiceScriptNavigation;
+    function getRange(node, document) {
+        return vscode_languageserver_types_1.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
+    }
+    /*
+    function getHighlightKind(node: nodes.Node): DocumentHighlightKind {
+    
+        if (node.type === nodes.NodeType.Selector) {
+            return DocumentHighlightKind.Write;
+        }
+    
+        if (node instanceof nodes.Identifier) {
+            if (node.parent && node.parent instanceof nodes.Property) {
+                if (node.isCustomProperty) {
+                    return DocumentHighlightKind.Write;
+                }
+            }
+        }
+    
+        if (node.parent) {
+            switch (node.parent.type) {
+                case nodes.NodeType.FunctionDeclaration:
+                case nodes.NodeType.Keyframe:
+                case nodes.NodeType.VariableDeclaration:
+                case nodes.NodeType.FunctionParameter:
+                    return DocumentHighlightKind.Write;
+            }
+        }
+    
+        return DocumentHighlightKind.Read;
+    }*/
+    function toTwoDigitHex(n) {
+        var r = n.toString(16);
+        return r.length !== 2 ? '0' + r : r;
+    }
+});
+//# sourceMappingURL=choicescriptNavigation.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
         define('vscode-css-languageservice/services/textRules',["require", "exports", "../parser/cssNodes", "vscode-nls"], factory);
     }
 })(function (require, exports) {
@@ -6040,13 +7038,17 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
         return NodesByRootMap;
     }());
     var SpellCheckVisitor = /** @class */ (function () {
-        function SpellCheckVisitor(document, settings, typo) {
+        function SpellCheckVisitor(document, settings, typo, dicts) {
             this.warnings = [];
             this.visitScene = function (node) {
                 return true;
             };
             this.visitWord = function (node) {
-                if (!this.typo.check(node.getText())) {
+                var word = node.getText();
+                // dicts are handled AWFULLY - FIXME!
+                if (!this.typo.check(word) &&
+                    !this.dicts.session[word] &&
+                    !this.dicts.persistent[word]) {
                     this.addEntry(node, textRules_1.Rules.BadSpelling, "Bad spelling: " + node.getText());
                 }
                 return true;
@@ -6055,9 +7057,10 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
             this.documentText = document.getText();
             this.keyframes = new NodesByRootMap();
             this.typo = typo;
+            this.dicts = dicts;
         }
-        SpellCheckVisitor.entries = function (node, document, settings, entryFilter, typo) {
-            var visitor = new SpellCheckVisitor(document, settings, typo);
+        SpellCheckVisitor.entries = function (node, document, settings, entryFilter, typo, userDictionaries) {
+            var visitor = new SpellCheckVisitor(document, settings, typo, userDictionaries);
             node.acceptVisitor(visitor);
             return visitor.getEntries(entryFilter);
         };
@@ -6173,7 +7176,7 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
             var entries = [];
             entries.push.apply(entries, nodes.ParseErrorCollector.entries(scene));
             if (settings && settings.spellCheckSettings.enabled === true) {
-                entries.push.apply(entries, spellcheck_1.SpellCheckVisitor.entries(scene, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo));
+                entries.push.apply(entries, spellcheck_1.SpellCheckVisitor.entries(scene, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo, settings.spellCheckSettings.userDictionaries));
             }
             var ruleIds = [];
             for (var r in textRules_1.Rules) {
@@ -6388,7 +7391,7 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define('vscode-css-languageservice/cssLanguageService',["require", "exports", "./parser/cssParser", "./services/cssCompletion", "./services/cssHover", "./services/ChoiceScriptValidation", "./services/ChoiceScriptCodeActions", "./cssLanguageTypes", "vscode-languageserver-types"], factory);
+        define('vscode-css-languageservice/cssLanguageService',["require", "exports", "./parser/cssParser", "./services/cssCompletion", "./services/cssHover", "./services/choicescriptNavigation", "./services/ChoiceScriptValidation", "./services/ChoiceScriptCodeActions", "./cssLanguageTypes", "vscode-languageserver-types"], factory);
     }
 })(function (require, exports) {
     /*---------------------------------------------------------------------------------------------
@@ -6403,40 +7406,42 @@ define('vscode-languageserver-types', ['vscode-languageserver-types/main'], func
     var cssParser_1 = require("./parser/cssParser");
     var cssCompletion_1 = require("./services/cssCompletion");
     var cssHover_1 = require("./services/cssHover");
+    var choicescriptNavigation_1 = require("./services/choicescriptNavigation");
     var ChoiceScriptValidation_1 = require("./services/ChoiceScriptValidation");
     var ChoiceScriptCodeActions_1 = require("./services/ChoiceScriptCodeActions");
     __export(require("./cssLanguageTypes"));
     __export(require("vscode-languageserver-types"));
-    function createFacade(parser, completion, hover, validation, codeActions) {
+    function createFacade(parser, completion, navigation, hover, validation, codeActions) {
         return {
             configure: validation.configure.bind(validation),
             doValidation: validation.doValidation.bind(validation),
             parseScene: parser.parseScene.bind(parser),
             doComplete: completion.doComplete.bind(completion),
+            findDocumentSymbols: navigation.findDocumentSymbols.bind(navigation),
             setCompletionParticipants: completion.setCompletionParticipants.bind(completion),
             doHover: hover.doHover.bind(hover),
+            findDefinition: navigation.findDefinition.bind(navigation),
             doCodeActions: codeActions.doCodeActions.bind(codeActions),
             doCodeActions2: codeActions.doCodeActions2.bind(codeActions),
         };
     }
     function getCSSLanguageService() {
-        return createFacade(new cssParser_1.Parser(), new cssCompletion_1.CSSCompletion(), new cssHover_1.CSSHover(), new ChoiceScriptValidation_1.ChoiceScriptValidation(), new ChoiceScriptCodeActions_1.ChoiceScriptCodeActions());
+        return createFacade(new cssParser_1.Parser(), new cssCompletion_1.CSSCompletion(), new choicescriptNavigation_1.ChoiceScriptNavigation(), new cssHover_1.CSSHover(), new ChoiceScriptValidation_1.ChoiceScriptValidation(), new ChoiceScriptCodeActions_1.ChoiceScriptCodeActions());
     }
     exports.getCSSLanguageService = getCSSLanguageService;
 });
 //# sourceMappingURL=cssLanguageService.js.map;
 define('vscode-css-languageservice', ['vscode-css-languageservice/cssLanguageService'], function (main) { return main; });
 
-define('vs/language/choicescript/choicescriptWorker',["require", "exports", "vscode-css-languageservice", "vscode-languageserver-types"], function (require, exports, choicescriptService, ls) {
+define('vs/language/choicescript/choicescriptWorker',["require", "exports", "vscode-css-languageservice"], function (require, exports, choicescriptService) {
     /*---------------------------------------------------------------------------------------------
      *  Copyright (c) Microsoft Corporation. All rights reserved.
      *  Licensed under the MIT License. See License.txt in the project root for license information.
      *--------------------------------------------------------------------------------------------*/
     'use strict';
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Promise = monaco.Promise;
-    var CSSWorker = /** @class */ (function () {
-        function CSSWorker(ctx, createData) {
+    var ChoiceScriptWorker = /** @class */ (function () {
+        function ChoiceScriptWorker(ctx, createData) {
             this._ctx = ctx;
             this._languageSettings = createData.languageSettings;
             this._languageId = createData.languageId;
@@ -6450,42 +7455,105 @@ define('vs/language/choicescript/choicescriptWorker',["require", "exports", "vsc
             this._languageService.configure(this._languageSettings);
         }
         // --- language service host ---------------
-        CSSWorker.prototype.doValidation = function (uri) {
+        ChoiceScriptWorker.prototype.doValidation = function (uri) {
             var document = this._getTextDocument(uri);
             if (document) {
-                var stylesheet = this._languageService.parseScene(document);
-                var check = this._languageService.doValidation(document, stylesheet, this._languageSettings);
-                return Promise.as(check);
+                var scene = this._languageService.parseScene(document);
+                var check = this._languageService.doValidation(document, scene, this._languageSettings);
+                return Promise.resolve(check);
             }
-            return Promise.as([]);
+            return Promise.resolve([]);
         };
-        CSSWorker.prototype.doComplete = function (uri, position) {
+        ChoiceScriptWorker.prototype.doComplete = function (uri, position) {
+            var document = this._getTextDocument(uri);
+            var scene = this._languageService.parseScene(document);
+            var completions = this._languageService.doComplete(document, position, scene);
+            return Promise.resolve(completions);
+        };
+        ChoiceScriptWorker.prototype.doHover = function (uri, position) {
+            var document = this._getTextDocument(uri);
+            var scene = this._languageService.parseScene(document);
+            var hover = this._languageService.doHover(document, position, scene);
+            return Promise.resolve(hover);
+        };
+        ChoiceScriptWorker.prototype.findDefinition = function (uri, position) {
+            var document = this._getTextDocument(uri);
+            var scene = this._languageService.parseScene(document);
+            var definition = this._languageService.findDefinition(document, position, scene);
+            return Promise.resolve(definition);
+        };
+        /*findReferences(uri: string, position: choicescriptService.Position): Thenable<choicescriptService.Location[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let references = this._languageService.findReferences(document, position, stylesheet);
+            return Promise.resolve(references);
+        }
+        findDocumentHighlights(uri: string, position: choicescriptService.Position): Thenable<choicescriptService.DocumentHighlight[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let highlights = this._languageService.findDocumentHighlights(document, position, stylesheet);
+            return Promise.resolve(highlights);
+        }*/
+        ChoiceScriptWorker.prototype.findDocumentSymbols = function (uri) {
+            var document = this._getTextDocument(uri);
+            var scene = this._languageService.parseScene(document);
+            var symbols = this._languageService.findDocumentSymbols(document, scene);
+            return Promise.resolve(symbols);
+        };
+        ChoiceScriptWorker.prototype.doCodeActions = function (uri, range, context) {
             var document = this._getTextDocument(uri);
             var stylesheet = this._languageService.parseScene(document);
-            var completions = this._languageService.doComplete(document, position, stylesheet);
-            return Promise.as(completions);
+            var actions = this._languageService.doCodeActions(document, range, context, stylesheet);
+            return Promise.resolve(actions);
         };
-        CSSWorker.prototype.doHover = function (uri, position) {
-            var document = this._getTextDocument(uri);
-            var stylesheet = this._languageService.parseScene(document);
-            var hover = this._languageService.doHover(document, position, stylesheet);
-            return Promise.as(hover);
-        };
-        CSSWorker.prototype._getTextDocument = function (uri) {
+        /*findDocumentColors(uri: string): Thenable<choicescriptService.ColorInformation[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let colorSymbols = this._languageService.findDocumentColors(document, stylesheet);
+            return Promise.resolve(colorSymbols);
+        }
+        getColorPresentations(uri: string, color: choicescriptService.Color, range: choicescriptService.Range): Thenable<choicescriptService.ColorPresentation[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let colorPresentations = this._languageService.getColorPresentations(document, stylesheet, color, range);
+            return Promise.resolve(colorPresentations);
+        }
+        getFoldingRanges(uri: string, context?: { rangeLimit?: number; }): Thenable<choicescriptService.FoldingRange[]> {
+            let document = this._getTextDocument(uri);
+            let ranges = this._languageService.getFoldingRanges(document, context);
+            return Promise.resolve(ranges);
+        }
+        getSelectionRanges(uri: string, positions: choicescriptService.Position[]): Thenable<choicescriptService.SelectionRange[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let ranges = this._languageService.getSelectionRanges(document, positions, stylesheet);
+            return Promise.resolve(ranges);
+        }
+        doRename(uri: string, position: choicescriptService.Position, newName: string): Thenable<choicescriptService.WorkspaceEdit> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let renames = this._languageService.doRename(document, position, newName, stylesheet);
+            return Promise.resolve(renames);
+        }*/
+        ChoiceScriptWorker.prototype._getTextDocument = function (uri) {
+            console.log(uri);
             var models = this._ctx.getMirrorModels();
             for (var _i = 0, models_1 = models; _i < models_1.length; _i++) {
                 var model = models_1[_i];
                 if (model.uri.toString() === uri) {
-                    return ls.TextDocument.create(uri, this._languageId, model.version, model.getValue());
+                    return choicescriptService.TextDocument.create(uri, this._languageId, model.version, model.getValue());
                 }
             }
             return null;
         };
-        return CSSWorker;
+        ChoiceScriptWorker.prototype._getStartupTextDocument = function (uri) {
+            return this._getTextDocument("startup");
+        };
+        return ChoiceScriptWorker;
     }());
-    exports.CSSWorker = CSSWorker;
+    exports.ChoiceScriptWorker = ChoiceScriptWorker;
     function create(ctx, createData) {
-        return new CSSWorker(ctx, createData);
+        return new ChoiceScriptWorker(ctx, createData);
     }
     exports.create = create;
 });

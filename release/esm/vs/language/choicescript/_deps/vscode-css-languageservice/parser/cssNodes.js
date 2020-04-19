@@ -23,72 +23,74 @@ var __extends = (this && this.__extends) || (function () {
 export var NodeType;
 (function (NodeType) {
     NodeType[NodeType["Undefined"] = 0] = "Undefined";
-    NodeType[NodeType["Identifier"] = 1] = "Identifier";
-    NodeType[NodeType["Scene"] = 2] = "Scene";
-    NodeType[NodeType["Line"] = 3] = "Line";
-    NodeType[NodeType["ChoiceScriptStatement"] = 4] = "ChoiceScriptStatement";
-    NodeType[NodeType["StringLiteral"] = 5] = "StringLiteral";
-    NodeType[NodeType["Operator"] = 6] = "Operator";
-    NodeType[NodeType["Expression"] = 7] = "Expression";
-    NodeType[NodeType["BinaryExpression"] = 8] = "BinaryExpression";
-    NodeType[NodeType["Term"] = 9] = "Term";
-    NodeType[NodeType["Value"] = 10] = "Value";
-    NodeType[NodeType["RealWord"] = 11] = "RealWord";
-    NodeType[NodeType["TextLine"] = 12] = "TextLine";
-    NodeType[NodeType["ChoiceCommand"] = 13] = "ChoiceCommand";
-    NodeType[NodeType["ChoiceOption"] = 14] = "ChoiceOption";
-    NodeType[NodeType["MultiReplace"] = 15] = "MultiReplace";
-    NodeType[NodeType["PrintVariable"] = 16] = "PrintVariable";
-    NodeType[NodeType["NumericValue"] = 17] = "NumericValue";
-    NodeType[NodeType["Boolean"] = 18] = "Boolean";
-    NodeType[NodeType["Indentation"] = 19] = "Indentation";
-    NodeType[NodeType["VariableDeclaration"] = 20] = "VariableDeclaration";
-    NodeType[NodeType["FlowCommand"] = 21] = "FlowCommand";
+    NodeType[NodeType["ChoiceScriptComment"] = 1] = "ChoiceScriptComment";
+    NodeType[NodeType["Identifier"] = 2] = "Identifier";
+    NodeType[NodeType["Scene"] = 3] = "Scene";
+    NodeType[NodeType["Line"] = 4] = "Line";
+    NodeType[NodeType["Label"] = 5] = "Label";
+    NodeType[NodeType["ChoiceScriptLine"] = 6] = "ChoiceScriptLine";
+    NodeType[NodeType["ChoiceScriptStatement"] = 7] = "ChoiceScriptStatement";
+    NodeType[NodeType["TextLine"] = 8] = "TextLine";
+    NodeType[NodeType["StringLiteral"] = 9] = "StringLiteral";
+    NodeType[NodeType["Operator"] = 10] = "Operator";
+    NodeType[NodeType["Expression"] = 11] = "Expression";
+    NodeType[NodeType["BinaryExpression"] = 12] = "BinaryExpression";
+    NodeType[NodeType["Term"] = 13] = "Term";
+    NodeType[NodeType["Value"] = 14] = "Value";
+    NodeType[NodeType["RealWord"] = 15] = "RealWord";
+    NodeType[NodeType["ChoiceCommand"] = 16] = "ChoiceCommand";
+    NodeType[NodeType["ChoiceOption"] = 17] = "ChoiceOption";
+    NodeType[NodeType["MultiReplace"] = 18] = "MultiReplace";
+    NodeType[NodeType["PrintVariable"] = 19] = "PrintVariable";
+    NodeType[NodeType["NumericValue"] = 20] = "NumericValue";
+    NodeType[NodeType["Boolean"] = 21] = "Boolean";
+    NodeType[NodeType["Indentation"] = 22] = "Indentation";
+    NodeType[NodeType["VariableDeclaration"] = 23] = "VariableDeclaration";
+    NodeType[NodeType["LabelDeclaration"] = 24] = "LabelDeclaration";
+    NodeType[NodeType["FlowCommand"] = 25] = "FlowCommand";
     // ...
-    NodeType[NodeType["HexColorValue"] = 22] = "HexColorValue";
-    NodeType[NodeType["CreateVariable"] = 23] = "CreateVariable";
-    NodeType[NodeType["If"] = 24] = "If";
-    NodeType[NodeType["Else"] = 25] = "Else";
-    NodeType[NodeType["For"] = 26] = "For";
-    NodeType[NodeType["Each"] = 27] = "Each";
-    NodeType[NodeType["While"] = 28] = "While";
-    NodeType[NodeType["MixinContent"] = 29] = "MixinContent";
-    NodeType[NodeType["Media"] = 30] = "Media";
-    NodeType[NodeType["Keyframe"] = 31] = "Keyframe";
-    NodeType[NodeType["FontFace"] = 32] = "FontFace";
-    NodeType[NodeType["Import"] = 33] = "Import";
-    NodeType[NodeType["Namespace"] = 34] = "Namespace";
-    NodeType[NodeType["Invocation"] = 35] = "Invocation";
-    NodeType[NodeType["FunctionDeclaration"] = 36] = "FunctionDeclaration";
-    NodeType[NodeType["ReturnStatement"] = 37] = "ReturnStatement";
-    NodeType[NodeType["MediaQuery"] = 38] = "MediaQuery";
-    NodeType[NodeType["FunctionParameter"] = 39] = "FunctionParameter";
-    NodeType[NodeType["FunctionArgument"] = 40] = "FunctionArgument";
-    NodeType[NodeType["KeyframeSelector"] = 41] = "KeyframeSelector";
-    NodeType[NodeType["ViewPort"] = 42] = "ViewPort";
-    NodeType[NodeType["Document"] = 43] = "Document";
-    NodeType[NodeType["AtApplyRule"] = 44] = "AtApplyRule";
-    NodeType[NodeType["CustomPropertyDeclaration"] = 45] = "CustomPropertyDeclaration";
-    NodeType[NodeType["CustomPropertySet"] = 46] = "CustomPropertySet";
-    NodeType[NodeType["ListEntry"] = 47] = "ListEntry";
-    NodeType[NodeType["Supports"] = 48] = "Supports";
-    NodeType[NodeType["SupportsCondition"] = 49] = "SupportsCondition";
-    NodeType[NodeType["NamespacePrefix"] = 50] = "NamespacePrefix";
-    NodeType[NodeType["GridLine"] = 51] = "GridLine";
-    NodeType[NodeType["Plugin"] = 52] = "Plugin";
-    NodeType[NodeType["UnknownAtRule"] = 53] = "UnknownAtRule";
-    NodeType[NodeType["Command"] = 54] = "Command";
-    NodeType[NodeType["StandardCommand"] = 55] = "StandardCommand";
-    NodeType[NodeType["InvalidBuiltin"] = 56] = "InvalidBuiltin";
+    NodeType[NodeType["HexColorValue"] = 26] = "HexColorValue";
+    NodeType[NodeType["Variable"] = 27] = "Variable";
+    NodeType[NodeType["CreateVariable"] = 28] = "CreateVariable";
+    NodeType[NodeType["If"] = 29] = "If";
+    NodeType[NodeType["Else"] = 30] = "Else";
+    NodeType[NodeType["For"] = 31] = "For";
+    NodeType[NodeType["Each"] = 32] = "Each";
+    NodeType[NodeType["While"] = 33] = "While";
+    NodeType[NodeType["MixinContent"] = 34] = "MixinContent";
+    NodeType[NodeType["Media"] = 35] = "Media";
+    NodeType[NodeType["Keyframe"] = 36] = "Keyframe";
+    NodeType[NodeType["FontFace"] = 37] = "FontFace";
+    NodeType[NodeType["Import"] = 38] = "Import";
+    NodeType[NodeType["Namespace"] = 39] = "Namespace";
+    NodeType[NodeType["Invocation"] = 40] = "Invocation";
+    NodeType[NodeType["FunctionDeclaration"] = 41] = "FunctionDeclaration";
+    NodeType[NodeType["ReturnStatement"] = 42] = "ReturnStatement";
+    NodeType[NodeType["MediaQuery"] = 43] = "MediaQuery";
+    NodeType[NodeType["FunctionParameter"] = 44] = "FunctionParameter";
+    NodeType[NodeType["FunctionArgument"] = 45] = "FunctionArgument";
+    NodeType[NodeType["KeyframeSelector"] = 46] = "KeyframeSelector";
+    NodeType[NodeType["ViewPort"] = 47] = "ViewPort";
+    NodeType[NodeType["Document"] = 48] = "Document";
+    NodeType[NodeType["AtApplyRule"] = 49] = "AtApplyRule";
+    NodeType[NodeType["CustomPropertyDeclaration"] = 50] = "CustomPropertyDeclaration";
+    NodeType[NodeType["CustomPropertySet"] = 51] = "CustomPropertySet";
+    NodeType[NodeType["ListEntry"] = 52] = "ListEntry";
+    NodeType[NodeType["Supports"] = 53] = "Supports";
+    NodeType[NodeType["SupportsCondition"] = 54] = "SupportsCondition";
+    NodeType[NodeType["NamespacePrefix"] = 55] = "NamespacePrefix";
+    NodeType[NodeType["GridLine"] = 56] = "GridLine";
+    NodeType[NodeType["Plugin"] = 57] = "Plugin";
+    NodeType[NodeType["UnknownAtRule"] = 58] = "UnknownAtRule";
+    NodeType[NodeType["Command"] = 59] = "Command";
+    NodeType[NodeType["StandardCommand"] = 60] = "StandardCommand";
+    NodeType[NodeType["InvalidBuiltin"] = 61] = "InvalidBuiltin";
 })(NodeType || (NodeType = {}));
 export var ReferenceType;
 (function (ReferenceType) {
-    ReferenceType[ReferenceType["Mixin"] = 0] = "Mixin";
-    ReferenceType[ReferenceType["Rule"] = 1] = "Rule";
-    ReferenceType[ReferenceType["Variable"] = 2] = "Variable";
-    ReferenceType[ReferenceType["Function"] = 3] = "Function";
-    ReferenceType[ReferenceType["Keyframe"] = 4] = "Keyframe";
-    ReferenceType[ReferenceType["Unknown"] = 5] = "Unknown";
+    ReferenceType[ReferenceType["Label"] = 0] = "Label";
+    ReferenceType[ReferenceType["Variable"] = 1] = "Variable";
+    ReferenceType[ReferenceType["Unknown"] = 2] = "Unknown";
 })(ReferenceType || (ReferenceType = {}));
 export function getNodeAtOffset(node, offset) {
     var candidate = null;
@@ -360,6 +362,21 @@ var ChoiceScriptStatement = /** @class */ (function (_super) {
     return ChoiceScriptStatement;
 }(Node));
 export { ChoiceScriptStatement };
+var ChoiceScriptComment = /** @class */ (function (_super) {
+    __extends(ChoiceScriptComment, _super);
+    function ChoiceScriptComment() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Object.defineProperty(ChoiceScriptComment.prototype, "type", {
+        get: function () {
+            return NodeType.ChoiceScriptComment;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return ChoiceScriptComment;
+}(Node));
+export { ChoiceScriptComment };
 var Identifier = /** @class */ (function (_super) {
     __extends(Identifier, _super);
     function Identifier(offset, length) {
@@ -400,6 +417,7 @@ var Scene = /** @class */ (function (_super) {
 export { Scene };
 var Command = /** @class */ (function (_super) {
     __extends(Command, _super);
+    // FIXME could we get a clever way of generic handling/modelling of params/args here?
     function Command(offset, length) {
         return _super.call(this, offset, length) || this;
     }
@@ -413,6 +431,24 @@ var Command = /** @class */ (function (_super) {
     return Command;
 }(Node));
 export { Command };
+var Label = /** @class */ (function (_super) {
+    __extends(Label, _super);
+    function Label(offset, length) {
+        return _super.call(this, offset, length) || this;
+    }
+    Object.defineProperty(Label.prototype, "type", {
+        get: function () {
+            return NodeType.Label;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Label.prototype.getName = function () {
+        return this.name || this.getText();
+    };
+    return Label;
+}(Command));
+export { Label };
 var StandardCommand = /** @class */ (function (_super) {
     __extends(StandardCommand, _super);
     function StandardCommand(offset, length) {
@@ -443,8 +479,41 @@ var FlowCommand = /** @class */ (function (_super) {
     return FlowCommand;
 }(Command));
 export { FlowCommand };
+var SetCommand = /** @class */ (function (_super) {
+    __extends(SetCommand, _super);
+    // FIXME: Getters?
+    function SetCommand(offset, length) {
+        return _super.call(this, offset, length) || this;
+    }
+    SetCommand.prototype.setVariable = function (node) {
+        if (node) {
+            node.attachTo(this);
+            this.variable = node;
+            return true;
+        }
+        return false;
+    };
+    SetCommand.prototype.setValue = function (node) {
+        if (node) {
+            node.attachTo(this);
+            this.value = node;
+            return true;
+        }
+        return false;
+    };
+    Object.defineProperty(SetCommand.prototype, "type", {
+        get: function () {
+            return NodeType.FlowCommand;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return SetCommand;
+}(Command));
+export { SetCommand };
 var ChoiceCommand = /** @class */ (function (_super) {
     __extends(ChoiceCommand, _super);
+    // FIXME member array for choice options?
     function ChoiceCommand(offset, length) {
         return _super.call(this, offset, length) || this;
     }
@@ -488,14 +557,40 @@ var RealWord = /** @class */ (function (_super) {
     return RealWord;
 }(Node));
 export { RealWord };
+var Line = /** @class */ (function (_super) {
+    __extends(Line, _super);
+    function Line(offset, length) {
+        return _super.call(this, offset, length) || this;
+    }
+    Line.prototype.getLineNum = function () {
+        return this.lineNumber;
+    };
+    Line.prototype.setLineNum = function (lineNum) {
+        if (lineNum > 0) {
+            this.lineNumber = lineNum;
+            return true;
+        }
+        return false;
+    };
+    return Line;
+}(Node));
+export { Line };
 var TextLine = /** @class */ (function (_super) {
     __extends(TextLine, _super);
     function TextLine(offset, length) {
         return _super.call(this, offset, length) || this;
     }
     return TextLine;
-}(Node));
+}(Line));
 export { TextLine };
+var ChoiceScriptLine = /** @class */ (function (_super) {
+    __extends(ChoiceScriptLine, _super);
+    function ChoiceScriptLine(offset, length) {
+        return _super.call(this, offset, length) || this;
+    }
+    return ChoiceScriptLine;
+}(Line));
+export { ChoiceScriptLine };
 var AtApplyRule = /** @class */ (function (_super) {
     __extends(AtApplyRule, _super);
     function AtApplyRule(offset, length) {
@@ -852,6 +947,32 @@ var VariableDeclaration = /** @class */ (function (_super) {
     return VariableDeclaration;
 }(AbstractDeclaration));
 export { VariableDeclaration };
+var LabelDeclaration = /** @class */ (function (_super) {
+    __extends(LabelDeclaration, _super);
+    function LabelDeclaration(offset, length) {
+        return _super.call(this, offset, length) || this;
+    }
+    Object.defineProperty(LabelDeclaration.prototype, "type", {
+        get: function () {
+            return NodeType.LabelDeclaration;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    LabelDeclaration.prototype.setLabel = function (node) {
+        if (node) {
+            node.attachTo(this);
+            this.label = node;
+            return true;
+        }
+        return false;
+    };
+    LabelDeclaration.prototype.getLabel = function () {
+        return this.label;
+    };
+    return LabelDeclaration;
+}(AbstractDeclaration));
+export { LabelDeclaration };
 var Variable = /** @class */ (function (_super) {
     __extends(Variable, _super);
     function Variable(offset, length) {
@@ -866,6 +987,9 @@ var Variable = /** @class */ (function (_super) {
     });
     Variable.prototype.getName = function () {
         return this.getText();
+    };
+    Variable.prototype.getValue = function () {
+        return this.value;
     };
     return Variable;
 }(Node));

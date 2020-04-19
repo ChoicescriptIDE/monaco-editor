@@ -98,6 +98,16 @@ var Parser = /** @class */ (function () {
         }
         return false;
     };
+    Parser.prototype.acceptFromRawTextList = function (keywords) {
+        for (var _i = 0, keywords_2 = keywords; _i < keywords_2.length; _i++) {
+            var keyword = keywords_2[_i];
+            if (keyword.length === this.token.text.length && keyword === this.token.text.toLowerCase()) {
+                this.consumeToken();
+                return true;
+            }
+        }
+        return false;
+    };
     Parser.prototype.acceptDelim = function (text) {
         if (this.peekDelim(text)) {
             this.consumeToken();
@@ -192,6 +202,7 @@ var Parser = /** @class */ (function () {
         return node;
     };
     Parser.prototype._parseScene = function () {
+        var lineNum = 1;
         var node = this.create(nodes.Scene);
         do {
             var hasMatch = false;
@@ -200,6 +211,7 @@ var Parser = /** @class */ (function () {
                 var line = this._parseLine();
                 // Hmm...
                 if (line) {
+                    line.setLineNum(lineNum++);
                     node.addChild(line);
                     while (!this.accept(TokenType.EOL) && !this.accept(TokenType.EOF)) {
                         this.consumeToken();
@@ -215,28 +227,47 @@ var Parser = /** @class */ (function () {
         return this.finish(node);
     };
     Parser.prototype._parseLine = function () {
+        var line;
         if (this.peek(TokenType.SingleLineComment)) {
-            var node = this.create(nodes.Node);
+            line = this.create(nodes.Line);
+            var comment = this.create(nodes.ChoiceScriptComment);
             this.consumeToken();
-            return this.finish(node);
+            line.addChild(comment);
         }
         else if (this.peek(TokenType.Builtin) || this.peek(TokenType.Invalid)) {
-            return this._parseChoiceScriptStatement();
+            line = this.create(nodes.ChoiceScriptLine);
+            line.addChild(this._parseChoiceScriptStatement());
         }
         else {
-            return this._parseTextLine();
+            line = this._parseTextLine();
         }
+        if (line.hasChildren()) {
+            return line;
+        }
+        return null;
     };
     Parser.prototype._parseTextLine = function () {
-        var node = this.createNode(nodes.NodeType.TextLine);
-        while (this.peek(TokenType.Word)) {
-            var noder = this.createNode(nodes.NodeType.RealWord);
-            node.addChild(noder);
-            this.consumeToken();
-            this.finish(noder);
+        var textLine = this.create(nodes.TextLine);
+        while (true) {
+            if (textLine.addChild(this._parseWord())) {
+                continue;
+            }
+            else if (!this.peek(TokenType.EOL) && !this.peek(TokenType.EOF)) {
+                // FIXME: Consider adding more than words to the node tree?
+                this.consumeToken();
+            }
+            else {
+                break;
+            }
         }
-        if (node.hasChildren()) {
-            return this.finish(node);
+        return textLine;
+    };
+    Parser.prototype._parseWord = function () {
+        // FIXME: Differentiate words and identifiers
+        if (this.peek(TokenType.Word) || this.peek(TokenType.Ident)) {
+            var word = this.createNode(nodes.NodeType.RealWord);
+            this.consumeToken();
+            return this.finish(word);
         }
         return null;
     };
@@ -244,10 +275,72 @@ var Parser = /** @class */ (function () {
         return this._parseChoiceScriptCommand();
     };
     Parser.prototype._parseChoiceScriptCommand = function () {
-        return this._parseChoiceCommand()
+        return this._parseVariableDeclaration()
+            || this._parseLabelDeclaration()
+            || this._parseSetCommand()
+            || this._parseChoiceCommand()
             || this._parseFlowCommand()
             || this._parseStandardCommand()
             || this._parseInvalidCommand();
+    };
+    Parser.prototype._parseLabelDeclaration = function () {
+        var declaration = this.create(nodes.LabelDeclaration);
+        var command = this.create(nodes.FlowCommand);
+        if (!this.acceptOneKeyword(["*label"])) {
+            return null;
+        }
+        declaration.addChild(this.finish(command));
+        if (!declaration.setLabel(this._parseLabel())) {
+            return this.finish(declaration, ParseError.LabelNameExpected);
+        }
+        return this.finish(declaration);
+    };
+    Parser.prototype._parseVariableDeclaration = function () {
+        var declaration = this.create(nodes.VariableDeclaration);
+        var command = this.create(nodes.StandardCommand);
+        if (!this.acceptOneKeyword(["*create", "*temp"])) {
+            return null;
+        }
+        declaration.addChild(this.finish(command));
+        if (!declaration.setVariable(this._parseVariable())) {
+            return this.finish(declaration, ParseError.VariableNameExpected);
+        }
+        if (!declaration.setValue(this._parseExpr())) {
+            return this.finish(declaration, ParseError.VariableValueExpected);
+        }
+        return this.finish(declaration);
+    };
+    Parser.prototype._parseVariable = function () {
+        var node = this.create(nodes.Variable);
+        if (!this.accept(TokenType.Ident)) {
+            return null;
+        }
+        return node; // feel like this should be this.finish, but LESS example says otherwise;
+    };
+    Parser.prototype._parseLabel = function () {
+        var node = this.create(nodes.Label);
+        if (!this.accept(TokenType.Ident)) {
+            return null;
+        }
+        return node; // feel like this should be this.finish, but LESS example says otherwise;
+    };
+    Parser.prototype._parsePrintVariable = function () {
+        var node = this.create(nodes.Variable);
+        var mark = this.mark();
+        if (!this.accept(TokenType.Dollar)) {
+            return null;
+        }
+        if (!this.accept(TokenType.CurlyL)) {
+            this.restoreAtMark(mark); // not a print var statement
+            return null;
+        }
+        if (!this.accept(TokenType.Ident)) {
+            return this.finish(node, ParseError.VariableNameExpected);
+        }
+        if (!this.accept(TokenType.CurlyR)) {
+            return this.finish(node, ParseError.RightCurlyExpected);
+        }
+        return this.finish(node); // feel like this should be this.finish, but LESS example says otherwise;
     };
     Parser.prototype._parseFlowCommand = function () {
         var node = this.create(nodes.FlowCommand);
@@ -255,6 +348,24 @@ var Parser = /** @class */ (function () {
             return this.finish(node);
         }
         return null;
+    };
+    Parser.prototype._parseIfCommand = function () {
+        var node = this.create(nodes.Node);
+        if (!this.acceptFromRawTextList(["*if", "*selectable_if"])) {
+            return null;
+        }
+        else {
+            while (!this.peek(TokenType.EOL) && !this.peek(TokenType.EOF)) {
+                this.consumeToken();
+            }
+            this.accept(TokenType.EOL);
+            return this.finish(node);
+        }
+    };
+    Parser.prototype._parseChoiceLine = function () {
+        // FIXME actually build IF/Option node structure properly.
+        this._parseIfCommand();
+        return this._parseChoiceOption();
     };
     Parser.prototype._parseChoiceOption = function () {
         if (!this.peek(TokenType.Hash) && !this.peekDelim('#')) {
@@ -276,7 +387,7 @@ var Parser = /** @class */ (function () {
         var node = this.create(nodes.ChoiceCommand);
         if (this.acceptOneKeyword(["*choice"])) {
             if (this.accept(TokenType.EOL)) {
-                while (node.addChild(this._parseChoiceOption())) {
+                while (node.addChild(this._parseChoiceLine())) {
                     this.accept(TokenType.EOL); // EOL
                 }
                 if (node.hasChildren()) {
@@ -289,6 +400,20 @@ var Parser = /** @class */ (function () {
             return this.finish(node, ParseError.NoChoiceOption);
         }
         return null;
+    };
+    Parser.prototype._parseSetCommand = function () {
+        var command = this.create(nodes.SetCommand);
+        if (!this.acceptOneKeyword(["*set"])) { // FIXME: not sure a function for every command is scalable
+            return null;
+        }
+        // this is VERY similar to create/temp commands (VariableDeclaration) can they share the logic? FIXME
+        if (!command.setVariable(this._parseVariable())) {
+            return this.finish(command, ParseError.VariableNameExpected);
+        }
+        if (!command.setValue(this._parseVariable() || this._parseExpr())) {
+            return this.finish(command, ParseError.VariableValueExpected);
+        }
+        return this.finish(command);
     };
     Parser.prototype._parseStandardCommand = function () {
         var node = this.create(nodes.StandardCommand);
@@ -465,22 +590,12 @@ var Parser = /** @class */ (function () {
     };
     Parser.prototype._parseExpr = function (stopOnComma) {
         if (stopOnComma === void 0) { stopOnComma = false; }
-        var node = this.create(nodes.Expression);
-        if (!node.addChild(this._parseBinaryExpr())) {
-            return null;
-        }
-        while (true) {
-            if (this.peek(TokenType.Comma)) { // optional
-                if (stopOnComma) {
-                    return this.finish(node);
-                }
-                this.consumeToken();
-            }
-            if (!node.addChild(this._parseBinaryExpr())) {
-                break;
-            }
-        }
-        return this.finish(node);
+        var expr = this._parseStringLiteral()
+            || this._parseNumeric()
+            || this._parseBinaryExpr()
+            || null;
+        return expr;
+        // FIXME support actual expressions, not simple value
     };
     Parser.prototype._parseNamedLine = function () {
         // https://www.w3.org/TR/css-grid-1/#named-lines
@@ -541,17 +656,15 @@ var Parser = /** @class */ (function () {
         }
         return this.finish(node);
     };
+    Parser.prototype._parseBoolean = function () {
+        var node = this.create(nodes.BinaryExpression);
+        if (!this.acceptFromRawTextList(["true", "false"])) {
+            return null;
+        }
+        return this.finish(node);
+    };
     Parser.prototype._parseNumeric = function () {
-        if (this.peek(TokenType.Num) ||
-            this.peek(TokenType.Percentage) ||
-            this.peek(TokenType.Resolution) ||
-            this.peek(TokenType.Length) ||
-            this.peek(TokenType.EMS) ||
-            this.peek(TokenType.EXS) ||
-            this.peek(TokenType.Angle) ||
-            this.peek(TokenType.Time) ||
-            this.peek(TokenType.Dimension) ||
-            this.peek(TokenType.Freq)) {
+        if (this.peek(TokenType.Num)) {
             var node = this.create(nodes.NumericValue);
             this.consumeToken();
             return this.finish(node);
@@ -580,25 +693,6 @@ var Parser = /** @class */ (function () {
         var node = this.create(nodes.Identifier);
         if (referenceTypes) {
             node.referenceTypes = referenceTypes;
-        }
-        node.isCustomProperty = this.peekRegExp(TokenType.Ident, /^--/);
-        this.consumeToken();
-        return this.finish(node);
-    };
-    Parser.prototype._parseFunctionIdentifier = function () {
-        if (!this.peek(TokenType.Ident)) {
-            return null;
-        }
-        var node = this.create(nodes.Identifier);
-        node.referenceTypes = [nodes.ReferenceType.Function];
-        if (this.acceptIdent('progid')) {
-            // support for IE7 specific filters: 'progid:DXImageTransform.Microsoft.MotionBlur(strength=13, direction=310)'
-            if (this.accept(TokenType.Colon)) {
-                while (this.accept(TokenType.Ident) && this.acceptDelim('.')) {
-                    // loop
-                }
-            }
-            return this.finish(node);
         }
         this.consumeToken();
         return this.finish(node);

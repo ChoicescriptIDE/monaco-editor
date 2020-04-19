@@ -2,12 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { Position } from '../../core/position.js';
 import { Range } from '../../core/range.js';
-import { leftest, righttest, updateTreeMetadata, rbDelete, fixInsert, SENTINEL, TreeNode } from './rbTreeBase.js';
-import { isValidMatch, Searcher, createFindMatch } from '../textModelSearch.js';
 import { FindMatch } from '../../model.js';
+import { SENTINEL, TreeNode, fixInsert, leftest, rbDelete, righttest, updateTreeMetadata } from './rbTreeBase.js';
+import { Searcher, createFindMatch, isValidMatch } from '../textModelSearch.js';
 // const lfRegex = new RegExp(/\r\n|\r|\n/g);
 export var AverageBufferSize = 65535;
 export function createUintArray(arr) {
@@ -146,19 +145,21 @@ var PieceTreeSearchCache = /** @class */ (function () {
     };
     PieceTreeSearchCache.prototype.valdiate = function (offset) {
         var hasInvalidVal = false;
-        for (var i = 0; i < this._cache.length; i++) {
-            var nodePos = this._cache[i];
+        var tmp = this._cache;
+        for (var i = 0; i < tmp.length; i++) {
+            var nodePos = tmp[i];
             if (nodePos.node.parent === null || nodePos.nodeStartOffset >= offset) {
-                this._cache[i] = null;
+                tmp[i] = null;
                 hasInvalidVal = true;
                 continue;
             }
         }
         if (hasInvalidVal) {
             var newArr = [];
-            for (var i = 0; i < this._cache.length; i++) {
-                if (this._cache[i] !== null) {
-                    newArr.push(this._cache[i]);
+            for (var _i = 0, tmp_1 = tmp; _i < tmp_1.length; _i++) {
+                var entry = tmp_1[_i];
+                if (entry !== null) {
+                    newArr.push(entry);
                 }
             }
             this._cache = newArr;
@@ -193,7 +194,7 @@ var PieceTreeBase = /** @class */ (function () {
             }
         }
         this._searchCache = new PieceTreeSearchCache(1);
-        this._lastVisitedLine = { lineNumber: 0, value: null };
+        this._lastVisitedLine = { lineNumber: 0, value: '' };
         this.computeBufferMetadata();
     };
     PieceTreeBase.prototype.normalizeEOL = function (eol) {
@@ -338,7 +339,81 @@ var PieceTreeBase = /** @class */ (function () {
         return ret;
     };
     PieceTreeBase.prototype.getLinesContent = function () {
-        return this.getContentOfSubTree(this.root).split(/\r\n|\r|\n/);
+        var _this = this;
+        var lines = [];
+        var linesLength = 0;
+        var currentLine = '';
+        var danglingCR = false;
+        this.iterate(this.root, function (node) {
+            if (node === SENTINEL) {
+                return true;
+            }
+            var piece = node.piece;
+            var pieceLength = piece.length;
+            if (pieceLength === 0) {
+                return true;
+            }
+            var buffer = _this._buffers[piece.bufferIndex].buffer;
+            var lineStarts = _this._buffers[piece.bufferIndex].lineStarts;
+            var pieceStartLine = piece.start.line;
+            var pieceEndLine = piece.end.line;
+            var pieceStartOffset = lineStarts[pieceStartLine] + piece.start.column;
+            if (danglingCR) {
+                if (buffer.charCodeAt(pieceStartOffset) === 10 /* LineFeed */) {
+                    // pretend the \n was in the previous piece..
+                    pieceStartOffset++;
+                    pieceLength--;
+                }
+                lines[linesLength++] = currentLine;
+                currentLine = '';
+                danglingCR = false;
+                if (pieceLength === 0) {
+                    return true;
+                }
+            }
+            if (pieceStartLine === pieceEndLine) {
+                // this piece has no new lines
+                if (!_this._EOLNormalized && buffer.charCodeAt(pieceStartOffset + pieceLength - 1) === 13 /* CarriageReturn */) {
+                    danglingCR = true;
+                    currentLine += buffer.substr(pieceStartOffset, pieceLength - 1);
+                }
+                else {
+                    currentLine += buffer.substr(pieceStartOffset, pieceLength);
+                }
+                return true;
+            }
+            // add the text before the first line start in this piece
+            currentLine += (_this._EOLNormalized
+                ? buffer.substring(pieceStartOffset, Math.max(pieceStartOffset, lineStarts[pieceStartLine + 1] - _this._EOLLength))
+                : buffer.substring(pieceStartOffset, lineStarts[pieceStartLine + 1]).replace(/(\r\n|\r|\n)$/, ''));
+            lines[linesLength++] = currentLine;
+            for (var line = pieceStartLine + 1; line < pieceEndLine; line++) {
+                currentLine = (_this._EOLNormalized
+                    ? buffer.substring(lineStarts[line], lineStarts[line + 1] - _this._EOLLength)
+                    : buffer.substring(lineStarts[line], lineStarts[line + 1]).replace(/(\r\n|\r|\n)$/, ''));
+                lines[linesLength++] = currentLine;
+            }
+            if (!_this._EOLNormalized && buffer.charCodeAt(lineStarts[pieceEndLine] + piece.end.column - 1) === 13 /* CarriageReturn */) {
+                danglingCR = true;
+                if (piece.end.column === 0) {
+                    // The last line ended with a \r, let's undo the push, it will be pushed by next iteration
+                    linesLength--;
+                }
+                else {
+                    currentLine = buffer.substr(lineStarts[pieceEndLine], piece.end.column - 1);
+                }
+            }
+            else {
+                currentLine = buffer.substr(lineStarts[pieceEndLine], piece.end.column);
+            }
+            return true;
+        });
+        if (danglingCR) {
+            lines[linesLength++] = currentLine;
+            currentLine = '';
+        }
+        lines[linesLength++] = currentLine;
+        return lines;
     };
     PieceTreeBase.prototype.getLength = function () {
         return this._length;
@@ -395,20 +470,31 @@ var PieceTreeBase = /** @class */ (function () {
         var end = this.offsetInBuffer(node.piece.bufferIndex, endCursor);
         var m;
         // Reset regex to search from the beginning
-        searcher.reset(start);
         var ret = { line: 0, column: 0 };
+        var searchText;
+        var offsetInBuffer;
+        if (searcher._wordSeparators) {
+            searchText = buffer.buffer.substring(start, end);
+            offsetInBuffer = function (offset) { return offset + start; };
+            searcher.reset(-1);
+        }
+        else {
+            searchText = buffer.buffer;
+            offsetInBuffer = function (offset) { return offset; };
+            searcher.reset(start);
+        }
         do {
-            m = searcher.next(buffer.buffer);
+            m = searcher.next(searchText);
             if (m) {
-                if (m.index >= end) {
+                if (offsetInBuffer(m.index) >= end) {
                     return resultLen;
                 }
-                this.positionInBuffer(node, m.index - startOffsetInBuffer, ret);
+                this.positionInBuffer(node, offsetInBuffer(m.index) - startOffsetInBuffer, ret);
                 var lineFeedCnt = this.getLineFeedCnt(node.piece.bufferIndex, startCursor, ret);
                 var retStartColumn = ret.line === startCursor.line ? ret.column - startCursor.column + startColumn : ret.column + 1;
                 var retEndColumn = retStartColumn + m[0].length;
                 result[resultLen++] = createFindMatch(new Range(startLineNumber + lineFeedCnt, retStartColumn, startLineNumber + lineFeedCnt, retEndColumn), m, captureMatches);
-                if (m.index + m[0].length >= end) {
+                if (offsetInBuffer(m.index) + m[0].length >= end) {
                     return resultLen;
                 }
                 if (resultLen >= limitResultCount) {
@@ -422,22 +508,22 @@ var PieceTreeBase = /** @class */ (function () {
         var result = [];
         var resultLen = 0;
         var searcher = new Searcher(searchData.wordSeparators, searchData.regex);
-        var startPostion = this.nodeAt2(searchRange.startLineNumber, searchRange.startColumn);
-        if (startPostion === null) {
+        var startPosition = this.nodeAt2(searchRange.startLineNumber, searchRange.startColumn);
+        if (startPosition === null) {
             return [];
         }
         var endPosition = this.nodeAt2(searchRange.endLineNumber, searchRange.endColumn);
         if (endPosition === null) {
             return [];
         }
-        var start = this.positionInBuffer(startPostion.node, startPostion.remainder);
+        var start = this.positionInBuffer(startPosition.node, startPosition.remainder);
         var end = this.positionInBuffer(endPosition.node, endPosition.remainder);
-        if (startPostion.node === endPosition.node) {
-            this.findMatchesInNode(startPostion.node, searcher, searchRange.startLineNumber, searchRange.startColumn, start, end, searchData, captureMatches, limitResultCount, resultLen, result);
+        if (startPosition.node === endPosition.node) {
+            this.findMatchesInNode(startPosition.node, searcher, searchRange.startLineNumber, searchRange.startColumn, start, end, searchData, captureMatches, limitResultCount, resultLen, result);
             return result;
         }
         var startLineNumber = searchRange.startLineNumber;
-        var currentNode = startPostion.node;
+        var currentNode = startPosition.node;
         while (currentNode !== endPosition.node) {
             var lineBreakCnt = this.getLineFeedCnt(currentNode.piece.bufferIndex, start, currentNode.piece.end);
             if (lineBreakCnt >= 1) {
@@ -464,9 +550,9 @@ var PieceTreeBase = /** @class */ (function () {
                 return result;
             }
             startLineNumber++;
-            startPostion = this.nodeAt2(startLineNumber, 1);
-            currentNode = startPostion.node;
-            start = this.positionInBuffer(startPostion.node, startPostion.remainder);
+            startPosition = this.nodeAt2(startLineNumber, 1);
+            currentNode = startPosition.node;
+            start = this.positionInBuffer(startPosition.node, startPosition.remainder);
         }
         if (startLineNumber === searchRange.endLineNumber) {
             var startColumn_3 = startLineNumber === searchRange.startLineNumber ? searchRange.startColumn - 1 : 0;
@@ -515,7 +601,7 @@ var PieceTreeBase = /** @class */ (function () {
         if (eolNormalized === void 0) { eolNormalized = false; }
         this._EOLNormalized = this._EOLNormalized && eolNormalized;
         this._lastVisitedLine.lineNumber = 0;
-        this._lastVisitedLine.value = null;
+        this._lastVisitedLine.value = '';
         if (this.root !== SENTINEL) {
             var _a = this.nodeAt(offset), node = _a.node, remainder = _a.remainder, nodeStartOffset = _a.nodeStartOffset;
             var piece = node.piece;
@@ -592,7 +678,7 @@ var PieceTreeBase = /** @class */ (function () {
     };
     PieceTreeBase.prototype.delete = function (offset, cnt) {
         this._lastVisitedLine.lineNumber = 0;
-        this._lastVisitedLine.value = null;
+        this._lastVisitedLine.value = '';
         if (cnt <= 0 || this.root === SENTINEL) {
             return;
         }
@@ -697,9 +783,9 @@ var PieceTreeBase = /** @class */ (function () {
         // binary search offset between startOffset and endOffset
         var low = piece.start.line;
         var high = piece.end.line;
-        var mid;
-        var midStop;
-        var midStart;
+        var mid = 0;
+        var midStop = 0;
+        var midStart = 0;
         while (low <= high) {
             mid = low + ((high - low) / 2) | 0;
             midStart = lineStarts[mid];
@@ -771,7 +857,7 @@ var PieceTreeBase = /** @class */ (function () {
             while (text.length > AverageBufferSize) {
                 var lastChar = text.charCodeAt(AverageBufferSize - 1);
                 var splitText = void 0;
-                if (lastChar === 13 /* CarriageReturn */ || (lastChar >= 0xd800 && lastChar <= 0xdbff)) {
+                if (lastChar === 13 /* CarriageReturn */ || (lastChar >= 0xD800 && lastChar <= 0xDBFF)) {
                     // last character is \r or a high surrogate => keep it back
                     splitText = text.substring(0, AverageBufferSize - 1);
                     text = text.substring(AverageBufferSize - 1);
@@ -819,7 +905,7 @@ var PieceTreeBase = /** @class */ (function () {
         var endIndex = this._buffers[0].lineStarts.length - 1;
         var endColumn = endOffset - this._buffers[0].lineStarts[endIndex];
         var endPos = { line: endIndex, column: endColumn };
-        var newPiece = new Piece(0, /** todo */ start, endPos, this.getLineFeedCnt(0, start, endPos), endOffset - startOffset);
+        var newPiece = new Piece(0, /** todo@peng */ start, endPos, this.getLineFeedCnt(0, start, endPos), endOffset - startOffset);
         this._lastChangeBufferPos = endPos;
         return [newPiece];
     };
@@ -1307,8 +1393,7 @@ var PieceTreeBase = /** @class */ (function () {
         z.parent = SENTINEL;
         z.size_left = 0;
         z.lf_left = 0;
-        var x = this.root;
-        if (x === SENTINEL) {
+        if (this.root === SENTINEL) {
             this.root = z;
             z.color = 0 /* Black */;
         }
@@ -1323,15 +1408,6 @@ var PieceTreeBase = /** @class */ (function () {
         }
         fixInsert(this, z);
         return z;
-    };
-    PieceTreeBase.prototype.getContentOfSubTree = function (node) {
-        var _this = this;
-        var str = '';
-        this.iterate(node, function (node) {
-            str += _this.getNodeContent(node);
-            return true;
-        });
-        return str;
     };
     return PieceTreeBase;
 }());

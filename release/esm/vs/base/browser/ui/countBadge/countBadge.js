@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import './countBadge.css';
 import { $, append } from '../../dom.js';
 import { format } from '../../../common/strings.js';
@@ -14,6 +13,7 @@ var defaultOpts = {
 };
 var CountBadge = /** @class */ (function () {
     function CountBadge(container, options) {
+        this.count = 0;
         this.options = options || Object.create(null);
         mixin(this.options, defaultOpts, false);
         this.badgeBackground = this.options.badgeBackground;
@@ -45,13 +45,13 @@ var CountBadge = /** @class */ (function () {
     };
     CountBadge.prototype.applyStyles = function () {
         if (this.element) {
-            var background = this.badgeBackground ? this.badgeBackground.toString() : null;
-            var foreground = this.badgeForeground ? this.badgeForeground.toString() : null;
-            var border = this.badgeBorder ? this.badgeBorder.toString() : null;
+            var background = this.badgeBackground ? this.badgeBackground.toString() : '';
+            var foreground = this.badgeForeground ? this.badgeForeground.toString() : '';
+            var border = this.badgeBorder ? this.badgeBorder.toString() : '';
             this.element.style.backgroundColor = background;
             this.element.style.color = foreground;
-            this.element.style.borderWidth = border ? '1px' : null;
-            this.element.style.borderStyle = border ? 'solid' : null;
+            this.element.style.borderWidth = border ? '1px' : '';
+            this.element.style.borderStyle = border ? 'solid' : '';
             this.element.style.borderColor = border;
         }
     };

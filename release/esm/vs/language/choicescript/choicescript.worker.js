@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 import * as worker from './....editoreditor.worker.jsker';
-import { CSSWorker } from './choicescriptWorker.js';
+import { ChoiceScriptWorker } from './choicescriptWorker.js';
 self.onmessage = function () {
     // ignore the first message
     worker.initialize(function (ctx, createData) {
-        return new CSSWorker(ctx, createData);
+        return new ChoiceScriptWorker(ctx, createData);
     });
 };

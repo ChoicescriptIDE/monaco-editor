@@ -5,8 +5,9 @@
 'use strict';
 import * as nodes from '../parser/cssNodes.js';
 import { ParseError } from '../parser/cssErrors.js';
-//import { Symbols, Symbol } from '../parser/cssSymbolScope';
+import { Symbols } from '../parser/choicescriptSymbolScope.js';
 import * as languageFacts from './languageFacts.js';
+import * as strings from '../utils/strings.js';
 import { Position, CompletionItemKind, Range, TextEdit, InsertTextFormat } from './../_deps/vscode-languageserver-types/main.js';
 import { Typo } from './typo/typo.js';
 import * as nls from './../../../fillers/vscode-nls.js';
@@ -30,29 +31,36 @@ var CSSCompletion = /** @class */ (function () {
         });
         this.variablePrefix = variablePrefix;
     }
-    /*protected getSymbolContext(): Symbols {
+    CSSCompletion.prototype.getSymbolContext = function () {
         if (!this.symbolContext) {
             this.symbolContext = new Symbols(this.scene);
         }
         return this.symbolContext;
-    }*/
+    };
     CSSCompletion.prototype.setCompletionParticipants = function (registeredCompletionParticipants) {
         this.completionParticipants = registeredCompletionParticipants || [];
     };
-    CSSCompletion.prototype.doComplete = function (document, position, styleSheet) {
+    CSSCompletion.prototype.doComplete = function (document, position, scene) {
         var _this = this;
         this.offset = document.offsetAt(position);
         this.position = position;
         this.currentWord = getCurrentWord(document, this.offset);
         this.defaultReplaceRange = Range.create(Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);
         this.textDocument = document;
-        this.scene = styleSheet;
+        this.scene = scene;
         try {
             var result_1 = { isIncomplete: false, items: [] };
             this.nodePath = nodes.getNodePath(this.scene, this.offset);
             for (var i = this.nodePath.length - 1; i >= 0; i--) {
                 var node = this.nodePath[i];
-                if (node.hasIssue(ParseError.UnknownCommand)) {
+                var parentRef = node.findParent(nodes.NodeType.VariableDeclaration);
+                if (parentRef) {
+                    this.getCompletionsForVariableDeclaration(parentRef, result_1);
+                    return new Promise(function (resolve, reject) {
+                        resolve(_this.finalize(result_1));
+                    });
+                }
+                else if (node.hasIssue(ParseError.UnknownCommand)) {
                     this.getCompletionsForCommands(result_1);
                     return new Promise(function (resolve, reject) {
                         resolve(_this.finalize(result_1));
@@ -168,12 +176,13 @@ var CSSCompletion = /** @class */ (function () {
                             filterText: word,
                             sortText: 'c',
                             insertText: { value: word },
-                            kind: CompletionItemKind.Property
+                            kind: CompletionItemKind.Property,
+                            command: 'close-selected-scene'
                         });
                         result.items = result.items.concat(suggestions.map(function (suggestion) {
                             return {
-                                label: "Correct to: " + suggestion,
-                                documentation: "",
+                                label: suggestion,
+                                detail: "spelling suggestion",
                                 textEdit: null,
                                 filterText: word,
                                 sortText: 'a',
@@ -199,29 +208,29 @@ var CSSCompletion = /** @class */ (function () {
         }
         return result;
     };
-    /*public getVariableProposals(existingNode: nodes.Node, result: CompletionList): CompletionList {
-        let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
-        for (let symbol of symbols) {
-            let insertText = strings.startsWith(symbol.name, '--') ? `var(${symbol.name})` : symbol.name;
-            const suggest: CompletionItem = {
+    CSSCompletion.prototype.getVariableProposals = function (existingNode, result) {
+        var symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
+        console.log("debug var sug", symbols);
+        for (var _b = 0, symbols_1 = symbols; _b < symbols_1.length; _b++) {
+            var symbol = symbols_1[_b];
+            var insertText = strings.startsWith(symbol.name, '--') ? "var(" + symbol.name + ")" : symbol.name;
+            var suggest = {
                 label: symbol.name,
                 documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
                 textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
                 kind: CompletionItemKind.Variable,
                 sortText: 'z'
             };
-
-            if (symbol.node.type === nodes.NodeType.FunctionParameter) {
+            /*if (symbol.node.type === nodes.NodeType.FunctionParameter) {
                 const mixinNode = <nodes.MixinDeclaration>(symbol.node.getParent());
                 if (mixinNode.type === nodes.NodeType.MixinDeclaration) {
                     suggest.detail = localize('completion.argument', 'argument from \'{0}\'', mixinNode.getName());
                 }
-            }
-
+            }*/
             result.items.push(suggest);
         }
         return result;
-    }*/
+    };
     /*public getVariableProposalsForCSSVarFunction(result: CompletionList): CompletionList {
         let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
         symbols = symbols.filter((symbol): boolean => {
@@ -422,12 +431,12 @@ var CSSCompletion = /** @class */ (function () {
         }
         return result;
     };
-    /*public getCompletionsForVariableDeclaration(declaration: nodes.VariableDeclaration, result: CompletionList): CompletionList {
-        if (this.offset > declaration.colonPosition) {
+    CSSCompletion.prototype.getCompletionsForVariableDeclaration = function (declaration, result) {
+        if (declaration.hasIssue(ParseError.VariableNameExpected)) {
             this.getVariableProposals(declaration.getValue(), result);
         }
         return result;
-    }*/
+    };
     CSSCompletion.prototype.getCompletionForUriLiteralValue = function (uriLiteralNode, result) {
         var uriValue;
         var position;

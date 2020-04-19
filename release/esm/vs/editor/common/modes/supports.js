@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 export function createScopedLineTokens(context, offset) {
     var tokenCount = context.getCount();
     var tokenIndex = context.findTokenIndexAtOffset(offset);
@@ -29,6 +28,10 @@ var ScopedLineTokens = /** @class */ (function () {
     ScopedLineTokens.prototype.getLineContent = function () {
         var actualLineContent = this._actual.getLineContent();
         return actualLineContent.substring(this.firstCharOffset, this._lastCharOffset);
+    };
+    ScopedLineTokens.prototype.getActualLineContentBefore = function (offset) {
+        var actualLineContent = this._actual.getLineContent();
+        return actualLineContent.substring(0, this.firstCharOffset + offset);
     };
     ScopedLineTokens.prototype.getTokenCount = function () {
         return this._lastTokenIndex - this._firstTokenIndex;

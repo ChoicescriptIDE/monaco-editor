@@ -2,11 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { Range } from '../../common/core/range.js';
-import { Position } from '../../common/core/position.js';
-import { EndOfLinePreference } from '../../common/model.js';
 import * as strings from '../../../base/common/strings.js';
+import { Position } from '../../common/core/position.js';
+import { Range } from '../../common/core/range.js';
 var TextAreaState = /** @class */ (function () {
     function TextAreaState(value, selectionStart, selectionEnd, selectionStartPosition, selectionEndPosition) {
         this.value = value;
@@ -58,7 +56,7 @@ var TextAreaState = /** @class */ (function () {
     TextAreaState.selectedText = function (text) {
         return new TextAreaState(text, 0, text.length, null, null);
     };
-    TextAreaState.deduceInput = function (previousState, currentState, couldBeEmojiInput, couldBeTypingAtOffset0) {
+    TextAreaState.deduceInput = function (previousState, currentState, couldBeEmojiInput) {
         if (!previousState) {
             // This is the EMPTY state
             return {
@@ -75,17 +73,6 @@ var TextAreaState = /** @class */ (function () {
         var currentValue = currentState.value;
         var currentSelectionStart = currentState.selectionStart;
         var currentSelectionEnd = currentState.selectionEnd;
-        if (couldBeTypingAtOffset0 && previousValue.length > 0 && previousSelectionStart === previousSelectionEnd && currentSelectionStart === currentSelectionEnd) {
-            // See https://github.com/Microsoft/vscode/issues/42251
-            // where typing always happens at offset 0 in the textarea
-            // when using a custom title area in OSX and moving the window
-            if (!strings.startsWith(currentValue, previousValue) && strings.endsWith(currentValue, previousValue)) {
-                // Looks like something was typed at offset 0
-                // ==> pretend we placed the cursor at offset 0 to begin with...
-                previousSelectionStart = 0;
-                previousSelectionEnd = 0;
-            }
-        }
         // Strip the previous suffix from the value (without interfering with the current selection)
         var previousSuffix = previousValue.substring(previousSelectionEnd);
         var currentSuffix = currentValue.substring(currentSelectionEnd);
@@ -176,37 +163,37 @@ export { TextAreaState };
 var PagedScreenReaderStrategy = /** @class */ (function () {
     function PagedScreenReaderStrategy() {
     }
-    PagedScreenReaderStrategy._getPageOfLine = function (lineNumber) {
-        return Math.floor((lineNumber - 1) / PagedScreenReaderStrategy._LINES_PER_PAGE);
+    PagedScreenReaderStrategy._getPageOfLine = function (lineNumber, linesPerPage) {
+        return Math.floor((lineNumber - 1) / linesPerPage);
     };
-    PagedScreenReaderStrategy._getRangeForPage = function (page) {
-        var offset = page * PagedScreenReaderStrategy._LINES_PER_PAGE;
+    PagedScreenReaderStrategy._getRangeForPage = function (page, linesPerPage) {
+        var offset = page * linesPerPage;
         var startLineNumber = offset + 1;
-        var endLineNumber = offset + PagedScreenReaderStrategy._LINES_PER_PAGE;
+        var endLineNumber = offset + linesPerPage;
         return new Range(startLineNumber, 1, endLineNumber + 1, 1);
     };
-    PagedScreenReaderStrategy.fromEditorSelection = function (previousState, model, selection, trimLongText) {
-        var selectionStartPage = PagedScreenReaderStrategy._getPageOfLine(selection.startLineNumber);
-        var selectionStartPageRange = PagedScreenReaderStrategy._getRangeForPage(selectionStartPage);
-        var selectionEndPage = PagedScreenReaderStrategy._getPageOfLine(selection.endLineNumber);
-        var selectionEndPageRange = PagedScreenReaderStrategy._getRangeForPage(selectionEndPage);
+    PagedScreenReaderStrategy.fromEditorSelection = function (previousState, model, selection, linesPerPage, trimLongText) {
+        var selectionStartPage = PagedScreenReaderStrategy._getPageOfLine(selection.startLineNumber, linesPerPage);
+        var selectionStartPageRange = PagedScreenReaderStrategy._getRangeForPage(selectionStartPage, linesPerPage);
+        var selectionEndPage = PagedScreenReaderStrategy._getPageOfLine(selection.endLineNumber, linesPerPage);
+        var selectionEndPageRange = PagedScreenReaderStrategy._getRangeForPage(selectionEndPage, linesPerPage);
         var pretextRange = selectionStartPageRange.intersectRanges(new Range(1, 1, selection.startLineNumber, selection.startColumn));
-        var pretext = model.getValueInRange(pretextRange, EndOfLinePreference.LF);
+        var pretext = model.getValueInRange(pretextRange, 1 /* LF */);
         var lastLine = model.getLineCount();
         var lastLineMaxColumn = model.getLineMaxColumn(lastLine);
         var posttextRange = selectionEndPageRange.intersectRanges(new Range(selection.endLineNumber, selection.endColumn, lastLine, lastLineMaxColumn));
-        var posttext = model.getValueInRange(posttextRange, EndOfLinePreference.LF);
-        var text = null;
+        var posttext = model.getValueInRange(posttextRange, 1 /* LF */);
+        var text;
         if (selectionStartPage === selectionEndPage || selectionStartPage + 1 === selectionEndPage) {
             // take full selection
-            text = model.getValueInRange(selection, EndOfLinePreference.LF);
+            text = model.getValueInRange(selection, 1 /* LF */);
         }
         else {
             var selectionRange1 = selectionStartPageRange.intersectRanges(selection);
             var selectionRange2 = selectionEndPageRange.intersectRanges(selection);
-            text = (model.getValueInRange(selectionRange1, EndOfLinePreference.LF)
+            text = (model.getValueInRange(selectionRange1, 1 /* LF */)
                 + String.fromCharCode(8230)
-                + model.getValueInRange(selectionRange2, EndOfLinePreference.LF));
+                + model.getValueInRange(selectionRange2, 1 /* LF */));
         }
         // Chromium handles very poorly text even of a few thousand chars
         // Cut text to avoid stalling the entire UI
@@ -224,7 +211,6 @@ var PagedScreenReaderStrategy = /** @class */ (function () {
         }
         return new TextAreaState(pretext + text + posttext, pretext.length, pretext.length + text.length, new Position(selection.startLineNumber, selection.startColumn), new Position(selection.endLineNumber, selection.endColumn));
     };
-    PagedScreenReaderStrategy._LINES_PER_PAGE = 10;
     return PagedScreenReaderStrategy;
 }());
 export { PagedScreenReaderStrategy };

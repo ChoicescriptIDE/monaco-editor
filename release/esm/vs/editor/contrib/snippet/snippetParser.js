@@ -2,21 +2,31 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 var _a;
 var Scanner = /** @class */ (function () {
     function Scanner() {
-        this.text('');
+        this.value = '';
+        this.pos = 0;
     }
     Scanner.isDigitCharacter = function (ch) {
         return ch >= 48 /* Digit0 */ && ch <= 57 /* Digit9 */;
@@ -115,9 +125,15 @@ var Marker = /** @class */ (function () {
         var parent = child.parent;
         var idx = parent.children.indexOf(child);
         var newChildren = parent.children.slice(0);
-        newChildren.splice.apply(newChildren, [idx, 1].concat(others));
+        newChildren.splice.apply(newChildren, __spreadArrays([idx, 1], others));
         parent._children = newChildren;
-        others.forEach(function (node) { return node.parent = parent; });
+        (function _fixParent(children, parent) {
+            for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
+                var child_1 = children_1[_i];
+                child_1.parent = parent;
+                _fixParent(child_1.children, child_1);
+            }
+        })(others, parent);
     };
     Object.defineProperty(Marker.prototype, "children", {
         get: function () {
@@ -263,25 +279,38 @@ export { Choice };
 var Transform = /** @class */ (function (_super) {
     __extends(Transform, _super);
     function Transform() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this_1 = _super !== null && _super.apply(this, arguments) || this;
+        _this_1.regexp = new RegExp('');
+        return _this_1;
     }
     Transform.prototype.resolve = function (value) {
         var _this = this;
-        return value.replace(this.regexp, function () {
-            var ret = '';
-            for (var _i = 0, _a = _this._children; _i < _a.length; _i++) {
-                var marker = _a[_i];
-                if (marker instanceof FormatString) {
-                    var value_1 = arguments.length - 2 > marker.index ? arguments[marker.index] : '';
-                    value_1 = marker.resolve(value_1);
-                    ret += value_1;
-                }
-                else {
-                    ret += marker.toString();
-                }
-            }
-            return ret;
+        var didMatch = false;
+        var ret = value.replace(this.regexp, function () {
+            didMatch = true;
+            return _this._replace(Array.prototype.slice.call(arguments, 0, -2));
         });
+        // when the regex didn't match and when the transform has
+        // else branches, then run those
+        if (!didMatch && this._children.some(function (child) { return child instanceof FormatString && Boolean(child.elseValue); })) {
+            ret = this._replace([]);
+        }
+        return ret;
+    };
+    Transform.prototype._replace = function (groups) {
+        var ret = '';
+        for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
+            var marker = _a[_i];
+            if (marker instanceof FormatString) {
+                var value = groups[marker.index] || '';
+                value = marker.resolve(value);
+                ret += value;
+            }
+            else {
+                ret += marker.toString();
+            }
+        }
+        return ret;
     };
     Transform.prototype.toString = function () {
         return '';
@@ -315,6 +344,9 @@ var FormatString = /** @class */ (function (_super) {
         else if (this.shorthandName === 'capitalize') {
             return !value ? '' : (value[0].toLocaleUpperCase() + value.substr(1));
         }
+        else if (this.shorthandName === 'pascalcase') {
+            return !value ? '' : this._toPascalCase(value);
+        }
         else if (Boolean(value) && typeof this.ifValue === 'string') {
             return this.ifValue;
         }
@@ -324,6 +356,17 @@ var FormatString = /** @class */ (function (_super) {
         else {
             return value || '';
         }
+    };
+    FormatString.prototype._toPascalCase = function (value) {
+        var match = value.match(/[a-z]+/gi);
+        if (!match) {
+            return value;
+        }
+        return match.map(function (word) {
+            return word.charAt(0).toUpperCase()
+                + word.substr(1).toLowerCase();
+        })
+            .join('');
     };
     FormatString.prototype.clone = function () {
         var ret = new FormatString(this.index, this.shorthandName, this.ifValue, this.elseValue);
@@ -362,7 +405,7 @@ var Variable = /** @class */ (function (_super) {
 }(TransformableMarker));
 export { Variable };
 function walk(marker, visitor) {
-    var stack = marker.slice();
+    var stack = __spreadArrays(marker);
     while (stack.length > 0) {
         var marker_1 = stack.shift();
         var recurse = visitor(marker_1);
@@ -474,6 +517,7 @@ export { TextmateSnippet };
 var SnippetParser = /** @class */ (function () {
     function SnippetParser() {
         this._scanner = new Scanner();
+        this._token = { type: 14 /* EOF */, pos: 0, len: 0 };
     }
     SnippetParser.escape = function (value) {
         return value.replace(/\$|}|\\/g, '\\$&');
@@ -507,11 +551,12 @@ var SnippetParser = /** @class */ (function () {
         });
         for (var _i = 0, incompletePlaceholders_1 = incompletePlaceholders; _i < incompletePlaceholders_1.length; _i++) {
             var placeholder = incompletePlaceholders_1[_i];
-            if (placeholderDefaultValues.has(placeholder.index)) {
+            var defaultValues = placeholderDefaultValues.get(placeholder.index);
+            if (defaultValues) {
                 var clone = new Placeholder(placeholder.index);
                 clone.transform = placeholder.transform;
-                for (var _a = 0, _b = placeholderDefaultValues.get(placeholder.index); _a < _b.length; _a++) {
-                    var child = _b[_a];
+                for (var _a = 0, defaultValues_1 = defaultValues; _a < defaultValues_1.length; _a++) {
+                    var child = defaultValues_1[_a];
                     clone.appendChild(child.clone());
                 }
                 snippet.replace(placeholder, [clone]);
@@ -541,17 +586,22 @@ var SnippetParser = /** @class */ (function () {
         return false;
     };
     SnippetParser.prototype._until = function (type) {
-        if (this._token.type === 14 /* EOF */) {
-            return false;
-        }
         var start = this._token;
         while (this._token.type !== type) {
-            this._token = this._scanner.next();
             if (this._token.type === 14 /* EOF */) {
                 return false;
             }
+            else if (this._token.type === 5 /* Backslash */) {
+                var nextToken = this._scanner.next();
+                if (nextToken.type !== 0 /* Dollar */
+                    && nextToken.type !== 4 /* CurlyClose */
+                    && nextToken.type !== 5 /* Backslash */) {
+                    return false;
+                }
+            }
+            this._token = this._scanner.next();
         }
-        var value = this._scanner.value.substring(start.pos, this._token.pos);
+        var value = this._scanner.value.substring(start.pos, this._token.pos).replace(/\\(\$|}|\\)/g, '$1');
         this._token = this._scanner.next();
         return value;
     };
@@ -668,9 +718,10 @@ var SnippetParser = /** @class */ (function () {
             }
             var value = void 0;
             if (value = this._accept(5 /* Backslash */, true)) {
-                // \, or \|
+                // \, \|, or \\
                 value = this._accept(2 /* Comma */, true)
                     || this._accept(7 /* Pipe */, true)
+                    || this._accept(5 /* Backslash */, true)
                     || value;
             }
             else {
@@ -766,7 +817,7 @@ var SnippetParser = /** @class */ (function () {
             }
             var escaped = void 0;
             if (escaped = this._accept(5 /* Backslash */, true)) {
-                escaped = this._accept(6 /* Forwardslash */, true) || escaped;
+                escaped = this._accept(5 /* Backslash */, true) || this._accept(6 /* Forwardslash */, true) || escaped;
                 transform.appendChild(new Text(escaped));
                 continue;
             }

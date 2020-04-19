@@ -29,6 +29,7 @@ export var ParseError = {
     PercentageExpected: new CSSIssueType('css-percentageexpected', localize('expected.percentage', "percentage expected")),
     URIOrStringExpected: new CSSIssueType('css-uriorstringexpected', localize('expected.uriorstring', "uri or string expected")),
     URIExpected: new CSSIssueType('css-uriexpected', localize('expected.uri', "URI expected")),
+    LabelNameExpected: new CSSIssueType('cs-labelnamexpected', localize('expected.labelname', "label name expected")),
     VariableNameExpected: new CSSIssueType('css-varnameexpected', localize('expected.varname', "variable name expected")),
     VariableValueExpected: new CSSIssueType('css-varvalueexpected', localize('expected.varvalue', "variable value expected")),
     PropertyValueExpected: new CSSIssueType('css-propertyvalueexpected', localize('expected.propvalue', "property value expected")),

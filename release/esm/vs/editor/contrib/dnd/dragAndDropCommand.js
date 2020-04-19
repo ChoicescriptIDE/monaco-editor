@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { Selection } from '../../common/core/selection.js';
 import { Range } from '../../common/core/range.js';
 var DragAndDropCommand = /** @class */ (function () {
@@ -10,6 +9,7 @@ var DragAndDropCommand = /** @class */ (function () {
         this.selection = selection;
         this.targetPosition = targetPosition;
         this.copy = copy;
+        this.targetSelection = null;
     }
     DragAndDropCommand.prototype.getEditOperations = function (model, builder) {
         var text = model.getValueInRange(this.selection);
@@ -52,7 +52,7 @@ var DragAndDropCommand = /** @class */ (function () {
                 this.selection.endColumn);
         }
         else {
-            // The target position is before the selection's end postion. Since the selection doesn't contain the target position, the selection is one-line and target position is before this selection.
+            // The target position is before the selection's end position. Since the selection doesn't contain the target position, the selection is one-line and target position is before this selection.
             this.targetSelection = new Selection(this.targetPosition.lineNumber - this.selection.endLineNumber + this.selection.startLineNumber, this.targetPosition.column, this.targetPosition.lineNumber, this.targetPosition.column + this.selection.endColumn - this.selection.startColumn);
         }
     };

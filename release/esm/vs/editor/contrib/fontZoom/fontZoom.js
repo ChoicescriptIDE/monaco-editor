@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,7 +16,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as nls from '../../../nls.js';
-import { registerEditorAction, EditorAction } from '../../browser/editorExtensions.js';
+import { EditorAction, registerEditorAction } from '../../browser/editorExtensions.js';
 import { EditorZoom } from '../../common/config/editorZoom.js';
 var EditorFontZoomIn = /** @class */ (function (_super) {
     __extends(EditorFontZoomIn, _super);
@@ -23,7 +25,7 @@ var EditorFontZoomIn = /** @class */ (function (_super) {
             id: 'editor.action.fontZoomIn',
             label: nls.localize('EditorFontZoomIn.label', "Editor Font Zoom In"),
             alias: 'Editor Font Zoom In',
-            precondition: null
+            precondition: undefined
         }) || this;
     }
     EditorFontZoomIn.prototype.run = function (accessor, editor) {
@@ -38,7 +40,7 @@ var EditorFontZoomOut = /** @class */ (function (_super) {
             id: 'editor.action.fontZoomOut',
             label: nls.localize('EditorFontZoomOut.label', "Editor Font Zoom Out"),
             alias: 'Editor Font Zoom Out',
-            precondition: null
+            precondition: undefined
         }) || this;
     }
     EditorFontZoomOut.prototype.run = function (accessor, editor) {
@@ -53,7 +55,7 @@ var EditorFontZoomReset = /** @class */ (function (_super) {
             id: 'editor.action.fontZoomReset',
             label: nls.localize('EditorFontZoomReset.label', "Editor Font Zoom Reset"),
             alias: 'Editor Font Zoom Reset',
-            precondition: null
+            precondition: undefined
         }) || this;
     }
     EditorFontZoomReset.prototype.run = function (accessor, editor) {

@@ -2,9 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { TrackedRangeStickiness } from '../../common/model.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { sanitizeRanges } from './syntaxRangeProvider.js';
 export var ID_INIT_PROVIDER = 'init';
 var InitializingRangeProvider = /** @class */ (function () {
@@ -21,7 +18,7 @@ var InitializingRangeProvider = /** @class */ (function () {
                         endColumn: editorModel.getLineLength(range.endLineNumber)
                     },
                     options: {
-                        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+                        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */
                     }
                 };
             };
@@ -32,11 +29,11 @@ var InitializingRangeProvider = /** @class */ (function () {
     InitializingRangeProvider.prototype.dispose = function () {
         if (this.decorationIds) {
             this.editorModel.deltaDecorations(this.decorationIds, []);
-            this.decorationIds = void 0;
+            this.decorationIds = undefined;
         }
         if (typeof this.timeout === 'number') {
             clearTimeout(this.timeout);
-            this.timeout = void 0;
+            this.timeout = undefined;
         }
     };
     InitializingRangeProvider.prototype.compute = function (cancelationToken) {
@@ -50,7 +47,7 @@ var InitializingRangeProvider = /** @class */ (function () {
                 }
             }
         }
-        return TPromise.as(sanitizeRanges(foldingRangeData, Number.MAX_VALUE));
+        return Promise.resolve(sanitizeRanges(foldingRangeData, Number.MAX_VALUE));
     };
     return InitializingRangeProvider;
 }());

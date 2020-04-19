@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { EditOperation } from '../../common/core/editOperation.js';
 import { Range } from '../../common/core/range.js';
 var FormattingEdit = /** @class */ (function () {
@@ -21,11 +20,16 @@ var FormattingEdit = /** @class */ (function () {
             }
         }
         if (typeof newEol === 'number') {
-            editor.getModel().pushEOL(newEol);
+            if (editor.hasModel()) {
+                editor.getModel().pushEOL(newEol);
+            }
         }
         return singleEdits;
     };
     FormattingEdit._isFullModelReplaceEdit = function (editor, edit) {
+        if (!editor.hasModel()) {
+            return false;
+        }
         var model = editor.getModel();
         var editRange = model.validateRange(edit.range);
         var fullModelRange = model.getFullModelRange();

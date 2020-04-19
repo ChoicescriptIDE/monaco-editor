@@ -2,13 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { Range } from '../../common/core/range.js';
 var ReplaceAllCommand = /** @class */ (function () {
     function ReplaceAllCommand(editorSelection, ranges, replaceStrings) {
         this._editorSelection = editorSelection;
         this._ranges = ranges;
         this._replaceStrings = replaceStrings;
+        this._trackedEditorSelectionId = null;
     }
     ReplaceAllCommand.prototype.getEditOperations = function (model, builder) {
         if (this._ranges.length > 0) {
@@ -39,8 +39,9 @@ var ReplaceAllCommand = /** @class */ (function () {
                 }
             }
             resultOps.push(previousOp);
-            for (var i = 0; i < resultOps.length; i++) {
-                builder.addEditOperation(resultOps[i].range, resultOps[i].text);
+            for (var _i = 0, resultOps_1 = resultOps; _i < resultOps_1.length; _i++) {
+                var op = resultOps_1[_i];
+                builder.addEditOperation(op.range, op.text);
             }
         }
         this._trackedEditorSelectionId = builder.trackSelection(this._editorSelection);

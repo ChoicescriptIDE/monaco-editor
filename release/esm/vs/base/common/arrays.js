@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-'use strict';
 /**
  * Returns the last element of an array.
  * @param array The array.
@@ -12,8 +7,20 @@ export function tail(array, n) {
     if (n === void 0) { n = 0; }
     return array[array.length - (1 + n)];
 }
+export function tail2(arr) {
+    if (arr.length === 0) {
+        throw new Error('Invalid tail call');
+    }
+    return [arr.slice(0, arr.length - 1), arr[arr.length - 1]];
+}
 export function equals(one, other, itemEquals) {
     if (itemEquals === void 0) { itemEquals = function (a, b) { return a === b; }; }
+    if (one === other) {
+        return true;
+    }
+    if (!one || !other) {
+        return false;
+    }
     if (one.length !== other.length) {
         return false;
     }
@@ -111,7 +118,7 @@ function _sort(a, compare, lo, hi, aux) {
 }
 export function groupBy(data, compare) {
     var result = [];
-    var currentGroup;
+    var currentGroup = undefined;
     for (var _i = 0, _a = mergeSort(data.slice(0), compare); _i < _a.length; _i++) {
         var element = _a[_i];
         if (!currentGroup || compare(currentGroup[0], element) !== 0) {
@@ -124,32 +131,20 @@ export function groupBy(data, compare) {
     }
     return result;
 }
-export function coalesce(array, inplace) {
-    if (!array) {
-        if (!inplace) {
-            return array;
-        }
-    }
-    if (!inplace) {
-        return array.filter(function (e) { return !!e; });
-    }
-    else {
-        var to = 0;
-        for (var i = 0; i < array.length; i++) {
-            if (!!array[i]) {
-                array[to] = array[i];
-                to += 1;
-            }
-        }
-        array.length = to;
-    }
+/**
+ * @returns New array with all falsy values removed. The original array IS NOT modified.
+ */
+export function coalesce(array) {
+    return array.filter(function (e) { return !!e; });
 }
 /**
- * @returns {{false}} if the provided object is an array
- * 	and not empty.
+ * @returns false if the provided object is an array and not empty.
  */
 export function isFalsyOrEmpty(obj) {
     return !Array.isArray(obj) || obj.length === 0;
+}
+export function isNonEmptyArray(obj) {
+    return Array.isArray(obj) && obj.length > 0;
 }
 /**
  * Removes duplicates from the given array. The optional keyFn allows to specify
@@ -171,6 +166,21 @@ export function distinct(array, keyFn) {
         return true;
     });
 }
+export function distinctES6(array) {
+    var seen = new Set();
+    return array.filter(function (element) {
+        if (seen.has(element)) {
+            return false;
+        }
+        seen.add(element);
+        return true;
+    });
+}
+export function fromSet(set) {
+    var result = [];
+    set.forEach(function (o) { return result.push(o); });
+    return result;
+}
 export function firstIndex(array, fn) {
     for (var i = 0; i < array.length; i++) {
         var element = array[i];
@@ -181,12 +191,16 @@ export function firstIndex(array, fn) {
     return -1;
 }
 export function first(array, fn, notFoundValue) {
-    if (notFoundValue === void 0) { notFoundValue = null; }
+    if (notFoundValue === void 0) { notFoundValue = undefined; }
     var index = firstIndex(array, fn);
     return index < 0 ? notFoundValue : array[index];
 }
+export function firstOrDefault(array, notFoundValue) {
+    return array.length > 0 ? array[0] : notFoundValue;
+}
 export function flatten(arr) {
-    return [].concat.apply([], arr);
+    var _a;
+    return (_a = []).concat.apply(_a, arr);
 }
 export function range(arg, to) {
     var from = typeof to === 'number' ? arg : 0;
@@ -218,4 +232,36 @@ export function arrayInsert(target, insertIndex, insertArr) {
     var before = target.slice(0, insertIndex);
     var after = target.slice(insertIndex);
     return before.concat(insertArr, after);
+}
+/**
+ * Pushes an element to the start of the array, if found.
+ */
+export function pushToStart(arr, value) {
+    var index = arr.indexOf(value);
+    if (index > -1) {
+        arr.splice(index, 1);
+        arr.unshift(value);
+    }
+}
+/**
+ * Pushes an element to the end of the array, if found.
+ */
+export function pushToEnd(arr, value) {
+    var index = arr.indexOf(value);
+    if (index > -1) {
+        arr.splice(index, 1);
+        arr.push(value);
+    }
+}
+export function find(arr, predicate) {
+    for (var i = 0; i < arr.length; i++) {
+        var element = arr[i];
+        if (predicate(element, i, arr)) {
+            return element;
+        }
+    }
+    return undefined;
+}
+export function asArray(x) {
+    return Array.isArray(x) ? x : [x];
 }

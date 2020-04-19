@@ -2,13 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { TPromise } from '../../../base/common/winjs.base.js';
-import { TokenizationRegistry } from '../../common/modes.js';
-import { renderViewLine2 as renderViewLine, RenderLineInput } from '../../common/viewLayout/viewLineRenderer.js';
-import { LineTokens } from '../../common/core/lineTokens.js';
+import { TimeoutTimer } from '../../../base/common/async.js';
 import * as strings from '../../../base/common/strings.js';
+import { LineTokens } from '../../common/core/lineTokens.js';
+import { TokenizationRegistry } from '../../common/modes.js';
+import { RenderLineInput, renderViewLine2 as renderViewLine } from '../../common/viewLayout/viewLineRenderer.js';
 import { ViewLineRenderingData } from '../../common/viewModel/viewModel.js';
+import { MonarchTokenizer } from '../common/monarch/monarchLexer.js';
 var Colorizer = /** @class */ (function () {
     function Colorizer() {
     }
@@ -18,63 +18,78 @@ var Colorizer = /** @class */ (function () {
         var mimeType = options.mimeType || domNode.getAttribute('lang') || domNode.getAttribute('data-lang');
         if (!mimeType) {
             console.error('Mode not detected');
-            return undefined;
+            return Promise.resolve();
         }
         themeService.setTheme(theme);
-        var text = domNode.firstChild.nodeValue;
+        var text = domNode.firstChild ? domNode.firstChild.nodeValue : '';
         domNode.className += ' ' + theme;
         var render = function (str) {
             domNode.innerHTML = str;
         };
-        return this.colorize(modeService, text, mimeType, options).then(render, function (err) { return console.error(err); });
-    };
-    Colorizer._tokenizationSupportChangedPromise = function (language) {
-        var listener = null;
-        var stopListening = function () {
-            if (listener) {
-                listener.dispose();
-                listener = null;
-            }
-        };
-        return new TPromise(function (c, e) {
-            listener = TokenizationRegistry.onDidChange(function (e) {
-                if (e.changedLanguages.indexOf(language) >= 0) {
-                    stopListening();
-                    c(void 0);
-                }
-            });
-        }, stopListening);
+        return this.colorize(modeService, text || '', mimeType, options).then(render, function (err) { return console.error(err); });
     };
     Colorizer.colorize = function (modeService, text, mimeType, options) {
+        var tabSize = 4;
+        if (options && typeof options.tabSize === 'number') {
+            tabSize = options.tabSize;
+        }
         if (strings.startsWithUTF8BOM(text)) {
             text = text.substr(1);
         }
         var lines = text.split(/\r\n|\r|\n/);
         var language = modeService.getModeId(mimeType);
-        options = options || {};
-        if (typeof options.tabSize === 'undefined') {
-            options.tabSize = 4;
+        if (!language) {
+            return Promise.resolve(_fakeColorize(lines, tabSize));
         }
         // Send out the event to create the mode
-        modeService.getOrCreateMode(language);
+        modeService.triggerMode(language);
         var tokenizationSupport = TokenizationRegistry.get(language);
         if (tokenizationSupport) {
-            return TPromise.as(_colorize(lines, options.tabSize, tokenizationSupport));
+            return _colorize(lines, tabSize, tokenizationSupport);
         }
-        // wait 500ms for mode to load, then give up
-        return TPromise.any([this._tokenizationSupportChangedPromise(language), TPromise.timeout(500)]).then(function (_) {
-            var tokenizationSupport = TokenizationRegistry.get(language);
-            if (tokenizationSupport) {
-                return _colorize(lines, options.tabSize, tokenizationSupport);
-            }
-            return _fakeColorize(lines, options.tabSize);
+        var tokenizationSupportPromise = TokenizationRegistry.getPromise(language);
+        if (tokenizationSupportPromise) {
+            // A tokenizer will be registered soon
+            return new Promise(function (resolve, reject) {
+                tokenizationSupportPromise.then(function (tokenizationSupport) {
+                    _colorize(lines, tabSize, tokenizationSupport).then(resolve, reject);
+                }, reject);
+            });
+        }
+        return new Promise(function (resolve, reject) {
+            var listener = null;
+            var timeout = null;
+            var execute = function () {
+                if (listener) {
+                    listener.dispose();
+                    listener = null;
+                }
+                if (timeout) {
+                    timeout.dispose();
+                    timeout = null;
+                }
+                var tokenizationSupport = TokenizationRegistry.get(language);
+                if (tokenizationSupport) {
+                    _colorize(lines, tabSize, tokenizationSupport).then(resolve, reject);
+                    return;
+                }
+                resolve(_fakeColorize(lines, tabSize));
+            };
+            // wait 500ms for mode to load, then give up
+            timeout = new TimeoutTimer();
+            timeout.cancelAndSet(execute, 500);
+            listener = TokenizationRegistry.onDidChange(function (e) {
+                if (e.changedLanguages.indexOf(language) >= 0) {
+                    execute();
+                }
+            });
         });
     };
     Colorizer.colorizeLine = function (line, mightContainNonBasicASCII, mightContainRTL, tokens, tabSize) {
         if (tabSize === void 0) { tabSize = 4; }
         var isBasicASCII = ViewLineRenderingData.isBasicASCII(line, mightContainNonBasicASCII);
         var containsRTL = ViewLineRenderingData.containsRTL(line, isBasicASCII, mightContainRTL);
-        var renderResult = renderViewLine(new RenderLineInput(false, line, false, isBasicASCII, containsRTL, 0, tokens, [], tabSize, 0, -1, 'none', false, false));
+        var renderResult = renderViewLine(new RenderLineInput(false, true, line, false, isBasicASCII, containsRTL, 0, tokens, [], tabSize, 0, 0, 0, -1, 'none', false, false, null));
         return renderResult.html;
     };
     Colorizer.colorizeModelLine = function (model, lineNumber, tabSize) {
@@ -89,7 +104,20 @@ var Colorizer = /** @class */ (function () {
 }());
 export { Colorizer };
 function _colorize(lines, tabSize, tokenizationSupport) {
-    return _actualColorize(lines, tabSize, tokenizationSupport);
+    return new Promise(function (c, e) {
+        var execute = function () {
+            var result = _actualColorize(lines, tabSize, tokenizationSupport);
+            if (tokenizationSupport instanceof MonarchTokenizer) {
+                var status_1 = tokenizationSupport.getLoadStatus();
+                if (status_1.loaded === false) {
+                    status_1.promise.then(execute, e);
+                    return;
+                }
+            }
+            c(result);
+        };
+        execute();
+    });
 }
 function _fakeColorize(lines, tabSize) {
     var html = [];
@@ -105,7 +133,7 @@ function _fakeColorize(lines, tabSize) {
         var lineTokens = new LineTokens(tokens, line);
         var isBasicASCII = ViewLineRenderingData.isBasicASCII(line, /* check for basic ASCII */ true);
         var containsRTL = ViewLineRenderingData.containsRTL(line, isBasicASCII, /* check for RTL */ true);
-        var renderResult = renderViewLine(new RenderLineInput(false, line, false, isBasicASCII, containsRTL, 0, lineTokens, [], tabSize, 0, -1, 'none', false, false));
+        var renderResult = renderViewLine(new RenderLineInput(false, true, line, false, isBasicASCII, containsRTL, 0, lineTokens, [], tabSize, 0, 0, 0, -1, 'none', false, false, null));
         html = html.concat(renderResult.html);
         html.push('<br/>');
     }
@@ -121,7 +149,7 @@ function _actualColorize(lines, tabSize, tokenizationSupport) {
         var lineTokens = new LineTokens(tokenizeResult.tokens, line);
         var isBasicASCII = ViewLineRenderingData.isBasicASCII(line, /* check for basic ASCII */ true);
         var containsRTL = ViewLineRenderingData.containsRTL(line, isBasicASCII, /* check for RTL */ true);
-        var renderResult = renderViewLine(new RenderLineInput(false, line, false, isBasicASCII, containsRTL, 0, lineTokens.inflate(), [], tabSize, 0, -1, 'none', false, false));
+        var renderResult = renderViewLine(new RenderLineInput(false, true, line, false, isBasicASCII, containsRTL, 0, lineTokens.inflate(), [], tabSize, 0, 0, 0, -1, 'none', false, false, null));
         html = html.concat(renderResult.html);
         html.push('<br/>');
         state = tokenizeResult.endState;

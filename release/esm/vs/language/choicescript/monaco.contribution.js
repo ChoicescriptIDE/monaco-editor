@@ -7,10 +7,11 @@ import './....editoreditor.api.jsapi';
 var Emitter = monaco.Emitter;
 // --- CSS configuration and defaults ---------
 var LanguageServiceDefaultsImpl = /** @class */ (function () {
-    function LanguageServiceDefaultsImpl(languageId, diagnosticsOptions) {
+    function LanguageServiceDefaultsImpl(languageId, diagnosticsOptions, modeConfiguration) {
         this._onDidChange = new Emitter();
         this._languageId = languageId;
         this.setDiagnosticsOptions(diagnosticsOptions);
+        this.setModeConfiguration(modeConfiguration);
     }
     Object.defineProperty(LanguageServiceDefaultsImpl.prototype, "onDidChange", {
         get: function () {
@@ -26,6 +27,13 @@ var LanguageServiceDefaultsImpl = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(LanguageServiceDefaultsImpl.prototype, "modeConfiguration", {
+        get: function () {
+            return this._modeConfiguration;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(LanguageServiceDefaultsImpl.prototype, "diagnosticsOptions", {
         get: function () {
             return this._diagnosticsOptions;
@@ -37,6 +45,11 @@ var LanguageServiceDefaultsImpl = /** @class */ (function () {
         this._diagnosticsOptions = options || Object.create(null);
         this._onDidChange.fire(this);
     };
+    LanguageServiceDefaultsImpl.prototype.setModeConfiguration = function (modeConfiguration) {
+        this._modeConfiguration = modeConfiguration || Object.create(null);
+        this._onDidChange.fire(this);
+    };
+    ;
     return LanguageServiceDefaultsImpl;
 }());
 export { LanguageServiceDefaultsImpl };
@@ -48,7 +61,11 @@ var diagnosticDefault = {
     spellCheckSettings: {
         rootPath: (typeof window.cside !== "undefined") ? "" : "https://raw.githubusercontent.com/ChoicescriptIDE/main/latest/source/lib/typo/dictionaries/",
         enabled: (typeof window.cside !== "undefined") ? false : true,
-        dictionary: "en_US"
+        dictionary: "en_US",
+        userDictionaries: {
+            persistent: {},
+            session: {}
+        }
     },
     lint: {
         compatibleVendorPrefixes: 'ignore',
@@ -71,7 +88,20 @@ var diagnosticDefault = {
         idSelector: 'ignore'
     }
 };
-var choicescriptDefaults = new LanguageServiceDefaultsImpl('choicescript', diagnosticDefault);
+var modeConfigurationDefault = {
+    completionItems: true,
+    hovers: true,
+    documentSymbols: true,
+    definitions: false,
+    references: false,
+    documentHighlights: false,
+    rename: false,
+    colors: false,
+    foldingRanges: false,
+    diagnostics: true,
+    selectionRanges: false
+};
+var choicescriptDefaults = new LanguageServiceDefaultsImpl('choicescript', diagnosticDefault, modeConfigurationDefault);
 // Export API
 function createAPI() {
     return {
@@ -81,7 +111,7 @@ function createAPI() {
 monaco.languages.choicescript = createAPI();
 // --- Registration to monaco editor ---
 function getMode() {
-    return monaco.Promise.wrap(import('./choicescriptMode.js'));
+    return import('./choicescriptMode.js');
 }
 monaco.languages.onLanguage('choicescript', function () {
     getMode().then(function (mode) { return mode.setupMode(choicescriptDefaults); });

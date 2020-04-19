@@ -2,10 +2,10 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { Range } from '../core/range.js';
 import { Position } from '../core/position.js';
+import { Range } from '../core/range.js';
 import { InlineDecoration, ViewModelDecoration } from './viewModel.js';
+import { filterValidationDecorations } from '../config/editorOptions.js';
 var ViewModelDecorations = /** @class */ (function () {
     function ViewModelDecorations(editorId, model, configuration, linesCollection, coordinatesConverter) {
         this.editorId = editorId;
@@ -14,14 +14,15 @@ var ViewModelDecorations = /** @class */ (function () {
         this._linesCollection = linesCollection;
         this._coordinatesConverter = coordinatesConverter;
         this._decorationsCache = Object.create(null);
-        this._clearCachedModelDecorationsResolver();
+        this._cachedModelDecorationsResolver = null;
+        this._cachedModelDecorationsResolverViewRange = null;
     }
     ViewModelDecorations.prototype._clearCachedModelDecorationsResolver = function () {
         this._cachedModelDecorationsResolver = null;
         this._cachedModelDecorationsResolverViewRange = null;
     };
     ViewModelDecorations.prototype.dispose = function () {
-        this._decorationsCache = null;
+        this._decorationsCache = Object.create(null);
         this._clearCachedModelDecorationsResolver();
     };
     ViewModelDecorations.prototype.reset = function () {
@@ -57,8 +58,7 @@ var ViewModelDecorations = /** @class */ (function () {
         return r;
     };
     ViewModelDecorations.prototype.getDecorationsViewportData = function (viewRange) {
-        var cacheIsValid = true;
-        cacheIsValid = cacheIsValid && (this._cachedModelDecorationsResolver !== null);
+        var cacheIsValid = (this._cachedModelDecorationsResolver !== null);
         cacheIsValid = cacheIsValid && (viewRange.equalsRange(this._cachedModelDecorationsResolverViewRange));
         if (!cacheIsValid) {
             this._cachedModelDecorationsResolver = this._getDecorationsViewportData(viewRange);
@@ -67,7 +67,7 @@ var ViewModelDecorations = /** @class */ (function () {
         return this._cachedModelDecorationsResolver;
     };
     ViewModelDecorations.prototype._getDecorationsViewportData = function (viewportRange) {
-        var modelDecorations = this._linesCollection.getDecorationsInRange(viewportRange, this.editorId, this.configuration.editor.readOnly);
+        var modelDecorations = this._linesCollection.getDecorationsInRange(viewportRange, this.editorId, filterValidationDecorations(this.configuration.options));
         var startLineNumber = viewportRange.startLineNumber;
         var endLineNumber = viewportRange.endLineNumber;
         var decorationsInViewport = [], decorationsInViewportLen = 0;

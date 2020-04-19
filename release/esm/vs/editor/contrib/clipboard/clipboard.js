@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -17,11 +19,10 @@ import './clipboard.css';
 import * as nls from '../../../nls.js';
 import * as browser from '../../../base/browser/browser.js';
 import * as platform from '../../../base/common/platform.js';
-import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
-import { registerEditorAction, EditorAction } from '../../browser/editorExtensions.js';
 import { CopyOptions } from '../../browser/controller/textAreaInput.js';
+import { EditorAction, registerEditorAction } from '../../browser/editorExtensions.js';
+import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
-import { MenuId } from '../../../platform/actions/common/actions.js';
 var CLIPBOARD_CONTEXT_MENU_GROUP = '9_cutcopypaste';
 var supportsCut = (platform.isNative || document.queryCommandSupported('cut'));
 var supportsCopy = (platform.isNative || document.queryCommandSupported('copy'));
@@ -66,7 +67,7 @@ var ExecCommandCutAction = /** @class */ (function (_super) {
         // Do not bind cut keybindings in the browser,
         // since browsers do that for us and it avoids security prompts
         if (!platform.isNative) {
-            kbOpts = null;
+            kbOpts = undefined;
         }
         _this = _super.call(this, 'cut', {
             id: 'editor.action.clipboardCutAction',
@@ -74,12 +75,12 @@ var ExecCommandCutAction = /** @class */ (function (_super) {
             alias: 'Cut',
             precondition: EditorContextKeys.writable,
             kbOpts: kbOpts,
-            menuOpts: {
+            contextMenuOpts: {
                 group: CLIPBOARD_CONTEXT_MENU_GROUP,
                 order: 1
             },
-            menubarOpts: {
-                menuId: MenuId.MenubarEditMenu,
+            menuOpts: {
+                menuId: 17 /* MenubarEditMenu */,
                 group: '2_ccp',
                 title: nls.localize({ key: 'miCut', comment: ['&& denotes a mnemonic'] }, "Cu&&t"),
                 order: 1
@@ -88,7 +89,10 @@ var ExecCommandCutAction = /** @class */ (function (_super) {
         return _this;
     }
     ExecCommandCutAction.prototype.run = function (accessor, editor) {
-        var emptySelectionClipboard = editor.getConfiguration().emptySelectionClipboard;
+        if (!editor.hasModel()) {
+            return;
+        }
+        var emptySelectionClipboard = editor.getOption(25 /* emptySelectionClipboard */);
         if (!emptySelectionClipboard && editor.getSelection().isEmpty()) {
             return;
         }
@@ -109,20 +113,20 @@ var ExecCommandCopyAction = /** @class */ (function (_super) {
         // Do not bind copy keybindings in the browser,
         // since browsers do that for us and it avoids security prompts
         if (!platform.isNative) {
-            kbOpts = null;
+            kbOpts = undefined;
         }
         _this = _super.call(this, 'copy', {
             id: 'editor.action.clipboardCopyAction',
             label: nls.localize('actions.clipboard.copyLabel', "Copy"),
             alias: 'Copy',
-            precondition: null,
+            precondition: undefined,
             kbOpts: kbOpts,
-            menuOpts: {
+            contextMenuOpts: {
                 group: CLIPBOARD_CONTEXT_MENU_GROUP,
                 order: 2
             },
-            menubarOpts: {
-                menuId: MenuId.MenubarEditMenu,
+            menuOpts: {
+                menuId: 17 /* MenubarEditMenu */,
                 group: '2_ccp',
                 title: nls.localize({ key: 'miCopy', comment: ['&& denotes a mnemonic'] }, "&&Copy"),
                 order: 2
@@ -131,7 +135,10 @@ var ExecCommandCopyAction = /** @class */ (function (_super) {
         return _this;
     }
     ExecCommandCopyAction.prototype.run = function (accessor, editor) {
-        var emptySelectionClipboard = editor.getConfiguration().emptySelectionClipboard;
+        if (!editor.hasModel()) {
+            return;
+        }
+        var emptySelectionClipboard = editor.getOption(25 /* emptySelectionClipboard */);
         if (!emptySelectionClipboard && editor.getSelection().isEmpty()) {
             return;
         }
@@ -152,7 +159,7 @@ var ExecCommandPasteAction = /** @class */ (function (_super) {
         // Do not bind paste keybindings in the browser,
         // since browsers do that for us and it avoids security prompts
         if (!platform.isNative) {
-            kbOpts = null;
+            kbOpts = undefined;
         }
         _this = _super.call(this, 'paste', {
             id: 'editor.action.clipboardPasteAction',
@@ -160,12 +167,12 @@ var ExecCommandPasteAction = /** @class */ (function (_super) {
             alias: 'Paste',
             precondition: EditorContextKeys.writable,
             kbOpts: kbOpts,
-            menuOpts: {
+            contextMenuOpts: {
                 group: CLIPBOARD_CONTEXT_MENU_GROUP,
                 order: 3
             },
-            menubarOpts: {
-                menuId: MenuId.MenubarEditMenu,
+            menuOpts: {
+                menuId: 17 /* MenubarEditMenu */,
                 group: '2_ccp',
                 title: nls.localize({ key: 'miPaste', comment: ['&& denotes a mnemonic'] }, "&&Paste"),
                 order: 3
@@ -182,16 +189,19 @@ var ExecCommandCopyWithSyntaxHighlightingAction = /** @class */ (function (_supe
             id: 'editor.action.clipboardCopyWithSyntaxHighlightingAction',
             label: nls.localize('actions.clipboard.copyWithSyntaxHighlightingLabel', "Copy With Syntax Highlighting"),
             alias: 'Copy With Syntax Highlighting',
-            precondition: null,
+            precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
-                primary: null,
+                primary: 0,
                 weight: 100 /* EditorContrib */
             }
         }) || this;
     }
     ExecCommandCopyWithSyntaxHighlightingAction.prototype.run = function (accessor, editor) {
-        var emptySelectionClipboard = editor.getConfiguration().emptySelectionClipboard;
+        if (!editor.hasModel()) {
+            return;
+        }
+        var emptySelectionClipboard = editor.getOption(25 /* emptySelectionClipboard */);
         if (!emptySelectionClipboard && editor.getSelection().isEmpty()) {
             return;
         }

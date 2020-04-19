@@ -2,21 +2,30 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as nls from '../../nls.js';
 var ModifierLabelProvider = /** @class */ (function () {
     function ModifierLabelProvider(mac, windows, linux) {
         if (linux === void 0) { linux = windows; }
-        this.modifierLabels = [null];
+        this.modifierLabels = [null]; // index 0 will never me accessed.
         this.modifierLabels[2 /* Macintosh */] = mac;
         this.modifierLabels[1 /* Windows */] = windows;
         this.modifierLabels[3 /* Linux */] = linux;
     }
-    ModifierLabelProvider.prototype.toLabel = function (firstPartMod, firstPartKey, chordPartMod, chordPartKey, OS) {
-        if (firstPartKey === null && chordPartKey === null) {
+    ModifierLabelProvider.prototype.toLabel = function (OS, parts, keyLabelProvider) {
+        if (parts.length === 0) {
             return null;
         }
-        return _asString(firstPartMod, firstPartKey, chordPartMod, chordPartKey, this.modifierLabels[OS]);
+        var result = [];
+        for (var i = 0, len = parts.length; i < len; i++) {
+            var part = parts[i];
+            var keyLabel = keyLabelProvider(part);
+            if (keyLabel === null) {
+                // this keybinding cannot be expressed...
+                return null;
+            }
+            result[i] = _simpleAsString(part, keyLabel, this.modifierLabels[OS]);
+        }
+        return result.join(' ');
     };
     return ModifierLabelProvider;
 }());
@@ -86,12 +95,4 @@ function _simpleAsString(modifiers, key, labels) {
     // the actual key
     result.push(key);
     return result.join(labels.separator);
-}
-function _asString(firstPartMod, firstPartKey, chordPartMod, chordPartKey, labels) {
-    var result = _simpleAsString(firstPartMod, firstPartKey, labels);
-    if (chordPartKey !== null) {
-        result += ' ';
-        result += _simpleAsString(chordPartMod, chordPartKey, labels);
-    }
-    return result;
 }

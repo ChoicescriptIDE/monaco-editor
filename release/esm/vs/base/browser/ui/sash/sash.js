@@ -2,9 +2,28 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 import './sash.css';
-import { dispose } from '../../../common/lifecycle.js';
+import { dispose, Disposable, DisposableStore } from '../../../common/lifecycle.js';
 import { isIPad } from '../../browser.js';
 import { isMacintosh } from '../../../common/platform.js';
 import * as types from '../../../common/types.js';
@@ -14,54 +33,44 @@ import { Emitter } from '../../../common/event.js';
 import { getElementsByTagName, EventHelper, createStyleSheet, addDisposableListener, append, $, addClass, removeClass, toggleClass } from '../../dom.js';
 import { domEvent } from '../../event.js';
 var DEBUG = false;
-export var Orientation;
-(function (Orientation) {
-    Orientation[Orientation["VERTICAL"] = 0] = "VERTICAL";
-    Orientation[Orientation["HORIZONTAL"] = 1] = "HORIZONTAL";
-})(Orientation || (Orientation = {}));
-export var SashState;
-(function (SashState) {
-    SashState[SashState["Disabled"] = 0] = "Disabled";
-    SashState[SashState["Minimum"] = 1] = "Minimum";
-    SashState[SashState["Maximum"] = 2] = "Maximum";
-    SashState[SashState["Enabled"] = 3] = "Enabled";
-})(SashState || (SashState = {}));
-var Sash = /** @class */ (function () {
+var Sash = /** @class */ (function (_super) {
+    __extends(Sash, _super);
     function Sash(container, layoutProvider, options) {
         if (options === void 0) { options = {}; }
-        this.disposables = [];
-        this._state = SashState.Enabled;
-        this._onDidEnablementChange = new Emitter();
-        this.onDidEnablementChange = this._onDidEnablementChange.event;
-        this._onDidStart = new Emitter();
-        this.onDidStart = this._onDidStart.event;
-        this._onDidChange = new Emitter();
-        this.onDidChange = this._onDidChange.event;
-        this._onDidReset = new Emitter();
-        this.onDidReset = this._onDidReset.event;
-        this._onDidEnd = new Emitter();
-        this.onDidEnd = this._onDidEnd.event;
-        this.linkedSash = undefined;
-        this.orthogonalStartSashDisposables = [];
-        this.orthogonalEndSashDisposables = [];
-        this.el = append(container, $('.monaco-sash'));
+        var _this = _super.call(this) || this;
+        _this._state = 3 /* Enabled */;
+        _this._onDidEnablementChange = _this._register(new Emitter());
+        _this.onDidEnablementChange = _this._onDidEnablementChange.event;
+        _this._onDidStart = _this._register(new Emitter());
+        _this.onDidStart = _this._onDidStart.event;
+        _this._onDidChange = _this._register(new Emitter());
+        _this.onDidChange = _this._onDidChange.event;
+        _this._onDidReset = _this._register(new Emitter());
+        _this.onDidReset = _this._onDidReset.event;
+        _this._onDidEnd = _this._register(new Emitter());
+        _this.onDidEnd = _this._onDidEnd.event;
+        _this.linkedSash = undefined;
+        _this.orthogonalStartSashDisposables = _this._register(new DisposableStore());
+        _this.orthogonalEndSashDisposables = _this._register(new DisposableStore());
+        _this.el = append(container, $('.monaco-sash'));
         if (isMacintosh) {
-            addClass(this.el, 'mac');
+            addClass(_this.el, 'mac');
         }
-        domEvent(this.el, 'mousedown')(this.onMouseDown, this, this.disposables);
-        domEvent(this.el, 'dblclick')(this.onMouseDoubleClick, this, this.disposables);
-        Gesture.addTarget(this.el);
-        domEvent(this.el, EventType.Start)(this.onTouchStart, this, this.disposables);
+        _this._register(domEvent(_this.el, 'mousedown')(_this.onMouseDown, _this));
+        _this._register(domEvent(_this.el, 'dblclick')(_this.onMouseDoubleClick, _this));
+        _this._register(Gesture.addTarget(_this.el));
+        _this._register(domEvent(_this.el, EventType.Start)(_this.onTouchStart, _this));
         if (isIPad) {
-            // see also http://ux.stackexchange.com/questions/39023/what-is-the-optimum-button-size-of-touch-screen-applications
-            addClass(this.el, 'touch');
+            // see also https://ux.stackexchange.com/questions/39023/what-is-the-optimum-button-size-of-touch-screen-applications
+            addClass(_this.el, 'touch');
         }
-        this.setOrientation(options.orientation || Orientation.VERTICAL);
-        this.hidden = false;
-        this.layoutProvider = layoutProvider;
-        this.orthogonalStartSash = options.orthogonalStartSash;
-        this.orthogonalEndSash = options.orthogonalEndSash;
-        toggleClass(this.el, 'debug', DEBUG);
+        _this.setOrientation(options.orientation || 0 /* VERTICAL */);
+        _this.hidden = false;
+        _this.layoutProvider = layoutProvider;
+        _this.orthogonalStartSash = options.orthogonalStartSash;
+        _this.orthogonalEndSash = options.orthogonalEndSash;
+        toggleClass(_this.el, 'debug', DEBUG);
+        return _this;
     }
     Object.defineProperty(Sash.prototype, "state", {
         get: function () { return this._state; },
@@ -69,9 +78,9 @@ var Sash = /** @class */ (function () {
             if (this._state === state) {
                 return;
             }
-            toggleClass(this.el, 'disabled', state === SashState.Disabled);
-            toggleClass(this.el, 'minimum', state === SashState.Minimum);
-            toggleClass(this.el, 'maximum', state === SashState.Maximum);
+            toggleClass(this.el, 'disabled', state === 0 /* Disabled */);
+            toggleClass(this.el, 'minimum', state === 1 /* Minimum */);
+            toggleClass(this.el, 'maximum', state === 2 /* Maximum */);
             this._state = state;
             this._onDidEnablementChange.fire(state);
         },
@@ -81,13 +90,13 @@ var Sash = /** @class */ (function () {
     Object.defineProperty(Sash.prototype, "orthogonalStartSash", {
         get: function () { return this._orthogonalStartSash; },
         set: function (sash) {
-            this.orthogonalStartSashDisposables = dispose(this.orthogonalStartSashDisposables);
+            this.orthogonalStartSashDisposables.clear();
             if (sash) {
-                sash.onDidEnablementChange(this.onOrthogonalStartSashEnablementChange, this, this.orthogonalStartSashDisposables);
+                this.orthogonalStartSashDisposables.add(sash.onDidEnablementChange(this.onOrthogonalStartSashEnablementChange, this));
                 this.onOrthogonalStartSashEnablementChange(sash.state);
             }
             else {
-                this.onOrthogonalStartSashEnablementChange(SashState.Disabled);
+                this.onOrthogonalStartSashEnablementChange(0 /* Disabled */);
             }
             this._orthogonalStartSash = sash;
         },
@@ -97,13 +106,13 @@ var Sash = /** @class */ (function () {
     Object.defineProperty(Sash.prototype, "orthogonalEndSash", {
         get: function () { return this._orthogonalEndSash; },
         set: function (sash) {
-            this.orthogonalEndSashDisposables = dispose(this.orthogonalEndSashDisposables);
+            this.orthogonalEndSashDisposables.clear();
             if (sash) {
-                sash.onDidEnablementChange(this.onOrthogonalEndSashEnablementChange, this, this.orthogonalEndSashDisposables);
+                this.orthogonalEndSashDisposables.add(sash.onDidEnablementChange(this.onOrthogonalEndSashEnablementChange, this));
                 this.onOrthogonalEndSashEnablementChange(sash.state);
             }
             else {
-                this.onOrthogonalEndSashEnablementChange(SashState.Disabled);
+                this.onOrthogonalEndSashEnablementChange(0 /* Disabled */);
             }
             this._orthogonalEndSash = sash;
         },
@@ -112,7 +121,7 @@ var Sash = /** @class */ (function () {
     });
     Sash.prototype.setOrientation = function (orientation) {
         this.orientation = orientation;
-        if (this.orientation === Orientation.HORIZONTAL) {
+        if (this.orientation === 1 /* HORIZONTAL */) {
             addClass(this.el, 'horizontal');
             removeClass(this.el, 'vertical');
         }
@@ -128,38 +137,24 @@ var Sash = /** @class */ (function () {
         var _this = this;
         EventHelper.stop(e, false);
         var isMultisashResize = false;
-        if (this.linkedSash && !e.__linkedSashEvent) {
-            e.__linkedSashEvent = true;
-            this.linkedSash.onMouseDown(e);
-        }
         if (!e.__orthogonalSashEvent) {
-            var orthogonalSash = void 0;
-            if (this.orientation === Orientation.VERTICAL) {
-                if (e.offsetY <= 4) {
-                    orthogonalSash = this.orthogonalStartSash;
-                }
-                else if (e.offsetY >= this.el.clientHeight - 4) {
-                    orthogonalSash = this.orthogonalEndSash;
-                }
-            }
-            else {
-                if (e.offsetX <= 4) {
-                    orthogonalSash = this.orthogonalStartSash;
-                }
-                else if (e.offsetX >= this.el.clientWidth - 4) {
-                    orthogonalSash = this.orthogonalEndSash;
-                }
-            }
+            var orthogonalSash = this.getOrthogonalSash(e);
             if (orthogonalSash) {
                 isMultisashResize = true;
                 e.__orthogonalSashEvent = true;
                 orthogonalSash.onMouseDown(e);
             }
         }
+        if (this.linkedSash && !e.__linkedSashEvent) {
+            e.__linkedSashEvent = true;
+            this.linkedSash.onMouseDown(e);
+        }
         if (!this.state) {
             return;
         }
-        var iframes = getElementsByTagName('iframe');
+        // Select both iframes and webviews; internally Electron nests an iframe
+        // in its <webview> component, but this isn't queryable.
+        var iframes = __spreadArrays(getElementsByTagName('iframe'), getElementsByTagName('webview'));
         for (var _i = 0, iframes_1 = iframes; _i < iframes_1.length; _i++) {
             var iframe = iframes_1[_i];
             iframe.style.pointerEvents = 'none'; // disable mouse events on iframes as long as we drag the sash
@@ -178,11 +173,11 @@ var Sash = /** @class */ (function () {
             if (isMultisashResize) {
                 cursor = 'all-scroll';
             }
-            else if (_this.orientation === Orientation.HORIZONTAL) {
-                if (_this.state === SashState.Minimum) {
+            else if (_this.orientation === 1 /* HORIZONTAL */) {
+                if (_this.state === 1 /* Minimum */) {
                     cursor = 's-resize';
                 }
-                else if (_this.state === SashState.Maximum) {
+                else if (_this.state === 2 /* Maximum */) {
                     cursor = 'n-resize';
                 }
                 else {
@@ -190,10 +185,10 @@ var Sash = /** @class */ (function () {
                 }
             }
             else {
-                if (_this.state === SashState.Minimum) {
+                if (_this.state === 1 /* Minimum */) {
                     cursor = 'e-resize';
                 }
-                else if (_this.state === SashState.Maximum) {
+                else if (_this.state === 2 /* Maximum */) {
                     cursor = 'w-resize';
                 }
                 else {
@@ -202,7 +197,7 @@ var Sash = /** @class */ (function () {
             }
             style.innerHTML = "* { cursor: " + cursor + " !important; }";
         };
-        var disposables = [];
+        var disposables = new DisposableStore();
         updateStyle();
         if (!isMultisashResize) {
             this.onDidEnablementChange(updateStyle, null, disposables);
@@ -218,8 +213,7 @@ var Sash = /** @class */ (function () {
             _this.el.removeChild(style);
             removeClass(_this.el, 'active');
             _this._onDidEnd.fire();
-            dispose(disposables);
-            var iframes = getElementsByTagName('iframe');
+            disposables.dispose();
             for (var _i = 0, iframes_2 = iframes; _i < iframes_2.length; _i++) {
                 var iframe = iframes_2[_i];
                 iframe.style.pointerEvents = 'auto';
@@ -228,7 +222,14 @@ var Sash = /** @class */ (function () {
         domEvent(window, 'mousemove')(onMouseMove, null, disposables);
         domEvent(window, 'mouseup')(onMouseUp, null, disposables);
     };
-    Sash.prototype.onMouseDoubleClick = function (event) {
+    Sash.prototype.onMouseDoubleClick = function (e) {
+        var orthogonalSash = this.getOrthogonalSash(e);
+        if (orthogonalSash) {
+            orthogonalSash._onDidReset.fire();
+        }
+        if (this.linkedSash) {
+            this.linkedSash._onDidReset.fire();
+        }
         this._onDidReset.fire();
     };
     Sash.prototype.onTouchStart = function (event) {
@@ -263,7 +264,7 @@ var Sash = /** @class */ (function () {
     };
     Sash.prototype.layout = function () {
         var size = isIPad ? 20 : 4;
-        if (this.orientation === Orientation.VERTICAL) {
+        if (this.orientation === 0 /* VERTICAL */) {
             var verticalProvider = this.layoutProvider;
             this.el.style.left = verticalProvider.getVerticalSashLeft(this) - (size / 2) + 'px';
             if (verticalProvider.getVerticalSashTop) {
@@ -290,20 +291,34 @@ var Sash = /** @class */ (function () {
         this.el.setAttribute('aria-hidden', 'true');
     };
     Sash.prototype.onOrthogonalStartSashEnablementChange = function (state) {
-        toggleClass(this.el, 'orthogonal-start', state !== SashState.Disabled);
+        toggleClass(this.el, 'orthogonal-start', state !== 0 /* Disabled */);
     };
     Sash.prototype.onOrthogonalEndSashEnablementChange = function (state) {
-        toggleClass(this.el, 'orthogonal-end', state !== SashState.Disabled);
+        toggleClass(this.el, 'orthogonal-end', state !== 0 /* Disabled */);
+    };
+    Sash.prototype.getOrthogonalSash = function (e) {
+        if (this.orientation === 0 /* VERTICAL */) {
+            if (e.offsetY <= 4) {
+                return this.orthogonalStartSash;
+            }
+            else if (e.offsetY >= this.el.clientHeight - 4) {
+                return this.orthogonalEndSash;
+            }
+        }
+        else {
+            if (e.offsetX <= 4) {
+                return this.orthogonalStartSash;
+            }
+            else if (e.offsetX >= this.el.clientWidth - 4) {
+                return this.orthogonalEndSash;
+            }
+        }
+        return undefined;
     };
     Sash.prototype.dispose = function () {
-        this.orthogonalStartSashDisposables = dispose(this.orthogonalStartSashDisposables);
-        this.orthogonalEndSashDisposables = dispose(this.orthogonalEndSashDisposables);
-        if (this.el && this.el.parentElement) {
-            this.el.parentElement.removeChild(this.el);
-        }
-        this.el = null;
-        this.disposables = dispose(this.disposables);
+        _super.prototype.dispose.call(this);
+        this.el.remove();
     };
     return Sash;
-}());
+}(Disposable));
 export { Sash };

@@ -1,7 +1,7560 @@
-/*!-----------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * monaco-css version: 2.2.0(290ea3e1be00c96cfbd8ae72487d1cb8f514edea)
- * Released under the MIT license
- * https://github.com/Microsoft/monaco-css/blob/master/LICENSE.md
- *-----------------------------------------------------------------------------*/
-!function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/parser/cssScanner",["require","exports"],e)}(function(e,t){"use strict";var a,n;Object.defineProperty(t,"__esModule",{value:!0}),(n=a=t.TokenType||(t.TokenType={}))[n.Ident=0]="Ident",n[n.AtKeyword=1]="AtKeyword",n[n.String=2]="String",n[n.BadString=3]="BadString",n[n.UnquotedString=4]="UnquotedString",n[n.Hash=5]="Hash",n[n.Num=6]="Num",n[n.Percentage=7]="Percentage",n[n.Dimension=8]="Dimension",n[n.UnicodeRange=9]="UnicodeRange",n[n.CDO=10]="CDO",n[n.CDC=11]="CDC",n[n.Colon=12]="Colon",n[n.SemiColon=13]="SemiColon",n[n.CurlyL=14]="CurlyL",n[n.CurlyR=15]="CurlyR",n[n.ParenthesisL=16]="ParenthesisL",n[n.ParenthesisR=17]="ParenthesisR",n[n.BracketL=18]="BracketL",n[n.BracketR=19]="BracketR",n[n.Whitespace=20]="Whitespace",n[n.Includes=21]="Includes",n[n.Dashmatch=22]="Dashmatch",n[n.SubstringOperator=23]="SubstringOperator",n[n.PrefixOperator=24]="PrefixOperator",n[n.SuffixOperator=25]="SuffixOperator",n[n.Delim=26]="Delim",n[n.EMS=27]="EMS",n[n.EXS=28]="EXS",n[n.Length=29]="Length",n[n.Angle=30]="Angle",n[n.Time=31]="Time",n[n.Freq=32]="Freq",n[n.Exclamation=33]="Exclamation",n[n.Resolution=34]="Resolution",n[n.Comma=35]="Comma",n[n.Charset=36]="Charset",n[n.EscapedJavaScript=37]="EscapedJavaScript",n[n.BadEscapedJavaScript=38]="BadEscapedJavaScript",n[n.Comment=39]="Comment",n[n.SingleLineComment=40]="SingleLineComment",n[n.EOF=41]="EOF",n[n.EOL=42]="EOL",n[n.CustomToken=43]="CustomToken",n[n.Builtin=44]="Builtin",n[n.Invalid=45]="Invalid",n[n.Word=46]="Word";var r=function(){function e(e){this.source=e,this.len=e.length,this.position=0}return e.prototype.substring=function(e,t){return void 0===t&&(t=this.position),this.source.substring(e,t)},e.prototype.eos=function(){return this.len<=this.position},e.prototype.pos=function(){return this.position},e.prototype.goBackTo=function(e){this.position=e},e.prototype.goBack=function(e){this.position-=e},e.prototype.advance=function(e){this.position+=e},e.prototype.nextChar=function(){return this.source.charCodeAt(this.position++)||0},e.prototype.peekChar=function(e){return void 0===e&&(e=0),this.source.charCodeAt(this.position+e)||0},e.prototype.lookbackChar=function(e){return void 0===e&&(e=0),this.source.charCodeAt(this.position-e)||0},e.prototype.advanceIfChar=function(e){return e===this.source.charCodeAt(this.position)&&(this.position++,!0)},e.prototype.advanceIfChars=function(e){var t;if(this.position+e.length>this.source.length)return!1;for(t=0;t<e.length;t++)if(this.source.charCodeAt(this.position+t)!==e[t])return!1;return this.advance(t),!0},e.prototype.advanceWhileChar=function(e){for(var t=this.position;this.position<this.len&&e(this.source.charCodeAt(this.position));)this.position++;return this.position-t},e}();t.MultiLineStream=r;var o="a".charCodeAt(0),c="c".charCodeAt(0),u="e".charCodeAt(0),s="f".charCodeAt(0),d="m".charCodeAt(0),p="n".charCodeAt(0),l="o".charCodeAt(0),h="t".charCodeAt(0),i="z".charCodeAt(0),f="A".charCodeAt(0),g="F".charCodeAt(0),m="Z".charCodeAt(0),y="0".charCodeAt(0),v="9".charCodeAt(0),b=("~".charCodeAt(0),"^".charCodeAt(0),"=".charCodeAt(0),"|".charCodeAt(0),"-".charCodeAt(0)),C="_".charCodeAt(0),x="%".charCodeAt(0),k="*".charCodeAt(0),T="(".charCodeAt(0),w=")".charCodeAt(0),_=("<".charCodeAt(0),">".charCodeAt(0),"@".charCodeAt(0),"#".charCodeAt(0)),S=("$".charCodeAt(0),"\\".charCodeAt(0)),E="/".charCodeAt(0),P="\n".charCodeAt(0),A="\r".charCodeAt(0),R="\f".charCodeAt(0),I='"'.charCodeAt(0),O="'".charCodeAt(0),L=" ".charCodeAt(0),N="\t".charCodeAt(0),D=";".charCodeAt(0),F=":".charCodeAt(0),j="{".charCodeAt(0),M="}".charCodeAt(0),B="[".charCodeAt(0),V="]".charCodeAt(0),q=",".charCodeAt(0),K=".".charCodeAt(0),W=("!".charCodeAt(0),{});W[D]=a.SemiColon,W[F]=a.Colon,W[j]=a.CurlyL,W[M]=a.CurlyR,W[V]=a.BracketR,W[B]=a.BracketL,W[T]=a.ParenthesisL,W[w]=a.ParenthesisR,W[q]=a.Comma;var U={};U.em=a.EMS,U.ex=a.EXS,U.px=a.Length,U.cm=a.Length,U.mm=a.Length,U.in=a.Length,U.pt=a.Length,U.pc=a.Length,U.deg=a.Angle,U.rad=a.Angle,U.grad=a.Angle,U.ms=a.Time,U.s=a.Time,U.hz=a.Freq,U.khz=a.Freq,U["%"]=a.Percentage,U.fr=a.Percentage,U.dpi=a.Resolution,U.dpcm=a.Resolution;var z=function(){function e(){this.stream=new r(""),this.ignoreComment=!0,this.ignoreWhitespace=!0,this.inURL=!1}return e.prototype.setSource=function(e){this.stream=new r(e)},e.prototype.finishToken=function(e,t,n){return{offset:e,len:this.stream.pos()-e,type:t,text:n||this.stream.substring(e)}},e.prototype.substring=function(e,t){return this.stream.substring(e,e+t)},e.prototype.pos=function(){return this.stream.pos()},e.prototype.goBackTo=function(e){this.stream.goBackTo(e)},e.prototype.scanUnquotedString=function(){var e=this.stream.pos(),t=[];return this._unquotedString(t)?this.finishToken(e,a.UnquotedString,t.join("")):null},e.prototype.scan=function(){var e=this.trivia();if(null!==e)return e;var t=this.stream.pos();return this.stream.eos()?this.finishToken(t,a.EOF):this.scanNext(t)},e.prototype.scanNext=function(e){if(this.stream.advanceIfChars([k,c,l,d,d,u,p,h])){var t=this.stream.advanceWhileChar(function(e){return!(e===R||e===P||e===A)}),n=this.finishToken(e,a.SingleLineComment);return 0<t?n:null}var r=[];if(this.stream.advanceIfChar(k))return r=["*"],this._name(r)?this.finishToken(e,a.Builtin,r.join("")):1===r.length?this.finishToken(e,a.Delim):this.finishToken(e,a.Invalid,r.join(""));if(this._newline(r))return this.finishToken(e,a.EOL,r.join(""));if(this.stream.advanceIfChar(_))return r=["#"],this._name(r)?this.finishToken(e,a.Hash,r.join("")):this.finishToken(e,a.Delim);if(this._number()){var i=this.stream.pos();if(r=[this.stream.substring(e,i)],this.stream.advanceIfChar(x))return this.finishToken(e,a.Percentage);if(this.ident(r)){var o=this.stream.substring(i).toLowerCase(),s=U[o];return void 0!==s?this.finishToken(e,s,r.join("")):this.finishToken(e,a.Dimension,r.join(""))}return this.finishToken(e,a.Num)}return this._word()?this.finishToken(e,a.Word):(this.stream.nextChar(),this.finishToken(e,a.Delim))},e.prototype._matchWordAnyCase=function(n){var r=0;return this.stream.advanceWhileChar(function(e){var t=n[r]===e||n[r+1]===e;return t&&(r+=2),t}),r===n.length||(this.stream.goBack(r/2),!1)},e.prototype.trivia=function(){for(;;){var e=this.stream.pos();if(this._whitespace()){if(!this.ignoreWhitespace)return this.finishToken(e,a.Whitespace)}else{if(!this.comment())return null;if(!this.ignoreComment)return this.finishToken(e,a.Comment)}}},e.prototype.comment=function(){if(this.stream.advanceIfChars([E,k])){var t=!1,n=!1;return this.stream.advanceWhileChar(function(e){return n&&e===E?!(t=!0):(n=e===k,!0)}),t&&this.stream.advance(1),!0}return!1},e.prototype._number=function(){var e,t=0;return this.stream.peekChar()===K&&(t=1),e=this.stream.peekChar(t),y<=e&&e<=v&&(this.stream.advance(t+1),this.stream.advanceWhileChar(function(e){return y<=e&&e<=v||0===t&&e===K}),!0)},e.prototype._word=function(){var e;return e=this.stream.peekChar(0),(f<=e&&e<=m||o<=e&&e<=i)&&(this.stream.advance(1),this.stream.advanceWhileChar(function(e){return f<=e&&e<=m||o<=e&&e<=i}),!0)},e.prototype._newline=function(e){var t=this.stream.peekChar();switch(t){case A:case R:case P:return this.stream.advance(1),e.push(String.fromCharCode(t)),t===A&&this.stream.advanceIfChar(P)&&e.push("\n"),!0}return!1},e.prototype._escape=function(e,t){var n=this.stream.peekChar();if(n===S){this.stream.advance(1),n=this.stream.peekChar();for(var r=0;r<6&&(y<=n&&n<=v||o<=n&&n<=s||f<=n&&n<=g);)this.stream.advance(1),n=this.stream.peekChar(),r++;if(0<r){try{var i=parseInt(this.stream.substring(this.stream.pos()-r),16);i&&e.push(String.fromCharCode(i))}catch(e){}return n===L||n===N?this.stream.advance(1):this._newline([]),!0}if(n!==A&&n!==R&&n!==P)return this.stream.advance(1),e.push(String.fromCharCode(n)),!0;if(t)return this._newline(e)}return!1},e.prototype._stringChar=function(e,t){var n=this.stream.peekChar();return 0!==n&&n!==e&&n!==S&&n!==A&&n!==R&&n!==P&&(this.stream.advance(1),t.push(String.fromCharCode(n)),!0)},e.prototype._string=function(e){if(this.stream.peekChar()===O||this.stream.peekChar()===I){var t=this.stream.nextChar();for(e.push(String.fromCharCode(t));this._stringChar(t,e)||this._escape(e,!0););return this.stream.peekChar()===t?(this.stream.nextChar(),e.push(String.fromCharCode(t)),a.String):a.BadString}return null},e.prototype._unquotedChar=function(e){var t=this.stream.peekChar();return 0!==t&&t!==S&&t!==O&&t!==I&&t!==T&&t!==w&&t!==L&&t!==N&&t!==P&&t!==R&&t!==A&&(this.stream.advance(1),e.push(String.fromCharCode(t)),!0)},e.prototype._unquotedString=function(e){for(var t=!1;this._unquotedChar(e)||this._escape(e);)t=!0;return t},e.prototype._whitespace=function(){return 0<this.stream.advanceWhileChar(function(e){return e===L||e===N})},e.prototype._name=function(e){for(var t=!1;this._identChar(e)||this._escape(e);)t=!0;return t},e.prototype.ident=function(e){var t=this.stream.pos();if(this._minus(e)&&this._minus(e)){if(this._identFirstChar(e)||this._escape(e)){for(;this._identChar(e)||this._escape(e););return!0}}else if(this._identFirstChar(e)||this._escape(e)){for(;this._identChar(e)||this._escape(e););return!0}return this.stream.goBackTo(t),!1},e.prototype._identFirstChar=function(e){var t=this.stream.peekChar();return(t===C||o<=t&&t<=i||f<=t&&t<=m||128<=t&&t<=65535)&&(this.stream.advance(1),e.push(String.fromCharCode(t)),!0)},e.prototype._minus=function(e){var t=this.stream.peekChar();return t===b&&(this.stream.advance(1),e.push(String.fromCharCode(t)),!0)},e.prototype._identChar=function(e){var t=this.stream.peekChar();return(t===C||t===b||o<=t&&t<=i||f<=t&&t<=m||y<=t&&t<=v||128<=t&&t<=65535)&&(this.stream.advance(1),e.push(String.fromCharCode(t)),!0)},e}();t.Scanner=z});var __extends=this&&this.__extends||function(){var r=function(e,t){return(r=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(e,t){e.__proto__=t}||function(e,t){for(var n in t)t.hasOwnProperty(n)&&(e[n]=t[n])})(e,t)};return function(e,t){function n(){this.constructor=e}r(e,t),e.prototype=null===t?Object.create(t):(n.prototype=t.prototype,new n)}}();!function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/parser/cssNodes",["require","exports"],e)}(function(e,t){"use strict";var i,n,r;function o(e,t){var n=null;return!e||t<e.offset||t>e.end?null:(e.accept(function(e){return-1===e.offset&&-1===e.length||e.offset<=t&&e.end>=t&&(n?e.length<=n.length&&(n=e):n=e,!0)}),n)}Object.defineProperty(t,"__esModule",{value:!0}),(n=i=t.NodeType||(t.NodeType={}))[n.Undefined=0]="Undefined",n[n.Identifier=1]="Identifier",n[n.Scene=2]="Scene",n[n.Line=3]="Line",n[n.ChoiceScriptStatement=4]="ChoiceScriptStatement",n[n.StringLiteral=5]="StringLiteral",n[n.Operator=6]="Operator",n[n.Expression=7]="Expression",n[n.BinaryExpression=8]="BinaryExpression",n[n.Term=9]="Term",n[n.Value=10]="Value",n[n.RealWord=11]="RealWord",n[n.TextLine=12]="TextLine",n[n.ChoiceCommand=13]="ChoiceCommand",n[n.ChoiceOption=14]="ChoiceOption",n[n.MultiReplace=15]="MultiReplace",n[n.PrintVariable=16]="PrintVariable",n[n.NumericValue=17]="NumericValue",n[n.Boolean=18]="Boolean",n[n.Indentation=19]="Indentation",n[n.VariableDeclaration=20]="VariableDeclaration",n[n.FlowCommand=21]="FlowCommand",n[n.HexColorValue=22]="HexColorValue",n[n.CreateVariable=23]="CreateVariable",n[n.If=24]="If",n[n.Else=25]="Else",n[n.For=26]="For",n[n.Each=27]="Each",n[n.While=28]="While",n[n.MixinContent=29]="MixinContent",n[n.Media=30]="Media",n[n.Keyframe=31]="Keyframe",n[n.FontFace=32]="FontFace",n[n.Import=33]="Import",n[n.Namespace=34]="Namespace",n[n.Invocation=35]="Invocation",n[n.FunctionDeclaration=36]="FunctionDeclaration",n[n.ReturnStatement=37]="ReturnStatement",n[n.MediaQuery=38]="MediaQuery",n[n.FunctionParameter=39]="FunctionParameter",n[n.FunctionArgument=40]="FunctionArgument",n[n.KeyframeSelector=41]="KeyframeSelector",n[n.ViewPort=42]="ViewPort",n[n.Document=43]="Document",n[n.AtApplyRule=44]="AtApplyRule",n[n.CustomPropertyDeclaration=45]="CustomPropertyDeclaration",n[n.CustomPropertySet=46]="CustomPropertySet",n[n.ListEntry=47]="ListEntry",n[n.Supports=48]="Supports",n[n.SupportsCondition=49]="SupportsCondition",n[n.NamespacePrefix=50]="NamespacePrefix",n[n.GridLine=51]="GridLine",n[n.Plugin=52]="Plugin",n[n.UnknownAtRule=53]="UnknownAtRule",n[n.Command=54]="Command",n[n.StandardCommand=55]="StandardCommand",n[n.InvalidBuiltin=56]="InvalidBuiltin",(r=t.ReferenceType||(t.ReferenceType={}))[r.Mixin=0]="Mixin",r[r.Rule=1]="Rule",r[r.Variable=2]="Variable",r[r.Function=3]="Function",r[r.Keyframe=4]="Keyframe",r[r.Unknown=5]="Unknown",t.getNodeAtOffset=o,t.getNodePath=function(e,t){for(var n=o(e,t),r=[];n;)r.unshift(n),n=n.parent;return r};var s=function(){function e(e,t,n){void 0===e&&(e=-1),void 0===t&&(t=-1),this.parent=null,this.offset=e,this.length=t,n&&(this.nodeType=n)}return Object.defineProperty(e.prototype,"end",{get:function(){return this.offset+this.length},enumerable:!0,configurable:!0}),Object.defineProperty(e.prototype,"type",{get:function(){return this.nodeType||i.Undefined},set:function(e){this.nodeType=e},enumerable:!0,configurable:!0}),e.prototype.getTextProvider=function(){for(var e=this;e&&!e.textProvider;)e=e.parent;return e?e.textProvider:function(){return"unknown"}},e.prototype.getText=function(){return this.getTextProvider()(this.offset,this.length)},e.prototype.matches=function(e){return this.length===e.length&&this.getTextProvider()(this.offset,this.length)===e},e.prototype.startsWith=function(e){return this.length>=e.length&&this.getTextProvider()(this.offset,e.length)===e},e.prototype.endsWith=function(e){return this.length>=e.length&&this.getTextProvider()(this.end-e.length,e.length)===e},e.prototype.accept=function(e){if(e(this)&&this.children)for(var t=0,n=this.children;t<n.length;t++){n[t].accept(e)}},e.prototype.acceptVisitor=function(e){this.accept(e.visitNode.bind(e))},e.prototype.adoptChild=function(e,t){if(void 0===t&&(t=-1),e.parent&&e.parent.children){var n=e.parent.children.indexOf(e);0<=n&&e.parent.children.splice(n,1)}var r=(e.parent=this).children;return r||(r=this.children=[]),-1!==t?r.splice(t,0,e):r.push(e),e},e.prototype.attachTo=function(e,t){return void 0===t&&(t=-1),e&&e.adoptChild(this,t),this},e.prototype.collectIssues=function(e){this.issues&&e.push.apply(e,this.issues)},e.prototype.addIssue=function(e){this.issues||(this.issues=[]),this.issues.push(e)},e.prototype.hasIssue=function(t){return Array.isArray(this.issues)&&this.issues.some(function(e){return e.getRule()===t})},e.prototype.isErroneous=function(e){return void 0===e&&(e=!1),!!(this.issues&&0<this.issues.length)||e&&Array.isArray(this.children)&&this.children.some(function(e){return e.isErroneous(!0)})},e.prototype.setNode=function(e,t,n){return void 0===n&&(n=-1),!!t&&(t.attachTo(this,n),this[e]=t,!0)},e.prototype.addChild=function(e){return!!e&&(this.children||(this.children=[]),e.attachTo(this),this.updateOffsetAndLength(e),!0)},e.prototype.updateOffsetAndLength=function(e){(e.offset<this.offset||-1===this.offset)&&(this.offset=e.offset);var t=e.end;(t>this.end||-1===this.length)&&(this.length=t-this.offset)},e.prototype.hasChildren=function(){return this.children&&0<this.children.length},e.prototype.getChildren=function(){return this.children?this.children.slice(0):[]},e.prototype.getChild=function(e){return this.children&&e<this.children.length?this.children[e]:null},e.prototype.addChildren=function(e){for(var t=0,n=e;t<n.length;t++){var r=n[t];this.addChild(r)}},e.prototype.findFirstChildBeforeOffset=function(e){if(this.children)for(var t=null,n=this.children.length-1;0<=n;n--)if((t=this.children[n]).offset<=e)return t;return null},e.prototype.findChildAtOffset=function(e,t){var n=this.findFirstChildBeforeOffset(e);return n&&n.end>=e?t&&n.findChildAtOffset(e,!0)||n:null},e.prototype.encloses=function(e){return this.offset<=e.offset&&this.offset+this.length>=e.offset+e.length},e.prototype.getParent=function(){for(var e=this.parent;e instanceof a;)e=e.parent;return e},e.prototype.findParent=function(e){for(var t=this;t&&t.type!==e;)t=t.parent;return t},e.prototype.setData=function(e,t){this.options||(this.options={}),this.options[e]=t},e.prototype.getData=function(e){return this.options&&this.options.hasOwnProperty(e)?this.options[e]:null},e}(),a=function(r){function e(e,t){void 0===t&&(t=-1);var n=r.call(this,-1,-1)||this;return n.attachTo(e,t),n.offset=-1,n.length=-1,n}return __extends(e,r),e}(t.Node=s);t.Nodelist=a;var c=function(e){function t(){return null!==e&&e.apply(this,arguments)||this}return __extends(t,e),Object.defineProperty(t.prototype,"type",{get:function(){return i.ChoiceScriptStatement},enumerable:!0,configurable:!0}),t}(s);t.ChoiceScriptStatement=c;var u=function(r){function e(e,t){var n=r.call(this,e,t)||this;return n.isCustomProperty=!1,n}return __extends(e,r),Object.defineProperty(e.prototype,"type",{get:function(){return i.Identifier},enumerable:!0,configurable:!0}),e.prototype.containsInterpolation=function(){return this.hasChildren()},e}(s);t.Identifier=u;var d=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.Scene},enumerable:!0,configurable:!0}),e.prototype.setName=function(e){this.name=e},e}(s);t.Scene=d;var p=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.Command},enumerable:!0,configurable:!0}),e}(s),l=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.StandardCommand},enumerable:!0,configurable:!0}),e}(t.Command=p);t.StandardCommand=l;var h=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.FlowCommand},enumerable:!0,configurable:!0}),e}(p);t.FlowCommand=h;var f=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.ChoiceCommand},enumerable:!0,configurable:!0}),e}(l);t.ChoiceCommand=f;var g=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.ChoiceOption},enumerable:!0,configurable:!0}),e}(s);t.ChoiceOption=g;var m=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.RealWord},enumerable:!0,configurable:!0}),e}(s);t.RealWord=m;var y=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),e}(s);t.TextLine=y;var v=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.AtApplyRule},enumerable:!0,configurable:!0}),e.prototype.setIdentifier=function(e){return this.setNode("identifier",e,0)},e.prototype.getIdentifier=function(){return this.identifier},e.prototype.getName=function(){return this.identifier?this.identifier.getText():""},e}(s);t.AtApplyRule=v;var b=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),e}(s);t.AbstractDeclaration=b;var C=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.Invocation},enumerable:!0,configurable:!0}),e.prototype.getArguments=function(){return this.arguments||(this.arguments=new a(this)),this.arguments},e}(s);t.Invocation=C;var x=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.FunctionParameter},enumerable:!0,configurable:!0}),e.prototype.setIdentifier=function(e){return this.setNode("identifier",e,0)},e.prototype.getIdentifier=function(){return this.identifier},e.prototype.getName=function(){return this.identifier?this.identifier.getText():""},e.prototype.setDefaultValue=function(e){return this.setNode("defaultValue",e,0)},e.prototype.getDefaultValue=function(){return this.defaultValue},e}(s);t.FunctionParameter=x;var k=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.FunctionArgument},enumerable:!0,configurable:!0}),e.prototype.setIdentifier=function(e){return this.setNode("identifier",e,0)},e.prototype.getIdentifier=function(){return this.identifier},e.prototype.getName=function(){return this.identifier?this.identifier.getText():""},e.prototype.setValue=function(e){return this.setNode("value",e,0)},e.prototype.getValue=function(){return this.value},e}(s);t.FunctionArgument=k;var T=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.Import},enumerable:!0,configurable:!0}),e.prototype.setMedialist=function(e){return!!e&&(e.attachTo(this),this.medialist=e,!0)},e}(s);t.Import=T;var w=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.Namespace},enumerable:!0,configurable:!0}),e}(s);t.Namespace=w;var _=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.MediaQuery},enumerable:!0,configurable:!0}),e}(s);t.MediaQuery=_;var S=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.SupportsCondition},enumerable:!0,configurable:!0}),e}(s);t.SupportsCondition=S;var E=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.Expression},enumerable:!0,configurable:!0}),e}(s);t.Expression=E;var P=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.BinaryExpression},enumerable:!0,configurable:!0}),e.prototype.setLeft=function(e){return this.setNode("left",e)},e.prototype.getLeft=function(){return this.left},e.prototype.setRight=function(e){return this.setNode("right",e)},e.prototype.getRight=function(){return this.right},e.prototype.setOperator=function(e){return this.setNode("operator",e)},e.prototype.getOperator=function(){return this.operator},e}(s);t.BinaryExpression=P;var A=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.Term},enumerable:!0,configurable:!0}),e.prototype.setOperator=function(e){return this.setNode("operator",e)},e.prototype.getOperator=function(){return this.operator},e.prototype.setExpression=function(e){return this.setNode("expression",e)},e.prototype.getExpression=function(){return this.expression},e}(s);t.Term=A;var R=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.Operator},enumerable:!0,configurable:!0}),e}(s);t.Operator=R;var I=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.HexColorValue},enumerable:!0,configurable:!0}),e}(s);t.HexColorValue=I;var O=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.NumericValue},enumerable:!0,configurable:!0}),e.prototype.getValue=function(){for(var e,t=this.getText(),n=0,r=".".charCodeAt(0),i="0".charCodeAt(0),o="9".charCodeAt(0),s=0,a=t.length;s<a&&(i<=(e=t.charCodeAt(s))&&e<=o||e===r);s++)n+=1;return{value:t.substring(0,n),unit:n<t.length?t.substring(n):void 0}},e}(s);t.NumericValue=O;var L=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.VariableDeclaration},enumerable:!0,configurable:!0}),e.prototype.setVariable=function(e){return!!e&&(e.attachTo(this),this.variable=e,!0)},e.prototype.getVariable=function(){return this.variable},e.prototype.getName=function(){return this.variable?this.variable.getName():""},e.prototype.setValue=function(e){return!!e&&(e.attachTo(this),this.value=e,!0)},e.prototype.getValue=function(){return this.value},e}(b);t.VariableDeclaration=L;var N=function(n){function e(e,t){return n.call(this,e,t)||this}return __extends(e,n),Object.defineProperty(e.prototype,"type",{get:function(){return i.CreateVariable},enumerable:!0,configurable:!0}),e.prototype.getName=function(){return this.getText()},e}(s);t.Variable=N;var D=function(e){function t(){return null!==e&&e.apply(this,arguments)||this}return __extends(t,e),Object.defineProperty(t.prototype,"type",{get:function(){return i.ListEntry},enumerable:!0,configurable:!0}),t.prototype.setKey=function(e){return this.setNode("key",e,0)},t.prototype.setValue=function(e){return this.setNode("value",e,1)},t}(s);t.ListEntry=D;var F=function(e){function t(){return null!==e&&e.apply(this,arguments)||this}return __extends(t,e),t.prototype.getConditions=function(){return this.conditions||(this.conditions=new a(this)),this.conditions},t}(s);t.LessGuard=F;var j,M=function(e){function t(){return null!==e&&e.apply(this,arguments)||this}return __extends(t,e),t.prototype.setVariable=function(e){return this.setNode("variable",e)},t}(s);t.GuardCondition=M,(j=t.Level||(t.Level={}))[j.Ignore=1]="Ignore",j[j.Warning=2]="Warning",j[j.Error=4]="Error";var B=function(){function e(e,t,n,r,i,o){void 0===i&&(i=e.offset),void 0===o&&(o=e.length),this.node=e,this.rule=t,this.level=n,this.message=r||t.message,this.offset=i,this.length=o}return e.prototype.getRule=function(){return this.rule},e.prototype.getLevel=function(){return this.level},e.prototype.getOffset=function(){return this.offset},e.prototype.getLength=function(){return this.length},e.prototype.getNode=function(){return this.node},e.prototype.getMessage=function(){return this.message},e}();t.Marker=B;var V=function(){function n(){this.entries=[]}return n.entries=function(e){var t=new n;return e.acceptVisitor(t),t.entries},n.prototype.visitNode=function(e){return e.isErroneous()&&e.collectIssues(this.entries),!0},n}();t.ParseErrorCollector=V}),define("vscode-nls/vscode-nls",["require","exports"],function(e,t){"use strict";function n(e,t){for(var n,r,i=[],o=2;o<arguments.length;o++)i[o-2]=arguments[o];return n=t,0===(r=i).length?n:n.replace(/\{(\d+)\}/g,function(e,t){var n=t[0];return void 0!==r[n]?r[n]:e})}function r(e){return n}Object.defineProperty(t,"__esModule",{value:!0}),t.loadMessageBundle=r,t.config=function(e){return r}}),define("vscode-nls",["vscode-nls/vscode-nls"],function(e){return e}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/parser/cssErrors",["require","exports","vscode-nls"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var n=e("vscode-nls").loadMessageBundle(),r=function(e,t){this.id=e,this.message=t};t.CSSIssueType=r,t.ParseError={UnknownCommand:new r("cs-unknowncommand",n("unknown.command","unknown command")),NoChoiceOption:new r("cs-nochoiceoption",n("no.choice.command","expected at least one choice option")),NumberExpected:new r("css-numberexpected",n("expected.number","number expected")),ConditionExpected:new r("css-conditionexpected",n("expected.condt","condition expected")),RuleOrSelectorExpected:new r("css-ruleorselectorexpected",n("expected.ruleorselector","at-rule or selector expected")),DotExpected:new r("css-dotexpected",n("expected.dot","dot expected")),ColonExpected:new r("css-colonexpected",n("expected.colon","colon expected")),SemiColonExpected:new r("css-semicolonexpected",n("expected.semicolon","semi-colon expected")),TermExpected:new r("css-termexpected",n("expected.term","term expected")),ExpressionExpected:new r("css-expressionexpected",n("expected.expression","expression expected")),OperatorExpected:new r("css-operatorexpected",n("expected.operator","operator expected")),IdentifierExpected:new r("css-identifierexpected",n("expected.ident","identifier expected")),PercentageExpected:new r("css-percentageexpected",n("expected.percentage","percentage expected")),URIOrStringExpected:new r("css-uriorstringexpected",n("expected.uriorstring","uri or string expected")),URIExpected:new r("css-uriexpected",n("expected.uri","URI expected")),VariableNameExpected:new r("css-varnameexpected",n("expected.varname","variable name expected")),VariableValueExpected:new r("css-varvalueexpected",n("expected.varvalue","variable value expected")),PropertyValueExpected:new r("css-propertyvalueexpected",n("expected.propvalue","property value expected")),LeftCurlyExpected:new r("css-lcurlyexpected",n("expected.lcurly","{ expected")),RightCurlyExpected:new r("css-rcurlyexpected",n("expected.rcurly","} expected")),LeftSquareBracketExpected:new r("css-rbracketexpected",n("expected.lsquare","[ expected")),RightSquareBracketExpected:new r("css-lbracketexpected",n("expected.rsquare","] expected")),LeftParenthesisExpected:new r("css-lparentexpected",n("expected.lparen","( expected")),RightParenthesisExpected:new r("css-rparentexpected",n("expected.rparent",") expected")),CommaExpected:new r("css-commaexpected",n("expected.comma","comma expected")),PageDirectiveOrDeclarationExpected:new r("css-pagedirordeclexpected",n("expected.pagedirordecl","page directive or declaraton expected")),UnknownAtRule:new r("css-unknownatrule",n("unknown.atrule","at-rule unknown")),SelectorExpected:new r("css-selectorexpected",n("expected.selector","selector expected")),StringLiteralExpected:new r("css-stringliteralexpected",n("expected.stringliteral","string literal expected")),WhitespaceExpected:new r("css-whitespaceexpected",n("expected.whitespace","whitespace expected")),MediaQueryExpected:new r("css-mediaqueryexpected",n("expected.mediaquery","media query expected"))}}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/data/commands",["require","exports"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.standardCommands={abort:{desc:""},achieve:{desc:"*achieve my_unique_achievement_id"},achievement:{desc:"*achievement unique_id true 100 Achievement Title\n\tPre-earned description.\n\tPost-earned description."},advertisement:{desc:""},allow_reuse:{desc:"*choice\n\t#Delete the file\n\t\t*gosub delete_file\n\t*allow_reuse #Log out\n\t\t*goto log_out"},author:{desc:"*author Jane Doe"},bug:{desc:"*bug Oops! Something broke. Please report this bug."},check_achievements:{desc:""},check_purchase:{desc:""},check_registration:{desc:""},choice:{desc:"*choice\n\t#Option 1\n\t\t*comment code here\n\t\t*goto label1\n\t#Option 2\n\t\t*comment code here\n\t\t*goto label2"},create:{desc:'*create name "Joe"'},delay_break:{desc:""},delay_ending:{desc:""},delete:{desc:""},disable_reuse:{desc:"*choice\n\t*disable_reuse #Delete the file\n\t\t*gosub delete_file\n\t#Log out\n\t\t*goto log_out"},else:{desc:"*if (success)\n\t*goto_scene victory\n*else\n\t*goto_scene defeat"},elseif:{desc:'*if (class = "wizard")\n\tYou are a wise wizard!\n*elseif (class = "warrior")\n\tYou are a loyal warrior!\n*else\n\tYou must be a wily rouge!'},elsif:{desc:'*if (class = "wizard")\n\tYou are a wise wizard!\n*elsif (class = "warrior")\n\tYou are a loyal warrior!\n*else\n\tYou must be a wily rouge!'},end_trial:{desc:""},ending:{desc:"Thanks for playing!\n*ending"},fake_choice:{desc:"What is your favorite colour?\n\n*fake_choice\n\t#Red\n\t#Green\n\t#Blue\n\nHow interesting! That's mine too!"},finish:{desc:"Thus ends the chapter!\n*finish"},hide_reuse:{desc:"*choice\n\t*hide_reuse #Delete the file\n\t\t*gosub delete_file\n\t#Log out\n\t\t*goto log_out"},if:{desc:"*if (is_warrior)\n\t*set strength (strength + 5)"},image:{desc:"*image myimage.png"},input_number:{desc:"*input_number percentage 1 100"},input_text:{desc:'*temp name ""\n*input_text name\nHello ${name}'},line_break:{desc:""},link:{desc:"*link http://www.choiceofgames.com/"},link_button:{desc:""},login:{desc:""},looplimit:{desc:"(Unimplemented)"},more_games:{desc:""},page_break:{desc:"*page_break Optional Button Text"},params:{desc:'*gosub sub_routine "Jane" "Doe"\n-----------\n*label sub_routine\n*params firstname lastname\nHi ${firstname} ${lastname}!\n*return'},print:{desc:"This command is deprecated. Please use the ${var} notation."},purchase:{desc:""},rand:{desc:"*rand dice_roll 1 6"},reset:{desc:""},restart:{desc:""},restore_game:{desc:""},restore_purchases:{desc:""},save_game:{desc:""},scene_list:{desc:"*scene_list\n\tscene_01\n\tscene_02\n\tscene_03"},script:{desc:"(Unsupported)"},selectable_if:{desc:"*choice\n\t*selectable_if (strength > 10) #Pump some iron\n\t\t...\n\t#Take a break\n\t\t..."},set:{desc:"*set n 5"},setref:{desc:"This command is deprecated.\nPlease use the *set {var} notation."},share_this_game:{desc:""},show_password:{desc:""},sound:{desc:"*sound mysoundfile.mp3"},stat_chart:{desc:""},subscribe:{desc:""},temp:{desc:"*temp "},title:{desc:"*title My Brand New Game"}},t.flowCommands={gosub:{desc:"*gosub my_label ?param1 ?param2 ?..."},gosub_scene:{desc:"*gosub_scene my_scene ?my_label "},goto:{desc:"*goto my_label"},goto_random_scene:{desc:""},goto_scene:{desc:"*goto_scene my_scene ?my_label"},gotoref:{desc:"This command is deprecated.\nPlease use the *goto {var} notation."},label:{desc:"*label my_label"},redirect_scene:{desc:""},return:{desc:""}},t.standardCommandList=Object.keys(t.standardCommands),t.flowCommandList=Object.keys(t.flowCommands),t.fullCommandList=t.standardCommandList.concat(t.flowCommandList)}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/parser/cssParser",["require","exports","./cssScanner","./cssNodes","./cssErrors","../data/commands"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var i=e("./cssScanner"),o=e("./cssNodes"),s=e("./cssErrors"),n=e("../data/commands"),r=function(){function e(e){void 0===e&&(e=new i.Scanner),this.scanner=e,this.token=null,this.prevToken=null}return e.prototype.peekIdent=function(e){return i.TokenType.Ident===this.token.type&&e.length===this.token.text.length&&e===this.token.text.toLowerCase()},e.prototype.peekKeyword=function(e){return i.TokenType.AtKeyword===this.token.type&&e.length===this.token.text.length&&e===this.token.text.toLowerCase()},e.prototype.peekDelim=function(e){return i.TokenType.Delim===this.token.type&&e===this.token.text},e.prototype.peek=function(e){return e===this.token.type},e.prototype.peekRegExp=function(e,t){return e===this.token.type&&t.test(this.token.text)},e.prototype.hasWhitespace=function(){return this.prevToken&&this.prevToken.offset+this.prevToken.len!==this.token.offset},e.prototype.consumeToken=function(){this.prevToken=this.token,this.token=this.scanner.scan()},e.prototype.mark=function(){return{prev:this.prevToken,curr:this.token,pos:this.scanner.pos()}},e.prototype.restoreAtMark=function(e){this.prevToken=e.prev,this.token=e.curr,this.scanner.goBackTo(e.pos)},e.prototype.try=function(e){var t=this.mark(),n=e();return n||(this.restoreAtMark(t),null)},e.prototype.acceptOneKeyword=function(e){if(i.TokenType.Builtin===this.token.type)for(var t=0,n=e;t<n.length;t++){var r=n[t];if(r.length===this.token.text.length&&r===this.token.text.toLowerCase())return this.consumeToken(),!0}return!1},e.prototype.accept=function(e){return e===this.token.type&&(this.consumeToken(),!0)},e.prototype.acceptIdent=function(e){return!!this.peekIdent(e)&&(this.consumeToken(),!0)},e.prototype.acceptKeyword=function(e){return!!this.peekKeyword(e)&&(this.consumeToken(),!0)},e.prototype.acceptDelim=function(e){return!!this.peekDelim(e)&&(this.consumeToken(),!0)},e.prototype.acceptUnquotedString=function(){var e=this.scanner.pos();this.scanner.goBackTo(this.token.offset);var t=this.scanner.scanUnquotedString();return t?(this.token=t,this.consumeToken(),!0):(this.scanner.goBackTo(e),!1)},e.prototype.resync=function(e,t){for(;;){if(e&&-1!==e.indexOf(this.token.type))return this.consumeToken(),!0;if(t&&-1!==t.indexOf(this.token.type))return!0;if(this.token.type===i.TokenType.EOF)return!1;this.token=this.scanner.scan()}},e.prototype.createNode=function(e){return new o.Node(this.token.offset,this.token.len,e)},e.prototype.create=function(e){var t=Object.create(e.prototype);return e.apply(t,[this.token.offset,this.token.len]),t},e.prototype.finish=function(e,t,n,r){if(!(e instanceof o.Nodelist)&&(t&&this.markError(e,t,n,r),null!==this.prevToken)){var i=this.prevToken.offset+this.prevToken.len;e.length=i>e.offset?i-e.offset:0}return e},e.prototype.markError=function(e,t,n,r){this.token!==this.lastErrorToken&&(e.addIssue(new o.Marker(e,t,o.Level.Error,null,this.token.offset,this.token.len)),this.lastErrorToken=this.token),(n||r)&&this.resync(n,r)},e.prototype.parseScene=function(n){var r=n.version;return this.internalParse(n.getText(),this._parseScene,function(e,t){if(n.version!==r)throw new Error("Underlying model has changed, AST is no longer valid");return n.getText().substr(e,t)})},e.prototype.internalParse=function(n,e,t){this.scanner.setSource(n),this.token=this.scanner.scan();var r=e.bind(this)();return r&&(r.textProvider=t||function(e,t){return n.substr(e,t)}),r},e.prototype._parseScene=function(){var e=this.create(o.Scene);do{var t=!1;do{t=!1;var n=this._parseLine();if(n){for(e.addChild(n);!this.accept(i.TokenType.EOL)&&!this.accept(i.TokenType.EOF);)this.consumeToken();t=!0}}while(t);if(this.peek(i.TokenType.EOF))break;this.consumeToken()}while(!this.peek(i.TokenType.EOF));return this.finish(e)},e.prototype._parseLine=function(){if(this.peek(i.TokenType.SingleLineComment)){var e=this.create(o.Node);return this.consumeToken(),this.finish(e)}return this.peek(i.TokenType.Builtin)||this.peek(i.TokenType.Invalid)?this._parseChoiceScriptStatement():this._parseTextLine()},e.prototype._parseTextLine=function(){for(var e=this.createNode(o.NodeType.TextLine);this.peek(i.TokenType.Word);){var t=this.createNode(o.NodeType.RealWord);e.addChild(t),this.consumeToken(),this.finish(t)}return e.hasChildren()?this.finish(e):null},e.prototype._parseChoiceScriptStatement=function(){return this._parseChoiceScriptCommand()},e.prototype._parseChoiceScriptCommand=function(){return this._parseChoiceCommand()||this._parseFlowCommand()||this._parseStandardCommand()||this._parseInvalidCommand()},e.prototype._parseFlowCommand=function(){var e=this.create(o.FlowCommand);return this.acceptOneKeyword(n.flowCommandList.map(function(e){return"*"+e}))?this.finish(e):null},e.prototype._parseChoiceOption=function(){if(!this.peek(i.TokenType.Hash)&&!this.peekDelim("#"))return null;var e=this.create(o.ChoiceOption);if(this.acceptDelim("#"))return this.finish(e);for(this.consumeToken();!this.peek(i.TokenType.EOL)&&!this.peek(i.TokenType.EOF);)this.consumeToken();return this.finish(e)},e.prototype._parseChoiceCommand=function(){var e=this.create(o.ChoiceCommand);if(this.acceptOneKeyword(["*choice"])){if(this.accept(i.TokenType.EOL)){for(;e.addChild(this._parseChoiceOption());)this.accept(i.TokenType.EOL);return e.hasChildren()?this.finish(e):this.finish(e,s.ParseError.NoChoiceOption)}return this.finish(e,s.ParseError.NoChoiceOption)}return null},e.prototype._parseStandardCommand=function(){var e=this.create(o.StandardCommand);return this.acceptOneKeyword(n.standardCommandList.map(function(e){return"*"+e}))?this.finish(e):null},e.prototype._parseInvalidCommand=function(){var e=this.create(o.Command);return this.markError(e,s.ParseError.UnknownCommand),this.consumeToken(),this.finish(e)},e.prototype._parseStylesheetAtStatement=function(){return this._parseDocument()},e.prototype._parseAtApply=function(){if(!this.peekKeyword("@apply"))return null;var e=this.create(o.AtApplyRule);return this.consumeToken(),e.setIdentifier(this._parseIdent([o.ReferenceType.Variable]))?this.finish(e):this.finish(e,s.ParseError.IdentifierExpected)},e.prototype._needsSemicolonAfter=function(e){switch(e.type){case o.NodeType.Keyframe:case o.NodeType.ViewPort:case o.NodeType.Media:case o.NodeType.Namespace:case o.NodeType.If:case o.NodeType.For:case o.NodeType.Each:case o.NodeType.While:case o.NodeType.FunctionDeclaration:return!1;case o.NodeType.VariableDeclaration:case o.NodeType.MixinContent:case o.NodeType.ReturnStatement:case o.NodeType.MediaQuery:case o.NodeType.Import:case o.NodeType.AtApplyRule:case o.NodeType.CustomPropertyDeclaration:return!0}return!1},e.prototype._parseDeclarations=function(e){var t=this.create(o.Declarations);if(!this.accept(i.TokenType.CurlyL))return null;for(var n=e();t.addChild(n)&&!this.peek(i.TokenType.CurlyR);){if(this._needsSemicolonAfter(n)&&!this.accept(i.TokenType.SemiColon))return this.finish(t,s.ParseError.SemiColonExpected,[i.TokenType.SemiColon,i.TokenType.CurlyR]);for(;this.accept(i.TokenType.SemiColon););n=e()}return this.accept(i.TokenType.CurlyR)?this.finish(t):this.finish(t,s.ParseError.RightCurlyExpected,[i.TokenType.CurlyR,i.TokenType.SemiColon])},e.prototype._parseBody=function(e,t){return e.setDeclarations(this._parseDeclarations(t))?this.finish(e):this.finish(e,s.ParseError.LeftCurlyExpected,[i.TokenType.CurlyR,i.TokenType.SemiColon])},e.prototype._parsePropertyIdentifier=function(){return this._parseIdent()},e.prototype._parseCharset=function(){if(!this.peek(i.TokenType.Charset))return null;var e=this.create(o.Node);return this.consumeToken(),this.accept(i.TokenType.String)?this.accept(i.TokenType.SemiColon)?this.finish(e):this.finish(e,s.ParseError.SemiColonExpected):this.finish(e,s.ParseError.IdentifierExpected)},e.prototype._parseDocument=function(){if(!this.peekKeyword("@-moz-document"))return null;var e=this.create(o.Document);return this.consumeToken(),this.resync([],[i.TokenType.CurlyL]),this._parseBody(e,this._parseScene.bind(this))},e.prototype._parseOperator=function(){if(this.peekDelim("/")||this.peekDelim("*")||this.peekDelim("+")||this.peekDelim("-")||this.peekDelim("%")||this.peekDelim("!")||this.peekDelim("&")||this.peek(i.TokenType.Dashmatch)||this.peek(i.TokenType.Includes)||this.peek(i.TokenType.SubstringOperator)||this.peek(i.TokenType.PrefixOperator)||this.peek(i.TokenType.SuffixOperator)||this.peekDelim("=")){var e=this.createNode(o.NodeType.Operator);return this.consumeToken(),this.finish(e)}return null},e.prototype._parseUnaryOperator=function(){if(!this.peekDelim("+")&&!this.peekDelim("-"))return null;var e=this.create(o.Node);return this.consumeToken(),this.finish(e)},e.prototype._parseSelectorIdent=function(){return this._parseIdent()},e.prototype._parseHash=function(){if(!this.peek(i.TokenType.Hash)&&!this.peekDelim("#"))return null;var e=this.createNode(o.NodeType.ChoiceOption);if(this.acceptDelim("#")){if(this.hasWhitespace()||!e.addChild(this._parseSelectorIdent()))return this.finish(e,s.ParseError.IdentifierExpected)}else this.consumeToken();return this.finish(e)},e.prototype._parseNamespacePrefix=function(){var e=this.mark(),t=this.createNode(o.NodeType.NamespacePrefix);return!t.addChild(this._parseIdent())&&this.acceptDelim("*"),this.acceptDelim("|")?this.finish(t):(this.restoreAtMark(e),null)},e.prototype._parseExpr=function(e){void 0===e&&(e=!1);var t=this.create(o.Expression);if(!t.addChild(this._parseBinaryExpr()))return null;for(;;){if(this.peek(i.TokenType.Comma)){if(e)return this.finish(t);this.consumeToken()}if(!t.addChild(this._parseBinaryExpr()))break}return this.finish(t)},e.prototype._parseNamedLine=function(){if(!this.peek(i.TokenType.BracketL))return null;var e=this.createNode(o.NodeType.GridLine);for(this.consumeToken();e.addChild(this._parseIdent()););return this.accept(i.TokenType.BracketR)?this.finish(e):this.finish(e,s.ParseError.RightSquareBracketExpected)},e.prototype._parseBinaryExpr=function(e,t){var n=this.create(o.BinaryExpression);if(!n.setLeft(e||this._parseTerm()))return null;if(!n.setOperator(t||this._parseOperator()))return this.finish(n);if(!n.setRight(this._parseTerm()))return this.finish(n,s.ParseError.TermExpected);n=this.finish(n);var r=this._parseOperator();return r&&(n=this._parseBinaryExpr(n,r)),this.finish(n)},e.prototype._parseTerm=function(){var e=this.create(o.Term);return e.setOperator(this._parseUnaryOperator()),e.setExpression(this._parseIdent())||e.setExpression(this._parseStringLiteral())||e.setExpression(this._parseNumeric())||e.setExpression(this._parseHexColor())||e.setExpression(this._parseOperation())||e.setExpression(this._parseNamedLine())?this.finish(e):null},e.prototype._parseOperation=function(){if(!this.peek(i.TokenType.ParenthesisL))return null;var e=this.create(o.Node);return this.consumeToken(),e.addChild(this._parseExpr()),this.accept(i.TokenType.ParenthesisR)?this.finish(e):this.finish(e,s.ParseError.RightParenthesisExpected)},e.prototype._parseNumeric=function(){if(this.peek(i.TokenType.Num)||this.peek(i.TokenType.Percentage)||this.peek(i.TokenType.Resolution)||this.peek(i.TokenType.Length)||this.peek(i.TokenType.EMS)||this.peek(i.TokenType.EXS)||this.peek(i.TokenType.Angle)||this.peek(i.TokenType.Time)||this.peek(i.TokenType.Dimension)||this.peek(i.TokenType.Freq)){var e=this.create(o.NumericValue);return this.consumeToken(),this.finish(e)}return null},e.prototype._parseStringLiteral=function(){if(!this.peek(i.TokenType.String)&&!this.peek(i.TokenType.BadString))return null;var e=this.createNode(o.NodeType.StringLiteral);return this.consumeToken(),this.finish(e)},e.prototype._parseURLArgument=function(){var e=this.create(o.Node);return this.accept(i.TokenType.String)||this.accept(i.TokenType.BadString)||this.acceptUnquotedString()?this.finish(e):null},e.prototype._parseIdent=function(e){if(!this.peek(i.TokenType.Ident))return null;var t=this.create(o.Identifier);return e&&(t.referenceTypes=e),t.isCustomProperty=this.peekRegExp(i.TokenType.Ident,/^--/),this.consumeToken(),this.finish(t)},e.prototype._parseFunctionIdentifier=function(){if(!this.peek(i.TokenType.Ident))return null;var e=this.create(o.Identifier);if(e.referenceTypes=[o.ReferenceType.Function],this.acceptIdent("progid")){if(this.accept(i.TokenType.Colon))for(;this.accept(i.TokenType.Ident)&&this.acceptDelim("."););return this.finish(e)}return this.consumeToken(),this.finish(e)},e.prototype._parseFunctionArgument=function(){var e=this.create(o.FunctionArgument);return e.setValue(this._parseExpr(!0))?this.finish(e):null},e.prototype._parseHexColor=function(){if(this.peekRegExp(i.TokenType.Hash,/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{4}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/g)){var e=this.create(o.HexColorValue);return this.consumeToken(),this.finish(e)}return null},e}();t.Parser=r}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/languageFacts",["require","exports","../data/commands","vscode-nls"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var n=e("../data/commands"),r=e("vscode-nls").loadMessageBundle();t.colors={aliceblue:"#f0f8ff",antiquewhite:"#faebd7",aqua:"#00ffff",aquamarine:"#7fffd4",azure:"#f0ffff",beige:"#f5f5dc",bisque:"#ffe4c4",black:"#000000",blanchedalmond:"#ffebcd",blue:"#0000ff",blueviolet:"#8a2be2",brown:"#a52a2a",burlywood:"#deb887",cadetblue:"#5f9ea0",chartreuse:"#7fff00",chocolate:"#d2691e",coral:"#ff7f50",cornflowerblue:"#6495ed",cornsilk:"#fff8dc",crimson:"#dc143c",cyan:"#00ffff",darkblue:"#00008b",darkcyan:"#008b8b",darkgoldenrod:"#b8860b",darkgray:"#a9a9a9",darkgrey:"#a9a9a9",darkgreen:"#006400",darkkhaki:"#bdb76b",darkmagenta:"#8b008b",darkolivegreen:"#556b2f",darkorange:"#ff8c00",darkorchid:"#9932cc",darkred:"#8b0000",darksalmon:"#e9967a",darkseagreen:"#8fbc8f",darkslateblue:"#483d8b",darkslategray:"#2f4f4f",darkslategrey:"#2f4f4f",darkturquoise:"#00ced1",darkviolet:"#9400d3",deeppink:"#ff1493",deepskyblue:"#00bfff",dimgray:"#696969",dimgrey:"#696969",dodgerblue:"#1e90ff",firebrick:"#b22222",floralwhite:"#fffaf0",forestgreen:"#228b22",fuchsia:"#ff00ff",gainsboro:"#dcdcdc",ghostwhite:"#f8f8ff",gold:"#ffd700",goldenrod:"#daa520",gray:"#808080",grey:"#808080",green:"#008000",greenyellow:"#adff2f",honeydew:"#f0fff0",hotpink:"#ff69b4",indianred:"#cd5c5c",indigo:"#4b0082",ivory:"#fffff0",khaki:"#f0e68c",lavender:"#e6e6fa",lavenderblush:"#fff0f5",lawngreen:"#7cfc00",lemonchiffon:"#fffacd",lightblue:"#add8e6",lightcoral:"#f08080",lightcyan:"#e0ffff",lightgoldenrodyellow:"#fafad2",lightgray:"#d3d3d3",lightgrey:"#d3d3d3",lightgreen:"#90ee90",lightpink:"#ffb6c1",lightsalmon:"#ffa07a",lightseagreen:"#20b2aa",lightskyblue:"#87cefa",lightslategray:"#778899",lightslategrey:"#778899",lightsteelblue:"#b0c4de",lightyellow:"#ffffe0",lime:"#00ff00",limegreen:"#32cd32",linen:"#faf0e6",magenta:"#ff00ff",maroon:"#800000",mediumaquamarine:"#66cdaa",mediumblue:"#0000cd",mediumorchid:"#ba55d3",mediumpurple:"#9370d8",mediumseagreen:"#3cb371",mediumslateblue:"#7b68ee",mediumspringgreen:"#00fa9a",mediumturquoise:"#48d1cc",mediumvioletred:"#c71585",midnightblue:"#191970",mintcream:"#f5fffa",mistyrose:"#ffe4e1",moccasin:"#ffe4b5",navajowhite:"#ffdead",navy:"#000080",oldlace:"#fdf5e6",olive:"#808000",olivedrab:"#6b8e23",orange:"#ffa500",orangered:"#ff4500",orchid:"#da70d6",palegoldenrod:"#eee8aa",palegreen:"#98fb98",paleturquoise:"#afeeee",palevioletred:"#d87093",papayawhip:"#ffefd5",peachpuff:"#ffdab9",peru:"#cd853f",pink:"#ffc0cb",plum:"#dda0dd",powderblue:"#b0e0e6",purple:"#800080",red:"#ff0000",rebeccapurple:"#663399",rosybrown:"#bc8f8f",royalblue:"#4169e1",saddlebrown:"#8b4513",salmon:"#fa8072",sandybrown:"#f4a460",seagreen:"#2e8b57",seashell:"#fff5ee",sienna:"#a0522d",silver:"#c0c0c0",skyblue:"#87ceeb",slateblue:"#6a5acd",slategray:"#708090",slategrey:"#708090",snow:"#fffafa",springgreen:"#00ff7f",steelblue:"#4682b4",tan:"#d2b48c",teal:"#008080",thistle:"#d8bfd8",tomato:"#ff6347",turquoise:"#40e0d0",violet:"#ee82ee",wheat:"#f5deb3",white:"#ffffff",whitesmoke:"#f5f5f5",yellow:"#ffff00",yellowgreen:"#9acd32"},t.colorKeywords={currentColor:"The value of the 'color' property. The computed value of the 'currentColor' keyword is the computed value of the 'color' property. If the 'currentColor' keyword is set on the 'color' property itself, it is treated as 'color:inherit' at parse time.",transparent:"Fully transparent. This keyword can be considered a shorthand for rgba(0,0,0,0) which is its computed value."},t.positionKeywords={bottom:"Computes to ‘100%’ for the vertical position if one or two values are given, otherwise specifies the bottom edge as the origin for the next offset.",center:"Computes to ‘50%’ (‘left 50%’) for the horizontal position if the horizontal position is not otherwise specified, or ‘50%’ (‘top 50%’) for the vertical position if it is.",left:"Computes to ‘0%’ for the horizontal position if one or two values are given, otherwise specifies the left edge as the origin for the next offset.",right:"Computes to ‘100%’ for the horizontal position if one or two values are given, otherwise specifies the right edge as the origin for the next offset.",top:"Computes to ‘0%’ for the vertical position if one or two values are given, otherwise specifies the top edge as the origin for the next offset."},t.repeatStyleKeywords={"no-repeat":"Placed once and not repeated in this direction.",repeat:"Repeated in this direction as often as needed to cover the background painting area.","repeat-x":"Computes to ‘repeat no-repeat’.","repeat-y":"Computes to ‘no-repeat repeat’.",round:"Repeated as often as will fit within the background positioning area. If it doesn’t fit a whole number of times, it is rescaled so that it does.",space:"Repeated as often as will fit within the background positioning area without being clipped and then the images are spaced out to fill the area."},t.lineStyleKeywords={dashed:"A series of square-ended dashes.",dotted:"A series of round dots.",double:"Two parallel solid lines with some space between them.",groove:"Looks as if it were carved in the canvas.",hidden:"Same as ‘none’, but has different behavior in the border conflict resolution rules for border-collapsed tables.",inset:"Looks as if the content on the inside of the border is sunken into the canvas.",none:"No border. Color and width are ignored.",outset:"Looks as if the content on the inside of the border is coming out of the canvas.",ridge:"Looks as if it were coming out of the canvas.",solid:"A single line segment."},t.lineWidthKeywords=["medium","thick","thin"],t.boxKeywords={"border-box":"The background is painted within (clipped to) the border box.","content-box":"The background is painted within (clipped to) the content box.","padding-box":"The background is painted within (clipped to) the padding box."},t.geometryBoxKeywords={"margin-box":"Uses the margin box as reference box.","fill-box":"Uses the object bounding box as reference box.","stroke-box":"Uses the stroke bounding box as reference box.","view-box":"Uses the nearest SVG viewport as reference box."},t.cssWideKeywords={initial:"Represents the value specified as the property’s initial value.",inherit:"Represents the computed value of the property on the element’s parent.",unset:"Acts as either `inherit` or `initial`, depending on whether the property is inherited or not."},t.colorFunctions=[{func:"rgb($red, $green, $blue)",desc:r("css.builtin.rgb","Creates a Color from red, green, and blue values.")},{func:"rgba($red, $green, $blue, $alpha)",desc:r("css.builtin.rgba","Creates a Color from red, green, blue, and alpha values.")},{func:"hsl($hue, $saturation, $lightness)",desc:r("css.builtin.hsl","Creates a Color from hue, saturation, and lightness values.")},{func:"hsla($hue, $saturation, $lightness, $alpha)",desc:r("css.builtin.hsla","Creates a Color from hue, saturation, lightness, and alpha values.")}],t.imageFunctions={"url()":"Reference an image file by URL","image()":"Provide image fallbacks and annotations.","-webkit-image-set()":"Provide multiple resolutions. Remember to use unprefixed image-set() in addition.","image-set()":"Provide multiple resolutions of an image and let the UA decide which is most appropriate in a given situation.","-moz-element()":"Use an element in the document as an image. Remember to use unprefixed element() in addition.","element()":"Use an element in the document as an image.","cross-fade()":"Indicates the two images to be combined and how far along in the transition the combination is.","-webkit-gradient()":"Deprecated. Use modern linear-gradient() or radial-gradient() instead.","-webkit-linear-gradient()":"Linear gradient. Remember to use unprefixed version in addition.","-moz-linear-gradient()":"Linear gradient. Remember to use unprefixed version in addition.","-o-linear-gradient()":"Linear gradient. Remember to use unprefixed version in addition.","linear-gradient()":"A linear gradient is created by specifying a straight gradient line, and then several colors placed along that line.","-webkit-repeating-linear-gradient()":"Repeating Linear gradient. Remember to use unprefixed version in addition.","-moz-repeating-linear-gradient()":"Repeating Linear gradient. Remember to use unprefixed version in addition.","-o-repeating-linear-gradient()":"RepeatingLinear gradient. Remember to use unprefixed version in addition.","repeating-linear-gradient()":"Same as linear-gradient, except the color-stops are repeated infinitely in both directions, with their positions shifted by multiples of the difference between the last specified color-stop’s position and the first specified color-stop’s position.","-webkit-radial-gradient()":"Radial gradient. Remember to use unprefixed version in addition.","-moz-radial-gradient()":"Radial gradient. Remember to use unprefixed version in addition.","radial-gradient()":"Colors emerge from a single point and smoothly spread outward in a circular or elliptical shape.","-webkit-repeating-radial-gradient()":"Repeating radial gradient. Remember to use unprefixed version in addition.","-moz-repeating-radial-gradient()":"Repeating radial gradient. Remember to use unprefixed version in addition.","repeating-radial-gradient()":"Same as radial-gradient, except the color-stops are repeated infinitely in both directions, with their positions shifted by multiples of the difference between the last specified color-stop’s position and the first specified color-stop’s position."},t.transitionTimingFunctions={ease:"Equivalent to cubic-bezier(0.25, 0.1, 0.25, 1.0).","ease-in":"Equivalent to cubic-bezier(0.42, 0, 1.0, 1.0).","ease-in-out":"Equivalent to cubic-bezier(0.42, 0, 0.58, 1.0).","ease-out":"Equivalent to cubic-bezier(0, 0, 0.58, 1.0).",linear:"Equivalent to cubic-bezier(0.0, 0.0, 1.0, 1.0).","step-end":"Equivalent to steps(1, end).","step-start":"Equivalent to steps(1, start).","steps()":"The first parameter specifies the number of intervals in the function. The second parameter, which is optional, is either the value “start” or “end”.","cubic-bezier()":"Specifies a cubic-bezier curve. The four values specify points P1 and P2  of the curve as (x1, y1, x2, y2).","cubic-bezier(0.6, -0.28, 0.735, 0.045)":"Ease-in Back. Overshoots.","cubic-bezier(0.68, -0.55, 0.265, 1.55)":"Ease-in-out Back. Overshoots.","cubic-bezier(0.175, 0.885, 0.32, 1.275)":"Ease-out Back. Overshoots.","cubic-bezier(0.6, 0.04, 0.98, 0.335)":"Ease-in Circular. Based on half circle.","cubic-bezier(0.785, 0.135, 0.15, 0.86)":"Ease-in-out Circular. Based on half circle.","cubic-bezier(0.075, 0.82, 0.165, 1)":"Ease-out Circular. Based on half circle.","cubic-bezier(0.55, 0.055, 0.675, 0.19)":"Ease-in Cubic. Based on power of three.","cubic-bezier(0.645, 0.045, 0.355, 1)":"Ease-in-out Cubic. Based on power of three.","cubic-bezier(0.215, 0.610, 0.355, 1)":"Ease-out Cubic. Based on power of three.","cubic-bezier(0.95, 0.05, 0.795, 0.035)":"Ease-in Exponential. Based on two to the power ten.","cubic-bezier(1, 0, 0, 1)":"Ease-in-out Exponential. Based on two to the power ten.","cubic-bezier(0.19, 1, 0.22, 1)":"Ease-out Exponential. Based on two to the power ten.","cubic-bezier(0.47, 0, 0.745, 0.715)":"Ease-in Sine.","cubic-bezier(0.445, 0.05, 0.55, 0.95)":"Ease-in-out Sine.","cubic-bezier(0.39, 0.575, 0.565, 1)":"Ease-out Sine.","cubic-bezier(0.55, 0.085, 0.68, 0.53)":"Ease-in Quadratic. Based on power of two.","cubic-bezier(0.455, 0.03, 0.515, 0.955)":"Ease-in-out Quadratic. Based on power of two.","cubic-bezier(0.25, 0.46, 0.45, 0.94)":"Ease-out Quadratic. Based on power of two.","cubic-bezier(0.895, 0.03, 0.685, 0.22)":"Ease-in Quartic. Based on power of four.","cubic-bezier(0.77, 0, 0.175, 1)":"Ease-in-out Quartic. Based on power of four.","cubic-bezier(0.165, 0.84, 0.44, 1)":"Ease-out Quartic. Based on power of four.","cubic-bezier(0.755, 0.05, 0.855, 0.06)":"Ease-in Quintic. Based on power of five.","cubic-bezier(0.86, 0, 0.07, 1)":"Ease-in-out Quintic. Based on power of five.","cubic-bezier(0.23, 1, 0.320, 1)":"Ease-out Quintic. Based on power of five."},t.basicShapeFunctions={"circle()":"Defines a circle.","ellipse()":"Defines an ellipse.","inset()":"Defines an inset rectangle.","polygon()":"Defines a polygon."},t.units={length:["em","rem","ex","px","cm","mm","in","pt","pc","ch","vw","vh","vmin","vmax"],angle:["deg","rad","grad","turn"],time:["ms","s"],frequency:["Hz","kHz"],resolution:["dpi","dpcm","dppx"],percentage:["%","fr"]},t.html5Tags=["a","abbr","address","area","article","aside","audio","b","base","bdi","bdo","blockquote","body","br","button","canvas","caption","cite","code","col","colgroup","data","datalist","dd","del","details","dfn","dialog","div","dl","dt","em","embed","fieldset","figcaption","figure","footer","form","h1","h2","h3","h4","h5","h6","head","header","hgroup","hr","html","i","iframe","img","input","ins","kbd","keygen","label","legend","li","link","main","map","mark","menu","menuitem","meta","meter","nav","noscript","object","ol","optgroup","option","output","p","param","picture","pre","progress","q","rb","rp","rt","rtc","ruby","s","samp","script","section","select","small","source","span","strong","style","sub","summary","sup","table","tbody","td","template","textarea","tfoot","th","thead","time","title","tr","track","u","ul","let","video","wbr"],t.svgElements=["circle","clipPath","cursor","defs","desc","ellipse","feBlend","feColorMatrix","feComponentTransfer","feComposite","feConvolveMatrix","feDiffuseLighting","feDisplacementMap","feDistantLight","feDropShadow","feFlood","feFuncA","feFuncB","feFuncG","feFuncR","feGaussianBlur","feImage","feMerge","feMergeNode","feMorphology","feOffset","fePointLight","feSpecularLighting","feSpotLight","feTile","feTurbulence","filter","foreignObject","g","hatch","hatchpath","image","line","linearGradient","marker","mask","mesh","meshpatch","meshrow","metadata","mpath","path","pattern","polygon","polyline","radialGradient","rect","set","solidcolor","stop","svg","switch","symbol","text","textPath","tspan","use","view"];var i=48,o=57,s=65,a=97,c=102;function u(e){return e<i?0:e<=o?e-i:(e<a&&(e+=a-s),a<=e&&e<=c?e-a+10:0)}function d(e){switch(e){case"e":return"experimental";case"n":return"nonstandard";case"o":return"obsolete";default:return"standard"}}t.hexDigit=u,t.colorFromHex=function(e){if("#"!==e[0])return null;switch(e.length){case 4:return{red:17*u(e.charCodeAt(1))/255,green:17*u(e.charCodeAt(2))/255,blue:17*u(e.charCodeAt(3))/255,alpha:1};case 5:return{red:17*u(e.charCodeAt(1))/255,green:17*u(e.charCodeAt(2))/255,blue:17*u(e.charCodeAt(3))/255,alpha:17*u(e.charCodeAt(4))/255};case 7:return{red:(16*u(e.charCodeAt(1))+u(e.charCodeAt(2)))/255,green:(16*u(e.charCodeAt(3))+u(e.charCodeAt(4)))/255,blue:(16*u(e.charCodeAt(5))+u(e.charCodeAt(6)))/255,alpha:1};case 9:return{red:(16*u(e.charCodeAt(1))+u(e.charCodeAt(2)))/255,green:(16*u(e.charCodeAt(3))+u(e.charCodeAt(4)))/255,blue:(16*u(e.charCodeAt(5))+u(e.charCodeAt(6)))/255,alpha:(16*u(e.charCodeAt(7))+u(e.charCodeAt(8)))/255}}return null},t.colorFrom256RGB=function(e,t,n,r){return void 0===r&&(r=1),{red:e/255,green:t/255,blue:n/255,alpha:r}},t.colorFromHSL=function(e,t,n,r){if(void 0===r&&(r=1),0===t)return{red:n,green:n,blue:n,alpha:r};var i=function(e,t,n){for(;n<0;)n+=6;for(;6<=n;)n-=6;return n<1?(t-e)*n+e:n<3?t:n<4?(t-e)*(4-n)+e:e},o=n<=.5?n*(t+1):n+t-n*t,s=2*n-o;return{red:i(s,o,2+(e/=60)),green:i(s,o,e),blue:i(s,o,e-2),alpha:r}},t.hslFromColor=function(e){var t=e.red,n=e.green,r=e.blue,i=e.alpha,o=Math.max(t,n,r),s=Math.min(t,n,r),a=0,c=0,u=(s+o)/2,d=o-s;if(0<d){switch(c=Math.min(u<=.5?d/(2*u):d/(2-2*u),1),o){case t:a=(n-r)/d+(n<r?6:0);break;case n:a=(r-t)/d+2;break;case r:a=(t-n)/d+4}a*=60,a=Math.round(a)}return{h:a,s:c,l:u,a:i}},t.isCommonValue=function(e){return 1<e.browsers.count},t.getPageBoxDirectives=function(){return["@bottom-center","@bottom-left","@bottom-left-corner","@bottom-right","@bottom-right-corner","@left-bottom","@left-middle","@left-top","@right-bottom","@right-middle","@right-top","@top-center","@top-left","@top-left-corner","@top-right","@top-right-corner"]},t.expandEntryStatus=d;var p,l=function(){function e(e){this.data=e}return Object.defineProperty(e.prototype,"name",{get:function(){return this.data.name},enumerable:!0,configurable:!0}),Object.defineProperty(e.prototype,"description",{get:function(){return this.data.desc},enumerable:!0,configurable:!0}),Object.defineProperty(e.prototype,"restrictions",{get:function(){return this.data.restriction?this.data.restriction.split(",").map(function(e){return e.trim()}):[]},enumerable:!0,configurable:!0}),Object.defineProperty(e.prototype,"status",{get:function(){return d(this.data.status)},enumerable:!0,configurable:!0}),e}(),h=n.fullCommandList;t.getCommands=function(){if(!p){p=[];for(var e=0;e<h.length;e++){var t={name:h[e],desc:["**Command**: "+h[e]]};void 0!==n.standardCommands[h[e]]&&n.standardCommands[h[e]].desc?t.desc.push("```choicescript\n"+n.standardCommands[h[e]].desc+"\n```"):void 0!==n.flowCommands[h[e]]&&n.flowCommands[h[e]].desc&&t.desc.push("```choicescript\n"+n.flowCommands[h[e]].desc+"\n```"),t.desc.push("Read more on the [wiki](https://choicescriptdev.wikia.com/wiki/"+h[e]+")"),p.push(new l(t))}}return p}}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-languageserver-types/main",["require","exports"],e)}(function(e,t){"use strict";var s,n,r,i,o,a,c,u,d,p,l,h,f,g,m,y,v,b,C,x,k,T,w,_;Object.defineProperty(t,"__esModule",{value:!0}),(n=s=t.Position||(t.Position={})).create=function(e,t){return{line:e,character:t}},n.is=function(e){var t=e;return Z.objectLiteral(t)&&Z.number(t.line)&&Z.number(t.character)},(i=r=t.Range||(t.Range={})).create=function(e,t,n,r){if(Z.number(e)&&Z.number(t)&&Z.number(n)&&Z.number(r))return{start:s.create(e,t),end:s.create(n,r)};if(s.is(e)&&s.is(t))return{start:e,end:t};throw new Error("Range#create called with invalid arguments["+e+", "+t+", "+n+", "+r+"]")},i.is=function(e){var t=e;return Z.objectLiteral(t)&&s.is(t.start)&&s.is(t.end)},(a=o=t.Location||(t.Location={})).create=function(e,t){return{uri:e,range:t}},a.is=function(e){var t=e;return Z.defined(t)&&r.is(t.range)&&(Z.string(t.uri)||Z.undefined(t.uri))},(u=c=t.Color||(t.Color={})).create=function(e,t,n,r){return{red:e,green:t,blue:n,alpha:r}},u.is=function(e){var t=e;return Z.number(t.red)&&Z.number(t.green)&&Z.number(t.blue)&&Z.number(t.alpha)},(d=t.ColorInformation||(t.ColorInformation={})).create=function(e,t){return{range:e,color:t}},d.is=function(e){var t=e;return r.is(t.range)&&c.is(t.color)},(p=t.ColorPresentation||(t.ColorPresentation={})).create=function(e,t,n){return{label:e,textEdit:t,additionalTextEdits:n}},p.is=function(e){var t=e;return Z.string(t.label)&&(Z.undefined(t.textEdit)||x.is(t))&&(Z.undefined(t.additionalTextEdits)||Z.typedArray(t.additionalTextEdits,x.is))},(l=t.FoldingRangeKind||(t.FoldingRangeKind={})).Comment="comment",l.Imports="imports",l.Region="region",(h=t.FoldingRange||(t.FoldingRange={})).create=function(e,t,n,r,i){var o={startLine:e,endLine:t};return Z.defined(n)&&(o.startCharacter=n),Z.defined(r)&&(o.endCharacter=r),Z.defined(i)&&(o.kind=i),o},h.is=function(e){var t=e;return Z.number(t.startLine)&&Z.number(t.startLine)&&(Z.undefined(t.startCharacter)||Z.number(t.startCharacter))&&(Z.undefined(t.endCharacter)||Z.number(t.endCharacter))&&(Z.undefined(t.kind)||Z.string(t.kind))},(g=f=t.DiagnosticRelatedInformation||(t.DiagnosticRelatedInformation={})).create=function(e,t){return{location:e,message:t}},g.is=function(e){var t=e;return Z.defined(t)&&o.is(t.location)&&Z.string(t.message)},(m=t.DiagnosticSeverity||(t.DiagnosticSeverity={})).Error=1,m.Warning=2,m.Information=3,m.Hint=4,(v=y=t.Diagnostic||(t.Diagnostic={})).create=function(e,t,n,r,i,o){var s={range:e,message:t};return Z.defined(n)&&(s.severity=n),Z.defined(r)&&(s.code=r),Z.defined(i)&&(s.source=i),Z.defined(o)&&(s.relatedInformation=o),s},v.is=function(e){var t=e;return Z.defined(t)&&r.is(t.range)&&Z.string(t.message)&&(Z.number(t.severity)||Z.undefined(t.severity))&&(Z.number(t.code)||Z.string(t.code)||Z.undefined(t.code))&&(Z.string(t.source)||Z.undefined(t.source))&&(Z.undefined(t.relatedInformation)||Z.typedArray(t.relatedInformation,f.is))},(C=b=t.Command||(t.Command={})).create=function(e,t){for(var n=[],r=2;r<arguments.length;r++)n[r-2]=arguments[r];var i={title:e,command:t};return Z.defined(n)&&0<n.length&&(i.arguments=n),i},C.is=function(e){var t=e;return Z.defined(t)&&Z.string(t.title)&&Z.string(t.command)},(k=x=t.TextEdit||(t.TextEdit={})).replace=function(e,t){return{range:e,newText:t}},k.insert=function(e,t){return{range:{start:e,end:e},newText:t}},k.del=function(e){return{range:e,newText:""}},k.is=function(e){var t=e;return Z.objectLiteral(t)&&Z.string(t.newText)&&r.is(t.range)},(w=T=t.TextDocumentEdit||(t.TextDocumentEdit={})).create=function(e,t){return{textDocument:e,edits:t}},w.is=function(e){var t=e;return Z.defined(t)&&E.is(t.textDocument)&&Array.isArray(t.edits)},(_=t.WorkspaceEdit||(t.WorkspaceEdit={})).is=function(e){var t=e;return t&&(void 0!==t.changes||void 0!==t.documentChanges)&&(void 0===t.documentChanges||Z.typedArray(t.documentChanges,T.is))};var S,E,P,A,R,I,O,L,N,D,F,j,M,B,V=function(){function e(e){this.edits=e}return e.prototype.insert=function(e,t){this.edits.push(x.insert(e,t))},e.prototype.replace=function(e,t){this.edits.push(x.replace(e,t))},e.prototype.delete=function(e){this.edits.push(x.del(e))},e.prototype.add=function(e){this.edits.push(e)},e.prototype.all=function(){return this.edits},e.prototype.clear=function(){this.edits.splice(0,this.edits.length)},e}(),q=function(){function e(n){var r=this;this._textEditChanges=Object.create(null),n&&((this._workspaceEdit=n).documentChanges?n.documentChanges.forEach(function(e){var t=new V(e.edits);r._textEditChanges[e.textDocument.uri]=t}):n.changes&&Object.keys(n.changes).forEach(function(e){var t=new V(n.changes[e]);r._textEditChanges[e]=t}))}return Object.defineProperty(e.prototype,"edit",{get:function(){return this._workspaceEdit},enumerable:!0,configurable:!0}),e.prototype.getTextEditChange=function(e){if(E.is(e)){if(this._workspaceEdit||(this._workspaceEdit={documentChanges:[]}),!this._workspaceEdit.documentChanges)throw new Error("Workspace edit is not configured for versioned document changes.");var t=e;if(!(r=this._textEditChanges[t.uri])){var n={textDocument:t,edits:i=[]};this._workspaceEdit.documentChanges.push(n),r=new V(i),this._textEditChanges[t.uri]=r}return r}if(this._workspaceEdit||(this._workspaceEdit={changes:Object.create(null)}),!this._workspaceEdit.changes)throw new Error("Workspace edit is not configured for normal text edit changes.");var r;if(!(r=this._textEditChanges[e])){var i=[];this._workspaceEdit.changes[e]=i,r=new V(i),this._textEditChanges[e]=r}return r},e}();t.WorkspaceChange=q,(S=t.TextDocumentIdentifier||(t.TextDocumentIdentifier={})).create=function(e){return{uri:e}},S.is=function(e){var t=e;return Z.defined(t)&&Z.string(t.uri)},(P=E=t.VersionedTextDocumentIdentifier||(t.VersionedTextDocumentIdentifier={})).create=function(e,t){return{uri:e,version:t}},P.is=function(e){var t=e;return Z.defined(t)&&Z.string(t.uri)&&Z.number(t.version)},(A=t.TextDocumentItem||(t.TextDocumentItem={})).create=function(e,t,n,r){return{uri:e,languageId:t,version:n,text:r}},A.is=function(e){var t=e;return Z.defined(t)&&Z.string(t.uri)&&Z.string(t.languageId)&&Z.number(t.version)&&Z.string(t.text)},(I=R=t.MarkupKind||(t.MarkupKind={})).PlainText="plaintext",I.Markdown="markdown",(O=R=t.MarkupKind||(t.MarkupKind={})).is=function(e){var t=e;return t===O.PlainText||t===O.Markdown},(L=t.MarkupContent||(t.MarkupContent={})).is=function(e){var t=e;return Z.objectLiteral(e)&&R.is(t.kind)&&Z.string(t.value)},(N=t.CompletionItemKind||(t.CompletionItemKind={})).Text=1,N.Method=2,N.Function=3,N.Constructor=4,N.Field=5,N.Variable=6,N.Class=7,N.Interface=8,N.Module=9,N.Property=10,N.Unit=11,N.Value=12,N.Enum=13,N.Keyword=14,N.Snippet=15,N.Color=16,N.File=17,N.Reference=18,N.Folder=19,N.EnumMember=20,N.Constant=21,N.Struct=22,N.Event=23,N.Operator=24,N.TypeParameter=25,(D=t.InsertTextFormat||(t.InsertTextFormat={})).PlainText=1,D.Snippet=2,(t.CompletionItem||(t.CompletionItem={})).create=function(e){return{label:e}},(t.CompletionList||(t.CompletionList={})).create=function(e,t){return{items:e||[],isIncomplete:!!t}},(j=F=t.MarkedString||(t.MarkedString={})).fromPlainText=function(e){return e.replace(/[\\`*_{}[\]()#+\-.!]/g,"\\$&")},j.is=function(e){var t=e;return Z.string(t)||Z.objectLiteral(t)&&Z.string(t.language)&&Z.string(t.value)},(t.Hover||(t.Hover={})).is=function(e){var t=e;return Z.objectLiteral(t)&&(L.is(t.contents)||F.is(t.contents)||Z.typedArray(t.contents,F.is))&&(void 0===e.range||r.is(e.range))},(t.ParameterInformation||(t.ParameterInformation={})).create=function(e,t){return t?{label:e,documentation:t}:{label:e}},(t.SignatureInformation||(t.SignatureInformation={})).create=function(e,t){for(var n=[],r=2;r<arguments.length;r++)n[r-2]=arguments[r];var i={label:e};return Z.defined(t)&&(i.documentation=t),Z.defined(n)?i.parameters=n:i.parameters=[],i},(M=t.DocumentHighlightKind||(t.DocumentHighlightKind={})).Text=1,M.Read=2,M.Write=3,(t.DocumentHighlight||(t.DocumentHighlight={})).create=function(e,t){var n={range:e};return Z.number(t)&&(n.kind=t),n},(B=t.SymbolKind||(t.SymbolKind={})).File=1,B.Module=2,B.Namespace=3,B.Package=4,B.Class=5,B.Method=6,B.Property=7,B.Field=8,B.Constructor=9,B.Enum=10,B.Interface=11,B.Function=12,B.Variable=13,B.Constant=14,B.String=15,B.Number=16,B.Boolean=17,B.Array=18,B.Object=19,B.Key=20,B.Null=21,B.EnumMember=22,B.Struct=23,B.Event=24,B.Operator=25,B.TypeParameter=26,(t.SymbolInformation||(t.SymbolInformation={})).create=function(e,t,n,r,i){var o={name:e,kind:t,location:{uri:r,range:n}};return i&&(o.containerName=i),o};var K,W,U,z,H,$,G=function(){};t.DocumentSymbol=G,(K=G=t.DocumentSymbol||(t.DocumentSymbol={})).create=function(e,t,n,r,i,o){var s={name:e,detail:t,kind:n,range:r,selectionRange:i};return void 0!==o&&(s.children=o),s},K.is=function(e){var t=e;return t&&Z.string(t.name)&&Z.string(t.detail)&&Z.number(t.kind)&&r.is(t.range)&&r.is(t.selectionRange)&&(void 0===t.deprecated||Z.boolean(t.deprecated))&&(void 0===t.children||Array.isArray(t.children))},t.DocumentSymbol=G,(W=t.CodeActionKind||(t.CodeActionKind={})).QuickFix="quickfix",W.Refactor="refactor",W.RefactorExtract="refactor.extract",W.RefactorInline="refactor.inline",W.RefactorRewrite="refactor.rewrite",W.Source="source",W.SourceOrganizeImports="source.organizeImports",(U=t.CodeActionContext||(t.CodeActionContext={})).create=function(e,t){var n={diagnostics:e};return null!=t&&(n.only=t),n},U.is=function(e){var t=e;return Z.defined(t)&&Z.typedArray(t.diagnostics,y.is)&&(void 0===t.only||Z.typedArray(t.only,Z.string))},(z=t.CodeAction||(t.CodeAction={})).create=function(e,t,n){var r={title:e};return b.is(t)?r.command=t:r.edit=t,void 0!==n&&(r.kind=n),r},z.is=function(e){var t=e;return t&&Z.string(t.title)&&(void 0===t.diagnostics||Z.typedArray(t.diagnostics,y.is))&&(void 0===t.kind||Z.string(t.kind))&&(void 0!==t.edit||void 0!==t.command)&&(void 0===t.command||b.is(t.command))&&(void 0===t.edit||_.is(t.edit))},(H=t.CodeLens||(t.CodeLens={})).create=function(e,t){var n={range:e};return Z.defined(t)&&(n.data=t),n},H.is=function(e){var t=e;return Z.defined(t)&&r.is(t.range)&&(Z.undefined(t.command)||b.is(t.command))},($=t.FormattingOptions||(t.FormattingOptions={})).create=function(e,t){return{tabSize:e,insertSpaces:t}},$.is=function(e){var t=e;return Z.defined(t)&&Z.number(t.tabSize)&&Z.boolean(t.insertSpaces)};var Q,X,Y,J=function(){};t.DocumentLink=J,(Q=J=t.DocumentLink||(t.DocumentLink={})).create=function(e,t,n){return{range:e,target:t,data:n}},Q.is=function(e){var t=e;return Z.defined(t)&&r.is(t.range)&&(Z.undefined(t.target)||Z.string(t.target))},t.DocumentLink=J,t.EOL=["\n","\r\n","\r"],(X=t.TextDocument||(t.TextDocument={})).create=function(e,t,n,r){return new ne(e,t,n,r)},X.is=function(e){var t=e;return!!(Z.defined(t)&&Z.string(t.uri)&&(Z.undefined(t.languageId)||Z.string(t.languageId))&&Z.number(t.lineCount)&&Z.func(t.getText)&&Z.func(t.positionAt)&&Z.func(t.offsetAt))},X.applyEdits=function(e,t){for(var n=e.getText(),r=function e(t,n){if(t.length<=1)return t;var r=t.length/2|0,i=t.slice(0,r),o=t.slice(r);e(i,n),e(o,n);for(var s=0,a=0,c=0;s<i.length&&a<o.length;){var u=n(i[s],o[a]);t[c++]=u<=0?i[s++]:o[a++]}for(;s<i.length;)t[c++]=i[s++];for(;a<o.length;)t[c++]=o[a++];return t}(t,function(e,t){var n=e.range.start.line-t.range.start.line;return 0===n?e.range.start.character-t.range.start.character:n}),i=n.length,o=r.length-1;0<=o;o--){var s=r[o],a=e.offsetAt(s.range.start),c=e.offsetAt(s.range.end);if(!(c<=i))throw new Error("Ovelapping edit");n=n.substring(0,a)+s.newText+n.substring(c,n.length),i=a}return n},(Y=t.TextDocumentSaveReason||(t.TextDocumentSaveReason={})).Manual=1,Y.AfterDelay=2,Y.FocusOut=3;var Z,ee,te,ne=function(){function e(e,t,n,r){this._uri=e,this._languageId=t,this._version=n,this._content=r,this._lineOffsets=null}return Object.defineProperty(e.prototype,"uri",{get:function(){return this._uri},enumerable:!0,configurable:!0}),Object.defineProperty(e.prototype,"languageId",{get:function(){return this._languageId},enumerable:!0,configurable:!0}),Object.defineProperty(e.prototype,"version",{get:function(){return this._version},enumerable:!0,configurable:!0}),e.prototype.getText=function(e){if(e){var t=this.offsetAt(e.start),n=this.offsetAt(e.end);return this._content.substring(t,n)}return this._content},e.prototype.update=function(e,t){this._content=e.text,this._version=t,this._lineOffsets=null},e.prototype.getLineOffsets=function(){if(null===this._lineOffsets){for(var e=[],t=this._content,n=!0,r=0;r<t.length;r++){n&&(e.push(r),n=!1);var i=t.charAt(r);n="\r"===i||"\n"===i,"\r"===i&&r+1<t.length&&"\n"===t.charAt(r+1)&&r++}n&&0<t.length&&e.push(t.length),this._lineOffsets=e}return this._lineOffsets},e.prototype.positionAt=function(e){e=Math.max(Math.min(e,this._content.length),0);var t=this.getLineOffsets(),n=0,r=t.length;if(0===r)return s.create(0,e);for(;n<r;){var i=Math.floor((n+r)/2);t[i]>e?r=i:n=i+1}var o=n-1;return s.create(o,e-t[o])},e.prototype.offsetAt=function(e){var t=this.getLineOffsets();if(e.line>=t.length)return this._content.length;if(e.line<0)return 0;var n=t[e.line],r=e.line+1<t.length?t[e.line+1]:this._content.length;return Math.max(Math.min(n+e.character,r),n)},Object.defineProperty(e.prototype,"lineCount",{get:function(){return this.getLineOffsets().length},enumerable:!0,configurable:!0}),e}();ee=Z||(Z={}),te=Object.prototype.toString,ee.defined=function(e){return void 0!==e},ee.undefined=function(e){return void 0===e},ee.boolean=function(e){return!0===e||!1===e},ee.string=function(e){return"[object String]"===te.call(e)},ee.number=function(e){return"[object Number]"===te.call(e)},ee.func=function(e){return"[object Function]"===te.call(e)},ee.objectLiteral=function(e){return null!==e&&"object"==typeof e},ee.typedArray=function(e,t){return Array.isArray(e)&&e.every(t)}}),define("vscode-languageserver-types",["vscode-languageserver-types/main"],function(e){return e}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/typo/typo",["require","exports"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var n=function(e,t,n,r){if(r=r||{},this.platform=r.platform||"chrome",this.dictionary=null,this.rules={},this.dictionaryTable={},this.compoundRules=[],this.compoundRuleCodes={},this.replacementTable=[],this.flags=r.flags||{},e){if(this.dictionary=e,"chrome"==this.platform)t||(t=this._readFile(chrome.extension.getURL("lib/typo/dictionaries/"+e+"/"+e+".aff"))),n||(n=this._readFile(chrome.extension.getURL("lib/typo/dictionaries/"+e+"/"+e+".dic")));else{var i=r.dictionaryPath||"";t||(t=this._readFile(i+"/"+e+"/"+e+".aff")),n||(n=this._readFile(i+"/"+e+"/"+e+".dic"))}this.rules=this._parseAFF(t),this.compoundRuleCodes={};for(var o=0,s=this.compoundRules.length;o<s;o++)for(var a=this.compoundRules[o],c=0,u=a.length;c<u;c++)this.compoundRuleCodes[a[c]]=[];for(var o in"ONLYINCOMPOUND"in this.flags&&(this.compoundRuleCodes[this.flags.ONLYINCOMPOUND]=[]),this.dictionaryTable=this._parseDIC(n),this.compoundRuleCodes)0==this.compoundRuleCodes[o].length&&delete this.compoundRuleCodes[o];for(o=0,s=this.compoundRules.length;o<s;o++){var d=this.compoundRules[o],p="";for(c=0,u=d.length;c<u;c++){var l=d[c];l in this.compoundRuleCodes?p+="("+this.compoundRuleCodes[l].join("|")+")":p+=l}this.compoundRules[o]=new RegExp(p,"i")}}return this};n.prototype={load:function(e){for(var t in e)this[t]=e[t];return this},_readFile:function(e,t){t||(t="ISO8859-1");var n=new XMLHttpRequest;return n.open("GET",e,!1),n.overrideMimeType&&n.overrideMimeType("text/plain; charset="+t),n.send(null),n.responseText},_parseAFF:function(e){for(var t={},n=(e=this._removeAffixComments(e)).split("\n"),r=0,i=n.length;r<i;r++){var o=(b=n[r]).split(/\s+/),s=o[0];if("PFX"==s||"SFX"==s){for(var a=o[1],c=o[2],u=[],d=r+1,p=r+1+(v=parseInt(o[3],10));d<p;d++){var l=(C=(b=n[d]).split(/\s+/))[2],h=C[3].split("/"),f=h[0];"0"===f&&(f="");var g=this.parseRuleCodes(h[1]),m=C[4],y={};y.add=f,0<g.length&&(y.continuationClasses=g),"."!==m&&(y.match="SFX"===s?new RegExp(m+"$"):new RegExp("^"+m)),"0"!=l&&(y.remove="SFX"===s?new RegExp(l+"$"):l),u.push(y)}t[a]={type:s,combineable:"Y"==c,entries:u},r+=v}else if("COMPOUNDRULE"===s){var v;for(d=r+1,p=r+1+(v=parseInt(o[1],10));d<p;d++){var b,C=(b=n[d]).split(/\s+/);this.compoundRules.push(C[1])}r+=v}else if("REP"===s){3===(C=b.split(/\s+/)).length&&this.replacementTable.push([C[1],C[2]])}else this.flags[s]=o[1]}return t},_removeAffixComments:function(e){return e=(e=(e=(e=e.replace(/#.*$/gm,"")).replace(/^\s\s*/m,"").replace(/\s\s*$/m,"")).replace(/\n{2,}/g,"\n")).replace(/^\s\s*/,"").replace(/\s\s*$/,"")},_parseDIC:function(e){var t=(e=this._removeDicComments(e)).split("\n"),n={};function r(e,t){e in n&&"object"==typeof n[e]||(n[e]=[]),n[e].push(t)}for(var i=1,o=t.length;i<o;i++){var s=t[i].split("/",2),a=s[0];if(1<s.length){var c=this.parseRuleCodes(s[1]);"NEEDAFFIX"in this.flags&&-1!=c.indexOf(this.flags.NEEDAFFIX)||r(a,c);for(var u=0,d=c.length;u<d;u++){var p=c[u],l=this.rules[p];if(l)for(var h=this._applyRule(a,l),f=0,g=h.length;f<g;f++){var m=h[f];if(r(m,[]),l.combineable)for(var y=u+1;y<d;y++){var v=c[y],b=this.rules[v];if(b&&b.combineable&&l.type!=b.type)for(var C=this._applyRule(m,b),x=0,k=C.length;x<k;x++){r(C[x],[])}}}p in this.compoundRuleCodes&&this.compoundRuleCodes[p].push(a)}}else r(a,[])}return n},_removeDicComments:function(e){return e=e.replace(/^\t.*$/gm,"")},parseRuleCodes:function(e){if(!e)return[];if(!("FLAG"in this.flags))return e.split("");if("long"===this.flags.FLAG){for(var t=[],n=0,r=e.length;n<r;n+=2)t.push(e.substr(n,2));return t}return"num"===this.flags.FLAG?textCode.split(","):void 0},_applyRule:function(e,t){for(var n=t.entries,r=[],i=0,o=n.length;i<o;i++){var s=n[i];if(!s.match||e.match(s.match)){var a=e;if(s.remove&&(a=a.replace(s.remove,"")),"SFX"===t.type?a+=s.add:a=s.add+a,r.push(a),"continuationClasses"in s)for(var c=0,u=s.continuationClasses.length;c<u;c++){var d=this.rules[s.continuationClasses[c]];d&&(r=r.concat(this._applyRule(a,d)))}}}return r},check:function(e){var t=e.replace(/^\s\s*/,"").replace(/\s\s*$/,"");if(this.checkExact(t))return!0;if(t.toUpperCase()===t){var n=t[0]+t.substring(1).toLowerCase();if(this.hasFlag(n,"KEEPCASE"))return!1;if(this.checkExact(n))return!0}var r=t.toLowerCase();if(r!==t){if(this.hasFlag(r,"KEEPCASE"))return!1;if(this.checkExact(r))return!0}return!1},checkExact:function(e){var t=this.dictionaryTable[e];if(void 0===t){if("COMPOUNDMIN"in this.flags&&e.length>=this.flags.COMPOUNDMIN)for(var n=0,r=this.compoundRules.length;n<r;n++)if(e.match(this.compoundRules[n]))return!0;return!1}for(n=0,r=t.length;n<r;n++)if(!this.hasFlag(e,"ONLYINCOMPOUND",t[n]))return!0;return!1},hasFlag:function(e,t,n){if(t in this.flags){if(void 0===n)n=Array.prototype.concat.apply([],this.dictionaryTable[e]);if(n&&-1!==n.indexOf(this.flags[t]))return!0}return!1},alphabet:"",suggest:function(e,c,t){if(c||(c=5),this.check(e))t([]);else{for(var n=0,r=this.replacementTable.length;n<r;n++){var i=this.replacementTable[n];if(-1!==e.indexOf(i[0])){var o=e.replace(i[0],i[1]);if(this.check(o))return void t([o])}}var u,d=this;d.alphabet="abcdefghijklmnopqrstuvwxyz",u=function(e){t(e)},s([e],function(a){s(a,function(e){for(var t=p(a).concat(p(e)),n={},r=0,i=t.length;r<i;r++)t[r]in n?n[t[r]]+=1:n[t[r]]=1;var o=[];for(var r in n)o.push([r,n[r]]);o.sort(function(e,t){return e[1]<t[1]?-1:1}).reverse();var s=[];for(r=0,i=Math.min(c,o.length);r<i;r++)d.hasFlag(o[r][0],"NOSUGGEST")||s.push(o[r][0]);u(s)})})}function s(e,t){for(var n=[],r=[],i=[],o=function(){for(var e=0;e<4;++e)if(!i[e])return;t(n)},s=0;s<4;++s){var a=new Worker("wordprocessor.js");a.addEventListener("message",function(t){return function(e){n=n.concat(e.data),i[t]=!0,this.terminate(),o()}}(s)),r.push(a),i.push(!1)}var c=e.length/4;for(s=0;s<4;++s)3!=s?r[s].postMessage(e.slice(c*s,c*(s+1))):r[s].postMessage(e.slice(c*s))}function p(e){for(var t=[],n=0;n<e.length;n++)d.check(e[n])&&t.push(e[n]);return t}}},t.Typo=n}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/cssCompletion",["require","exports","../parser/cssNodes","../parser/cssErrors","./languageFacts","vscode-languageserver-types","./typo/typo","vscode-nls"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var l=e("../parser/cssNodes"),a=e("../parser/cssErrors"),h=e("./languageFacts"),f=e("vscode-languageserver-types"),r=e("./typo/typo"),o=(e("vscode-nls").loadMessageBundle(),f.InsertTextFormat.Snippet),n=function(){function e(e){void 0===e&&(e=null),this.completionParticipants=[],this.valueTypes=[l.NodeType.Identifier,l.NodeType.Value,l.NodeType.StringLiteral,l.NodeType.NumericValue,l.NodeType.HexColorValue,l.NodeType.PrintVariable];var t="https://raw.githubusercontent.com/ChoicescriptIDE/main/latest/source/lib/typo/dictionaries/",n="en_US";this.typo=new r.Typo("","","",{platform:"any"}),this.typo=new r.Typo(n,this.typo._readFile(t+n+"/"+n+".aff"),this.typo._readFile(t+n+"/"+n+".dic"),{platform:"any"}),this.variablePrefix=e}return e.prototype.setCompletionParticipants=function(e){this.completionParticipants=e||[]},e.prototype.doComplete=function(e,t,n){var r=this;this.offset=e.offsetAt(t),this.position=t,this.currentWord=function(e,t){var n=t-1,r=e.getText();for(;0<=n&&-1===' \t\n\r":{[()]},*>+'.indexOf(r.charAt(n));)n--;return r.substring(n+1,t)}(e,this.offset),this.defaultReplaceRange=f.Range.create(f.Position.create(this.position.line,this.position.character-this.currentWord.length),this.position),this.textDocument=e,this.scene=n;try{var i={isIncomplete:!1,items:[]};this.nodePath=l.getNodePath(this.scene,this.offset);for(var o=this.nodePath.length-1;0<=o;o--){var s=this.nodePath[o];return s.hasIssue(a.ParseError.UnknownCommand)?(this.getCompletionsForCommands(i),new Promise(function(e,t){e(r.finalize(i))})):s.type===l.NodeType.RealWord&&2<s.getText().length&&!this.typo.check(s.getText())?this.getSuggestionsForSpellings(i).then(function(e){return r.finalize(e)}).catch(function(){return r.finalize(i)}):new Promise(function(e,t){e(r.finalize(i))})}}finally{this.position=null,this.currentWord=null,this.textDocument=null,this.scene=null,this.defaultReplaceRange=null,this.nodePath=null}},e.prototype.finalize=function(e){if(e.items.some(function(e){return!!e.sortText}))for(var t=0,n=e.items;t<n.length;t++){var r=n[t];r.sortText||(r.sortText="d")}return e},e.prototype.findInNodePath=function(){for(var e=[],t=0;t<arguments.length;t++)e[t]=arguments[t];for(var n=this.nodePath.length-1;0<=n;n--){var r=this.nodePath[n];if(-1!==e.indexOf(r.type))return r}return null},e.prototype.getCompletionsForCommands=function(e){for(var t=this,n=0,r=h.getCommands().filter(function(e){return t.currentWord.slice(0,1)===e.name.slice(0,1)});n<r.length;n++)e.items.push({label:r[n].name,detail:"(command)",documentation:"TBD",textEdit:f.TextEdit.replace(this.getCompletionRange(null),r[n].name),kind:f.CompletionItemKind.Keyword});return e},e.prototype.getSuggestionsForSpellings=function(t){var r=this,i=this,o=this.currentWord;return new Promise(function(n,e){r.typo.working?e(t):(r.typo.working=!0,r.typo.suggest(o,5,function(e){var t={items:[],isIncomplete:!1};e.length<1?t.items.push({label:"No spelling suggestions for "+o,documentation:"",textEdit:null,insertText:{value:o},kind:f.CompletionItemKind.Keyword}):(t.items.push({label:"Ignore '"+o+"' this session.",documentation:"",textEdit:null,filterText:o,sortText:"b",insertText:{value:o},kind:f.CompletionItemKind.Property}),t.items.push({label:"Add '"+o+"' to user dictionary.",documentation:"",textEdit:null,filterText:o,sortText:"c",insertText:{value:o},kind:f.CompletionItemKind.Property}),t.items=t.items.concat(e.map(function(e){return{label:"Correct to: "+e,documentation:"",textEdit:null,filterText:o,sortText:"a",insertText:{value:e},kind:f.CompletionItemKind.Text}}))),i.typo.working=!1,n(t)}))})},e.prototype.getCSSWideKeywordProposals=function(e,t,n){for(var r in h.cssWideKeywords)n.items.push({label:r,documentation:h.cssWideKeywords[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),r),kind:f.CompletionItemKind.Keyword});return n},e.prototype.getUnitProposals=function(e,t,n){var r="0";if(0<this.currentWord.length){var i=this.currentWord.match(/^-?\d[\.\d+]*/);i&&(r=i[0],n.isIncomplete=r.length===this.currentWord.length)}else 0===this.currentWord.length&&(n.isIncomplete=!0);t&&t.parent&&t.parent.type===l.NodeType.Term&&(t=t.getParent());for(var o=0,s=e.restrictions;o<s.length;o++){var a=s[o],c=h.units[a];if(c)for(var u=0,d=c;u<d.length;u++){var p=r+d[u];n.items.push({label:p,textEdit:f.TextEdit.replace(this.getCompletionRange(t),p),kind:f.CompletionItemKind.Unit})}}return n},e.prototype.getCompletionRange=function(e){if(e&&e.offset<=this.offset){var t=-1!==e.end?this.textDocument.positionAt(e.end):this.position;return f.Range.create(this.textDocument.positionAt(e.offset),t)}return this.defaultReplaceRange},e.prototype.getPositionProposals=function(e,t,n){for(var r in h.positionKeywords)n.items.push({label:r,documentation:h.positionKeywords[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),r),kind:f.CompletionItemKind.Value});return n},e.prototype.getRepeatStyleProposals=function(e,t,n){for(var r in h.repeatStyleKeywords)n.items.push({label:r,documentation:h.repeatStyleKeywords[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),r),kind:f.CompletionItemKind.Value});return n},e.prototype.getLineStyleProposals=function(e,t,n){for(var r in h.lineStyleKeywords)n.items.push({label:r,documentation:h.lineStyleKeywords[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),r),kind:f.CompletionItemKind.Value});return n},e.prototype.getLineWidthProposals=function(e,t,n){for(var r=0,i=h.lineWidthKeywords;r<i.length;r++){var o=i[r];n.items.push({label:o,textEdit:f.TextEdit.replace(this.getCompletionRange(t),o),kind:f.CompletionItemKind.Value})}return n},e.prototype.getGeometryBoxProposals=function(e,t,n){for(var r in h.geometryBoxKeywords)n.items.push({label:r,documentation:h.geometryBoxKeywords[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),r),kind:f.CompletionItemKind.Value});return n},e.prototype.getBoxProposals=function(e,t,n){for(var r in h.boxKeywords)n.items.push({label:r,documentation:h.boxKeywords[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),r),kind:f.CompletionItemKind.Value});return n},e.prototype.getImageProposals=function(e,t,n){for(var r in h.imageFunctions){var i=s(r);n.items.push({label:r,documentation:h.imageFunctions[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),i),kind:f.CompletionItemKind.Function,insertTextFormat:r!==i?o:void 0})}return n},e.prototype.getTimingFunctionProposals=function(e,t,n){for(var r in h.transitionTimingFunctions){var i=s(r);n.items.push({label:r,documentation:h.transitionTimingFunctions[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),i),kind:f.CompletionItemKind.Function,insertTextFormat:r!==i?o:void 0})}return n},e.prototype.getBasicShapeProposals=function(e,t,n){for(var r in h.basicShapeFunctions){var i=s(r);n.items.push({label:r,documentation:h.basicShapeFunctions[r],textEdit:f.TextEdit.replace(this.getCompletionRange(t),i),kind:f.CompletionItemKind.Function,insertTextFormat:r!==i?o:void 0})}return n},e.prototype.getCompletionForUriLiteralValue=function(e,t){var n,r,i;if(0===e.getChildren().length){n="",r=this.position;var o=this.textDocument.positionAt(e.offset+"url(".length);i=f.Range.create(o,o)}else{var s=e.getChild(0);n=s.getText(),r=this.position,i=this.getCompletionRange(s)}return this.completionParticipants.forEach(function(e){e.onCssURILiteralValue&&e.onCssURILiteralValue({uriValue:n,position:r,range:i})}),t},e.prototype.getCompletionForImportPath=function(t,e){var n=this;return this.completionParticipants.forEach(function(e){e.onCssImportPath&&e.onCssImportPath({pathValue:t.getText(),position:n.position,range:n.getCompletionRange(t)})}),e},e}();t.CSSCompletion=n;!function(){function e(){this.entries={}}e.prototype.add=function(e){this.entries[e]=!0},e.prototype.getEntries=function(){return Object.keys(this.entries)}}();function s(e){return e.replace(/\(\)$/,"($1)")}}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/cssHover",["require","exports","../parser/cssNodes","./languageFacts","vscode-languageserver-types"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var p=e("../parser/cssNodes"),l=e("./languageFacts"),h=e("vscode-languageserver-types"),n=function(){function e(){}return e.prototype.doHover=function(t,e,n){function r(e){return h.Range.create(t.positionAt(e.offset),t.positionAt(e.end))}for(var i=t.offsetAt(e),o=p.getNodePath(n,i),s=0;s<o.length;s++){var a=o[s];if(a instanceof p.Command){var c=a.getText().slice(1,a.getText().length),u=l.getCommands(),d=u.map(function(e){return e.name}).indexOf(c);if(-1!==d)return{contents:u[d].description,range:r(a)}}if(a instanceof p.Expression)return{contents:"selectorToMarkedString",range:r(a)};if(a instanceof p.Expression)return{contents:"simpleSelector",range:r(a)}}return null},e}();t.CSSHover=n}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/textRules",["require","exports","../parser/cssNodes","vscode-nls"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var n=e("../parser/cssNodes"),r=e("vscode-nls").loadMessageBundle(),i=n.Level.Warning,o=(n.Level.Error,n.Level.Ignore,function(e,t,n){this.id=e,this.message=t,this.defaultValue=n});t.Rule=o,t.Rules={BadSpelling:new o("badSpelling",r("rule.badSpelling","Bad spelling."),i)};var s=function(){function e(e){void 0===e&&(e={}),this.conf=e}return e.prototype.get=function(e){if(this.conf.hasOwnProperty(e.id)){var t=function(e){switch(e){case"ignore":return n.Level.Ignore;case"warning":return n.Level.Warning;case"error":return n.Level.Error}return null}(this.conf[e.id]);if(t)return t}return e.defaultValue},e}();t.LintConfigurationSettings=s}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/spellcheck",["require","exports","./textRules","../parser/cssNodes","vscode-nls"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r=e("./textRules"),i=e("../parser/cssNodes"),a=e("vscode-nls").loadMessageBundle(),o=function(){function e(){this.data={}}return e.prototype.add=function(e,t,n){var r=this.data[e];r||(r={nodes:[],names:[]},this.data[e]=r),r.names.push(t),n&&r.nodes.push(n)},e}(),n=function(){function s(e,t,n){this.warnings=[],this.visitScene=function(e){return!0},this.visitWord=function(e){return this.typo.check(e.getText())||this.addEntry(e,r.Rules.BadSpelling,"Bad spelling: "+e.getText()),!0},this.settings=t,this.documentText=e.getText(),this.keyframes=new o,this.typo=n}return s.entries=function(e,t,n,r,i){var o=new s(t,n,i);return e.acceptVisitor(o),o.getEntries(r)},s.prototype.findValueInExpression=function(e,t){var n=!1;return e.accept(function(e){return e.type===i.NodeType.Identifier&&e.getText()===t&&(n=!0),!n}),n},s.prototype.getEntries=function(t){return void 0===t&&(t=i.Level.Warning|i.Level.Error),this.warnings.filter(function(e){return 0!=(e.getLevel()&t)})},s.prototype.addEntry=function(e,t,n){var r=new i.Marker(e,t,i.Level.Warning,n,e.offset,e.length);this.warnings.push(r)},s.prototype.getMissingNames=function(e,t){e=e.slice(0);for(var n=0;n<t.length;n++){var r=e.indexOf(t[n]);-1!==r&&(e[r]=null)}var i=null;for(n=0;n<e.length;n++){var o=e[n];o&&(i=null===i?a("namelist.single","'{0}'",o):a("namelist.concatenated","{0}, '{1}'",i,o))}return i},s.prototype.visitNode=function(e){switch(e.type){case i.NodeType.Scene:return this.visitScene(e);case i.NodeType.TextLine:return!0;case i.NodeType.RealWord:return this.visitWord(e);default:return!0}},s.prefixes=["-ms-","-moz-","-o-","-webkit-"],s}();t.SpellCheckVisitor=n}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/ChoiceScriptValidation",["require","exports","../parser/cssNodes","vscode-languageserver-types","./textRules","./spellcheck","./typo/typo"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var s=e("../parser/cssNodes"),a=e("vscode-languageserver-types"),c=e("./textRules"),u=e("./spellcheck"),r=e("./typo/typo"),n=function(){function e(){this.typo=new r.Typo("","","",{platform:"any"})}return e.prototype.configure=function(e){this.settings=e,console.log(e),this.settings.spellCheckSettings.enabled&&this.loadTypo(e)},e.prototype.loadTypo=function(e){var t=e.spellCheckSettings.rootPath,n=e.spellCheckSettings.dictionary;this.typo=new r.Typo(n,this.typo._readFile(t+n+"/"+n+".aff"),this.typo._readFile(t+n+"/"+n+".dic"),{platform:"any"})},e.prototype.doValidation=function(r,e,t){if(void 0===t&&(t=this.settings),t&&!1===t.validate)return[];var n=[];n.push.apply(n,s.ParseErrorCollector.entries(e)),t&&!0===t.spellCheckSettings.enabled&&n.push.apply(n,u.SpellCheckVisitor.entries(e,r,null,s.Level.Warning|s.Level.Error,this.typo));var i=[];for(var o in c.Rules)i.push(c.Rules[o].id);return n.filter(function(e){return e.getLevel()!==s.Level.Ignore}).map(function(e){var t=a.Range.create(r.positionAt(e.getOffset()),r.positionAt(e.getOffset()+e.getLength())),n=-1!==i.indexOf(e.getRule().id)?r.languageId+".lint."+e.getRule().id:r.languageId;return{code:e.getRule().id,source:n,message:e.getMessage(),severity:e.getLevel()===s.Level.Warning?a.DiagnosticSeverity.Warning:a.DiagnosticSeverity.Error,range:t}})},e}();t.ChoiceScriptValidation=n}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/lintRules",["require","exports","../parser/cssNodes","vscode-nls"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var n=e("../parser/cssNodes"),r=e("vscode-nls").loadMessageBundle(),i=n.Level.Warning,o=n.Level.Error,s=n.Level.Ignore,a=function(e,t,n){this.id=e,this.message=t,this.defaultValue=n};t.Rule=a,t.Rules={AllVendorPrefixes:new a("compatibleVendorPrefixes",r("rule.vendorprefixes.all","When using a vendor-specific prefix make sure to also include all other vendor-specific properties"),s),IncludeStandardPropertyWhenUsingVendorPrefix:new a("vendorPrefix",r("rule.standardvendorprefix.all","When using a vendor-specific prefix also include the standard property"),i),DuplicateDeclarations:new a("duplicateProperties",r("rule.duplicateDeclarations","Do not use duplicate style definitions"),s),EmptyRuleSet:new a("emptyRules",r("rule.emptyRuleSets","Do not use empty rulesets"),i),ImportStatemement:new a("importStatement",r("rule.importDirective","Import statements do not load in parallel"),s),BewareOfBoxModelSize:new a("boxModel",r("rule.bewareOfBoxModelSize","Do not use width or height when using padding or border"),s),UniversalSelector:new a("universalSelector",r("rule.universalSelector","The universal selector (*) is known to be slow"),s),ZeroWithUnit:new a("zeroUnits",r("rule.zeroWidthUnit","No unit for zero needed"),s),RequiredPropertiesForFontFace:new a("fontFaceProperties",r("rule.fontFaceProperties","@font-face rule must define 'src' and 'font-family' properties"),i),HexColorLength:new a("hexColorLength",r("rule.hexColor","Hex colors must consist of three, four, six or eight hex numbers"),o),ArgsInColorFunction:new a("argumentsInColorFunction",r("rule.colorFunction","Invalid number of parameters"),o),UnknownProperty:new a("unknownProperties",r("rule.unknownProperty","Unknown property."),i),UnknownAtRules:new a("unknownAtRules",r("rule.unknownAtRules","Unknown at-rule."),i),IEStarHack:new a("ieHack",r("rule.ieHack","IE hacks are only necessary when supporting IE7 and older"),s),UnknownVendorSpecificProperty:new a("unknownVendorSpecificProperties",r("rule.unknownVendorSpecificProperty","Unknown vendor specific property."),s),PropertyIgnoredDueToDisplay:new a("propertyIgnoredDueToDisplay",r("rule.propertyIgnoredDueToDisplay","Property is ignored due to the display."),i),AvoidImportant:new a("important",r("rule.avoidImportant","Avoid using !important. It is an indication that the specificity of the entire CSS has gotten out of control and needs to be refactored."),s),AvoidFloat:new a("float",r("rule.avoidFloat","Avoid using 'float'. Floats lead to fragile CSS that is easy to break if one aspect of the layout changes."),s),AvoidIdSelector:new a("idSelector",r("rule.avoidIdSelector","Selectors should not contain IDs because these rules are too tightly coupled with the HTML."),s)};var c=function(){function e(e){void 0===e&&(e={}),this.conf=e}return e.prototype.get=function(e){if(this.conf.hasOwnProperty(e.id)){var t=function(e){switch(e){case"ignore":return n.Level.Ignore;case"warning":return n.Level.Warning;case"error":return n.Level.Error}return null}(this.conf[e.id]);if(t)return t}return e.defaultValue},e}();t.LintConfigurationSettings=c}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/services/ChoiceScriptCodeActions",["require","exports","../parser/cssNodes","../services/lintRules","vscode-languageserver-types","vscode-nls"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var u=e("../parser/cssNodes"),d=e("../services/lintRules"),h=e("vscode-languageserver-types"),f=e("vscode-nls").loadMessageBundle(),n=function(){function e(){}return e.prototype.doCodeActions=function(t,e,n,r){return this.doCodeActions2(t,e,n,r).map(function(e){return h.Command.create(e.title,"_choicescript.applyCodeAction",t.uri,t.version,e.edit.documentChanges[0].edits)})},e.prototype.doCodeActions2=function(e,t,n,r){var i=[];if(n.diagnostics)for(var o=0,s=n.diagnostics;o<s.length;o++){var a=s[o];this.appendSpellingSuggestions(e,r,a,i)}return i},e.prototype.getSpellingSuggestions=function(e,t,n,r){for(var i=3,o=0,s=["Suggestion One","Suggestion Two","Suggestion Three","Suggestion Four","Suggestion Five"];o<s.length;o++){var a=s[o],c=f("choicescript.codeaction.correctspelling","Correct to '{0}'",a),u=h.TextEdit.replace(n.range,a),d=h.VersionedTextDocumentIdentifier.create(e.uri,e.version),p={documentChanges:[h.TextDocumentEdit.create(d,[u])]},l=h.CodeAction.create(c,p,h.CodeActionKind.QuickFix);if(l.diagnostics=[n],r.push(l),--i<=0)return}},e.prototype.appendSpellingSuggestions=function(e,t,n,r){if(n.code===d.Rules.UnknownProperty.id)for(var i=e.offsetAt(n.range.start),o=e.offsetAt(n.range.end),s=u.getNodePath(t,i),a=s.length-1;0<=a;a--){var c=s[a];if(c instanceof u.RealWord&&c&&c.offset===i&&c.end===o)return void this.getSpellingSuggestions(e,c,n,r)}},e}();t.ChoiceScriptCodeActions=n}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/cssLanguageTypes",["require","exports","vscode-languageserver-types"],e)}(function(e,t){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var n,r=e("vscode-languageserver-types");t.Range=r.Range,t.TextEdit=r.TextEdit,t.Position=r.Position,(n=t.SpellCheckDictionary||(t.SpellCheckDictionary={})).EN_US="en_US",n.EN_GB="en_GB"}),function(e){if("object"==typeof module&&"object"==typeof module.exports){var t=e(require,exports);void 0!==t&&(module.exports=t)}else"function"==typeof define&&define.amd&&define("vscode-css-languageservice/cssLanguageService",["require","exports","./parser/cssParser","./services/cssCompletion","./services/cssHover","./services/ChoiceScriptValidation","./services/ChoiceScriptCodeActions","./cssLanguageTypes","vscode-languageserver-types"],e)}(function(e,n){"use strict";function t(e){for(var t in e)n.hasOwnProperty(t)||(n[t]=e[t])}Object.defineProperty(n,"__esModule",{value:!0});var o=e("./parser/cssParser"),s=e("./services/cssCompletion"),a=e("./services/cssHover"),c=e("./services/ChoiceScriptValidation"),u=e("./services/ChoiceScriptCodeActions");t(e("./cssLanguageTypes")),t(e("vscode-languageserver-types")),n.getCSSLanguageService=function(){return e=new o.Parser,t=new s.CSSCompletion,n=new a.CSSHover,r=new c.ChoiceScriptValidation,i=new u.ChoiceScriptCodeActions,{configure:r.configure.bind(r),doValidation:r.doValidation.bind(r),parseScene:e.parseScene.bind(e),doComplete:t.doComplete.bind(t),setCompletionParticipants:t.setCompletionParticipants.bind(t),doHover:n.doHover.bind(n),doCodeActions:i.doCodeActions.bind(i),doCodeActions2:i.doCodeActions2.bind(i)};var e,t,n,r,i}}),define("vscode-css-languageservice",["vscode-css-languageservice/cssLanguageService"],function(e){return e}),define("vs/language/choicescript/choicescriptWorker",["require","exports","vscode-css-languageservice","vscode-languageserver-types"],function(e,t,n,i){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var o=monaco.Promise,r=function(){function e(e,t){switch(this._ctx=e,this._languageSettings=t.languageSettings,this._languageId=t.languageId,this._languageId){case"choicescript":this._languageService=n.getCSSLanguageService();break;default:throw new Error("Invalid language id: "+this._languageId)}this._languageService.configure(this._languageSettings)}return e.prototype.doValidation=function(e){var t=this._getTextDocument(e);if(t){var n=this._languageService.parseScene(t),r=this._languageService.doValidation(t,n,this._languageSettings);return o.as(r)}return o.as([])},e.prototype.doComplete=function(e,t){var n=this._getTextDocument(e),r=this._languageService.parseScene(n),i=this._languageService.doComplete(n,t,r);return o.as(i)},e.prototype.doHover=function(e,t){var n=this._getTextDocument(e),r=this._languageService.parseScene(n),i=this._languageService.doHover(n,t,r);return o.as(i)},e.prototype._getTextDocument=function(e){for(var t=0,n=this._ctx.getMirrorModels();t<n.length;t++){var r=n[t];if(r.uri.toString()===e)return i.TextDocument.create(e,this._languageId,r.version,r.getValue())}return null},e}();t.CSSWorker=r,t.create=function(e,t){return new r(e,t)}});
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/parser/cssScanner',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var TokenType;
+    (function (TokenType) {
+        TokenType[TokenType["Ident"] = 0] = "Ident";
+        TokenType[TokenType["AtKeyword"] = 1] = "AtKeyword";
+        TokenType[TokenType["String"] = 2] = "String";
+        TokenType[TokenType["BadString"] = 3] = "BadString";
+        TokenType[TokenType["UnquotedString"] = 4] = "UnquotedString";
+        TokenType[TokenType["Hash"] = 5] = "Hash";
+        TokenType[TokenType["Num"] = 6] = "Num";
+        TokenType[TokenType["Percentage"] = 7] = "Percentage";
+        TokenType[TokenType["Dimension"] = 8] = "Dimension";
+        TokenType[TokenType["UnicodeRange"] = 9] = "UnicodeRange";
+        TokenType[TokenType["CDO"] = 10] = "CDO";
+        TokenType[TokenType["CDC"] = 11] = "CDC";
+        TokenType[TokenType["Colon"] = 12] = "Colon";
+        TokenType[TokenType["SemiColon"] = 13] = "SemiColon";
+        TokenType[TokenType["CurlyL"] = 14] = "CurlyL";
+        TokenType[TokenType["CurlyR"] = 15] = "CurlyR";
+        TokenType[TokenType["ParenthesisL"] = 16] = "ParenthesisL";
+        TokenType[TokenType["ParenthesisR"] = 17] = "ParenthesisR";
+        TokenType[TokenType["BracketL"] = 18] = "BracketL";
+        TokenType[TokenType["BracketR"] = 19] = "BracketR";
+        TokenType[TokenType["Whitespace"] = 20] = "Whitespace";
+        TokenType[TokenType["Includes"] = 21] = "Includes";
+        TokenType[TokenType["Dashmatch"] = 22] = "Dashmatch";
+        TokenType[TokenType["SubstringOperator"] = 23] = "SubstringOperator";
+        TokenType[TokenType["PrefixOperator"] = 24] = "PrefixOperator";
+        TokenType[TokenType["SuffixOperator"] = 25] = "SuffixOperator";
+        TokenType[TokenType["Delim"] = 26] = "Delim";
+        TokenType[TokenType["EMS"] = 27] = "EMS";
+        TokenType[TokenType["EXS"] = 28] = "EXS";
+        TokenType[TokenType["Length"] = 29] = "Length";
+        TokenType[TokenType["Angle"] = 30] = "Angle";
+        TokenType[TokenType["Time"] = 31] = "Time";
+        TokenType[TokenType["Freq"] = 32] = "Freq";
+        TokenType[TokenType["Exclamation"] = 33] = "Exclamation";
+        TokenType[TokenType["Resolution"] = 34] = "Resolution";
+        TokenType[TokenType["Comma"] = 35] = "Comma";
+        TokenType[TokenType["Charset"] = 36] = "Charset";
+        TokenType[TokenType["EscapedJavaScript"] = 37] = "EscapedJavaScript";
+        TokenType[TokenType["BadEscapedJavaScript"] = 38] = "BadEscapedJavaScript";
+        TokenType[TokenType["Comment"] = 39] = "Comment";
+        TokenType[TokenType["SingleLineComment"] = 40] = "SingleLineComment";
+        TokenType[TokenType["EOF"] = 41] = "EOF";
+        TokenType[TokenType["EOL"] = 42] = "EOL";
+        TokenType[TokenType["CustomToken"] = 43] = "CustomToken";
+        TokenType[TokenType["Builtin"] = 44] = "Builtin";
+        TokenType[TokenType["Invalid"] = 45] = "Invalid";
+        TokenType[TokenType["Word"] = 46] = "Word";
+        TokenType[TokenType["Dollar"] = 47] = "Dollar";
+    })(TokenType = exports.TokenType || (exports.TokenType = {}));
+    var MultiLineStream = /** @class */ (function () {
+        function MultiLineStream(source) {
+            this.source = source;
+            this.len = source.length;
+            this.position = 0;
+        }
+        MultiLineStream.prototype.substring = function (from, to) {
+            if (to === void 0) { to = this.position; }
+            return this.source.substring(from, to);
+        };
+        MultiLineStream.prototype.eos = function () {
+            return this.len <= this.position;
+        };
+        MultiLineStream.prototype.pos = function () {
+            return this.position;
+        };
+        MultiLineStream.prototype.goBackTo = function (pos) {
+            this.position = pos;
+        };
+        MultiLineStream.prototype.goBack = function (n) {
+            this.position -= n;
+        };
+        MultiLineStream.prototype.advance = function (n) {
+            this.position += n;
+        };
+        MultiLineStream.prototype.nextChar = function () {
+            return this.source.charCodeAt(this.position++) || 0;
+        };
+        MultiLineStream.prototype.peekChar = function (n) {
+            if (n === void 0) { n = 0; }
+            return this.source.charCodeAt(this.position + n) || 0;
+        };
+        MultiLineStream.prototype.lookbackChar = function (n) {
+            if (n === void 0) { n = 0; }
+            return this.source.charCodeAt(this.position - n) || 0;
+        };
+        MultiLineStream.prototype.advanceIfChar = function (ch) {
+            if (ch === this.source.charCodeAt(this.position)) {
+                this.position++;
+                return true;
+            }
+            return false;
+        };
+        MultiLineStream.prototype.advanceIfChars = function (ch) {
+            var i;
+            if (this.position + ch.length > this.source.length) {
+                return false;
+            }
+            for (i = 0; i < ch.length; i++) {
+                if (this.source.charCodeAt(this.position + i) !== ch[i]) {
+                    return false;
+                }
+            }
+            this.advance(i);
+            return true;
+        };
+        MultiLineStream.prototype.advanceWhileChar = function (condition) {
+            var posNow = this.position;
+            while (this.position < this.len && condition(this.source.charCodeAt(this.position))) {
+                this.position++;
+            }
+            return this.position - posNow;
+        };
+        return MultiLineStream;
+    }());
+    exports.MultiLineStream = MultiLineStream;
+    var _a = 'a'.charCodeAt(0);
+    var _c = 'c'.charCodeAt(0);
+    var _e = 'e'.charCodeAt(0);
+    var _f = 'f'.charCodeAt(0);
+    var _m = 'm'.charCodeAt(0);
+    var _n = 'n'.charCodeAt(0);
+    var _o = 'o'.charCodeAt(0);
+    var _t = 't'.charCodeAt(0);
+    var _z = 'z'.charCodeAt(0);
+    var _A = 'A'.charCodeAt(0);
+    var _F = 'F'.charCodeAt(0);
+    var _Z = 'Z'.charCodeAt(0);
+    var _0 = '0'.charCodeAt(0);
+    var _9 = '9'.charCodeAt(0);
+    var _TLD = '~'.charCodeAt(0);
+    var _HAT = '^'.charCodeAt(0);
+    var _EQS = '='.charCodeAt(0);
+    var _PIP = '|'.charCodeAt(0);
+    var _MIN = '-'.charCodeAt(0);
+    var _USC = '_'.charCodeAt(0);
+    var _PRC = '%'.charCodeAt(0);
+    var _MUL = '*'.charCodeAt(0);
+    var _LPA = '('.charCodeAt(0);
+    var _RPA = ')'.charCodeAt(0);
+    var _LAN = '<'.charCodeAt(0);
+    var _RAN = '>'.charCodeAt(0);
+    var _ATS = '@'.charCodeAt(0);
+    var _HSH = '#'.charCodeAt(0);
+    var _DLR = '$'.charCodeAt(0);
+    var _BSL = '\\'.charCodeAt(0);
+    var _FSL = '/'.charCodeAt(0);
+    var _NWL = '\n'.charCodeAt(0);
+    var _CAR = '\r'.charCodeAt(0);
+    var _LFD = '\f'.charCodeAt(0);
+    var _DQO = '"'.charCodeAt(0);
+    var _SQO = '\''.charCodeAt(0);
+    var _WSP = ' '.charCodeAt(0);
+    var _TAB = '\t'.charCodeAt(0);
+    var _SEM = ';'.charCodeAt(0);
+    var _COL = ':'.charCodeAt(0);
+    var _CUL = '{'.charCodeAt(0);
+    var _CUR = '}'.charCodeAt(0);
+    var _BRL = '['.charCodeAt(0);
+    var _BRR = ']'.charCodeAt(0);
+    var _CMA = ','.charCodeAt(0);
+    var _DOT = '.'.charCodeAt(0);
+    var _BNG = '!'.charCodeAt(0);
+    var _AST = '*'.charCodeAt(0);
+    var staticTokenTable = {};
+    staticTokenTable[_SEM] = TokenType.SemiColon;
+    staticTokenTable[_COL] = TokenType.Colon;
+    staticTokenTable[_CUL] = TokenType.CurlyL;
+    staticTokenTable[_CUR] = TokenType.CurlyR;
+    staticTokenTable[_BRR] = TokenType.BracketR;
+    staticTokenTable[_BRL] = TokenType.BracketL;
+    staticTokenTable[_LPA] = TokenType.ParenthesisL;
+    staticTokenTable[_RPA] = TokenType.ParenthesisR;
+    staticTokenTable[_CMA] = TokenType.Comma;
+    staticTokenTable[_DLR] = TokenType.Dollar;
+    var staticUnitTable = {};
+    staticUnitTable['em'] = TokenType.EMS;
+    staticUnitTable['ex'] = TokenType.EXS;
+    staticUnitTable['px'] = TokenType.Length;
+    staticUnitTable['cm'] = TokenType.Length;
+    staticUnitTable['mm'] = TokenType.Length;
+    staticUnitTable['in'] = TokenType.Length;
+    staticUnitTable['pt'] = TokenType.Length;
+    staticUnitTable['pc'] = TokenType.Length;
+    staticUnitTable['deg'] = TokenType.Angle;
+    staticUnitTable['rad'] = TokenType.Angle;
+    staticUnitTable['grad'] = TokenType.Angle;
+    staticUnitTable['ms'] = TokenType.Time;
+    staticUnitTable['s'] = TokenType.Time;
+    staticUnitTable['hz'] = TokenType.Freq;
+    staticUnitTable['khz'] = TokenType.Freq;
+    staticUnitTable['%'] = TokenType.Percentage;
+    staticUnitTable['fr'] = TokenType.Percentage;
+    staticUnitTable['dpi'] = TokenType.Resolution;
+    staticUnitTable['dpcm'] = TokenType.Resolution;
+    var Scanner = /** @class */ (function () {
+        function Scanner() {
+            this.stream = new MultiLineStream('');
+            this.ignoreComment = true;
+            this.ignoreWhitespace = true;
+            this.inURL = false;
+        }
+        Scanner.prototype.setSource = function (input) {
+            this.stream = new MultiLineStream(input);
+        };
+        Scanner.prototype.finishToken = function (offset, type, text) {
+            return {
+                offset: offset,
+                len: this.stream.pos() - offset,
+                type: type,
+                text: text || this.stream.substring(offset)
+            };
+        };
+        Scanner.prototype.substring = function (offset, len) {
+            return this.stream.substring(offset, offset + len);
+        };
+        Scanner.prototype.pos = function () {
+            return this.stream.pos();
+        };
+        Scanner.prototype.goBackTo = function (pos) {
+            this.stream.goBackTo(pos);
+        };
+        Scanner.prototype.scanUnquotedString = function () {
+            var offset = this.stream.pos();
+            var content = [];
+            if (this._unquotedString(content)) {
+                return this.finishToken(offset, TokenType.UnquotedString, content.join(''));
+            }
+            return null;
+        };
+        Scanner.prototype.scan = function () {
+            // processes all whitespaces and comments... BUT NOT NEW LINES (or does it now?! CJW)
+            var triviaToken = this.trivia();
+            if (triviaToken !== null) {
+                return triviaToken;
+            }
+            var offset = this.stream.pos();
+            // End of file/input
+            if (this.stream.eos()) {
+                return this.finishToken(offset, TokenType.EOF);
+            }
+            return this.scanNext(offset);
+        };
+        Scanner.prototype.scanNext = function (offset) {
+            var content = [];
+            // newlines
+            if (this._newline(content)) {
+                return this.finishToken(offset, TokenType.EOL, content.join(''));
+            }
+            // Comment
+            if (this.stream.advanceIfChars([_MUL, _c, _o, _m, _m, _e, _n, _t])) {
+                var n = this.stream.advanceWhileChar(function (ch) {
+                    return !(ch === _LFD || ch === _NWL || ch === _CAR);
+                });
+                var t = this.finishToken(offset, TokenType.SingleLineComment);
+                return (n > 0) ? t : null;
+            }
+            // Command
+            if (this.stream.advanceIfChar(_MUL)) {
+                content = ['*'];
+                if (this._name(content)) {
+                    return this.finishToken(offset, TokenType.Builtin, content.join(''));
+                }
+                else if (content.length === 1) {
+                    return this.finishToken(offset, TokenType.Delim);
+                }
+                else {
+                    return this.finishToken(offset, TokenType.Invalid, content.join(''));
+                }
+            }
+            else {
+                if (this.ident(content)) {
+                    return this.finishToken(offset, TokenType.Ident, content.join(''));
+                }
+                else if (this._word()) {
+                    return this.finishToken(offset, TokenType.Word);
+                }
+            }
+            // String, BadString
+            content = [];
+            var tokenType = this._string(content);
+            if (tokenType !== null) {
+                return this.finishToken(offset, tokenType, content.join(''));
+            }
+            // hash
+            if (this.stream.advanceIfChar(_HSH)) {
+                content = ['#'];
+                if (this._name(content)) {
+                    return this.finishToken(offset, TokenType.Hash, content.join(''));
+                }
+                else {
+                    return this.finishToken(offset, TokenType.Delim);
+                }
+            }
+            // Numbers
+            if (this._number()) {
+                var pos = this.stream.pos();
+                content = [this.stream.substring(offset, pos)];
+                if (this.stream.advanceIfChar(_PRC)) {
+                    // Percentage 43%
+                    return this.finishToken(offset, TokenType.Percentage);
+                }
+                else if (this.ident(content)) {
+                    var dim = this.stream.substring(pos).toLowerCase();
+                    var tokenType_1 = staticUnitTable[dim];
+                    if (typeof tokenType_1 !== 'undefined') {
+                        // Known dimension 43px
+                        return this.finishToken(offset, tokenType_1, content.join(''));
+                    }
+                    else {
+                        // Unknown dimension 43ft
+                        return this.finishToken(offset, TokenType.Dimension, content.join(''));
+                    }
+                }
+                return this.finishToken(offset, TokenType.Num);
+            }
+            // Brackets, commas, etc.
+            tokenType = staticTokenTable[this.stream.peekChar()];
+            if (typeof tokenType !== 'undefined') {
+                this.stream.advance(1);
+                return this.finishToken(offset, tokenType);
+            }
+            // Delim
+            this.stream.nextChar();
+            return this.finishToken(offset, TokenType.Delim);
+        };
+        Scanner.prototype._matchWordAnyCase = function (characters) {
+            var index = 0;
+            this.stream.advanceWhileChar(function (ch) {
+                var result = characters[index] === ch || characters[index + 1] === ch;
+                if (result) {
+                    index += 2;
+                }
+                return result;
+            });
+            if (index === characters.length) {
+                return true;
+            }
+            else {
+                this.stream.goBack(index / 2);
+                return false;
+            }
+        };
+        Scanner.prototype.trivia = function () {
+            while (true) {
+                var offset = this.stream.pos();
+                if (this._whitespace()) {
+                    if (!this.ignoreWhitespace) {
+                        return this.finishToken(offset, TokenType.Whitespace);
+                    }
+                }
+                else if (this.comment()) {
+                    if (!this.ignoreComment) {
+                        return this.finishToken(offset, TokenType.Comment);
+                    }
+                }
+                else {
+                    return null;
+                }
+            }
+        };
+        Scanner.prototype.comment = function () {
+            if (this.stream.advanceIfChars([_FSL, _MUL])) {
+                var success_1 = false, hot_1 = false;
+                this.stream.advanceWhileChar(function (ch) {
+                    if (hot_1 && ch === _FSL) {
+                        success_1 = true;
+                        return false;
+                    }
+                    hot_1 = ch === _MUL;
+                    return true;
+                });
+                if (success_1) {
+                    this.stream.advance(1);
+                }
+                return true;
+            }
+            return false;
+        };
+        Scanner.prototype._number = function () {
+            var npeek = 0, ch;
+            if (this.stream.peekChar() === _DOT) {
+                npeek = 1;
+            }
+            ch = this.stream.peekChar(npeek);
+            if (ch >= _0 && ch <= _9) {
+                this.stream.advance(npeek + 1);
+                this.stream.advanceWhileChar(function (ch) {
+                    return ch >= _0 && ch <= _9 || npeek === 0 && ch === _DOT;
+                });
+                return true;
+            }
+            return false;
+        };
+        Scanner.prototype._word = function () {
+            var npeek = 0, ch;
+            ch = this.stream.peekChar(npeek);
+            if ((ch >= _A && ch <= _Z) ||
+                (ch >= _a && ch <= _z)) {
+                this.stream.advance(npeek + 1);
+                this.stream.advanceWhileChar(function (ch) {
+                    return ((ch >= _A && ch <= _Z) ||
+                        (ch >= _a && ch <= _z) ||
+                        (ch === _SQO)); // FIXME: Handle apostrophes with some measure of grace
+                });
+                return true;
+            }
+            return false;
+        };
+        Scanner.prototype._newline = function (result) {
+            var ch = this.stream.peekChar();
+            switch (ch) {
+                case _CAR:
+                case _LFD:
+                case _NWL:
+                    this.stream.advance(1);
+                    result.push(String.fromCharCode(ch));
+                    if (ch === _CAR && this.stream.advanceIfChar(_NWL)) {
+                        result.push('\n');
+                    }
+                    return true;
+            }
+            return false;
+        };
+        Scanner.prototype._escape = function (result, includeNewLines) {
+            var ch = this.stream.peekChar();
+            if (ch === _BSL) {
+                this.stream.advance(1);
+                ch = this.stream.peekChar();
+                var hexNumCount = 0;
+                while (hexNumCount < 6 && (ch >= _0 && ch <= _9 || ch >= _a && ch <= _f || ch >= _A && ch <= _F)) {
+                    this.stream.advance(1);
+                    ch = this.stream.peekChar();
+                    hexNumCount++;
+                }
+                if (hexNumCount > 0) {
+                    try {
+                        var hexVal = parseInt(this.stream.substring(this.stream.pos() - hexNumCount), 16);
+                        if (hexVal) {
+                            result.push(String.fromCharCode(hexVal));
+                        }
+                    }
+                    catch (e) {
+                        // ignore
+                    }
+                    // optional whitespace or new line, not part of result text
+                    if (ch === _WSP || ch === _TAB) {
+                        this.stream.advance(1);
+                    }
+                    else {
+                        this._newline([]);
+                    }
+                    return true;
+                }
+                if (ch !== _CAR && ch !== _LFD && ch !== _NWL) {
+                    this.stream.advance(1);
+                    result.push(String.fromCharCode(ch));
+                    return true;
+                }
+                else if (includeNewLines) {
+                    return this._newline(result);
+                }
+            }
+            return false;
+        };
+        Scanner.prototype._stringChar = function (closeQuote, result) {
+            // not closeQuote, not backslash, not newline
+            var ch = this.stream.peekChar();
+            if (ch !== 0 && ch !== closeQuote && ch !== _BSL && ch !== _CAR && ch !== _LFD && ch !== _NWL) {
+                this.stream.advance(1);
+                result.push(String.fromCharCode(ch));
+                return true;
+            }
+            return false;
+        };
+        Scanner.prototype._string = function (result) {
+            if (this.stream.peekChar() === _SQO || this.stream.peekChar() === _DQO) {
+                var closeQuote = this.stream.nextChar();
+                result.push(String.fromCharCode(closeQuote));
+                while (this._stringChar(closeQuote, result) || this._escape(result, true)) {
+                    // loop
+                }
+                if (this.stream.peekChar() === closeQuote) {
+                    this.stream.nextChar();
+                    result.push(String.fromCharCode(closeQuote));
+                    return TokenType.String;
+                }
+                else {
+                    return TokenType.BadString;
+                }
+            }
+            return null;
+        };
+        Scanner.prototype._unquotedChar = function (result) {
+            // not closeQuote, not backslash, not newline
+            var ch = this.stream.peekChar();
+            if (ch !== 0 && ch !== _BSL && ch !== _SQO && ch !== _DQO && ch !== _LPA && ch !== _RPA && ch !== _WSP && ch !== _TAB && ch !== _NWL && ch !== _LFD && ch !== _CAR) {
+                this.stream.advance(1);
+                result.push(String.fromCharCode(ch));
+                return true;
+            }
+            return false;
+        };
+        Scanner.prototype._unquotedString = function (result) {
+            var hasContent = false;
+            while (this._unquotedChar(result) || this._escape(result)) {
+                hasContent = true;
+            }
+            return hasContent;
+        };
+        Scanner.prototype._whitespace = function () {
+            var n = this.stream.advanceWhileChar(function (ch) {
+                return ch === _WSP || ch === _TAB;
+            });
+            return n > 0;
+        };
+        Scanner.prototype._name = function (result) {
+            var matched = false;
+            while (this._identChar(result) || this._escape(result)) {
+                matched = true;
+            }
+            return matched;
+        };
+        Scanner.prototype.ident = function (result) {
+            var pos = this.stream.pos();
+            var hasMinus = this._minus(result);
+            if (hasMinus && this._minus(result) /* -- */) {
+                if (this._identFirstChar(result) || this._escape(result)) {
+                    while (this._identChar(result) || this._escape(result)) {
+                        // loop
+                    }
+                    return true;
+                }
+            }
+            else if (this._identFirstChar(result) || this._escape(result)) {
+                while (this._identChar(result) || this._escape(result)) {
+                    // loop
+                }
+                return true;
+            }
+            this.stream.goBackTo(pos);
+            return false;
+        };
+        Scanner.prototype._identFirstChar = function (result) {
+            var ch = this.stream.peekChar();
+            if (ch === _USC || // _
+                ch >= _a && ch <= _z || // a-z
+                ch >= _A && ch <= _Z || // A-Z
+                ch >= 0x80 && ch <= 0xFFFF) { // nonascii
+                this.stream.advance(1);
+                result.push(String.fromCharCode(ch));
+                return true;
+            }
+            return false;
+        };
+        Scanner.prototype._minus = function (result) {
+            var ch = this.stream.peekChar();
+            if (ch === _MIN) {
+                this.stream.advance(1);
+                result.push(String.fromCharCode(ch));
+                return true;
+            }
+            return false;
+        };
+        Scanner.prototype._identChar = function (result) {
+            var ch = this.stream.peekChar();
+            if (ch === _USC || // _
+                ch === _MIN || // -
+                ch >= _a && ch <= _z || // a-z
+                ch >= _A && ch <= _Z || // A-Z
+                ch >= _0 && ch <= _9 || // 0/9
+                ch >= 0x80 && ch <= 0xFFFF) { // nonascii
+                this.stream.advance(1);
+                result.push(String.fromCharCode(ch));
+                return true;
+            }
+            return false;
+        };
+        return Scanner;
+    }());
+    exports.Scanner = Scanner;
+});
+//# sourceMappingURL=cssScanner.js.map;
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/parser/cssNodes',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /// <summary>
+    /// Nodes for the css 2.1 specification. See for reference:
+    /// http://www.w3.org/TR/CSS21/grammar.html#grammar
+    /// </summary>
+    var NodeType;
+    (function (NodeType) {
+        NodeType[NodeType["Undefined"] = 0] = "Undefined";
+        NodeType[NodeType["ChoiceScriptComment"] = 1] = "ChoiceScriptComment";
+        NodeType[NodeType["Identifier"] = 2] = "Identifier";
+        NodeType[NodeType["Scene"] = 3] = "Scene";
+        NodeType[NodeType["Line"] = 4] = "Line";
+        NodeType[NodeType["Label"] = 5] = "Label";
+        NodeType[NodeType["ChoiceScriptLine"] = 6] = "ChoiceScriptLine";
+        NodeType[NodeType["ChoiceScriptStatement"] = 7] = "ChoiceScriptStatement";
+        NodeType[NodeType["TextLine"] = 8] = "TextLine";
+        NodeType[NodeType["StringLiteral"] = 9] = "StringLiteral";
+        NodeType[NodeType["Operator"] = 10] = "Operator";
+        NodeType[NodeType["Expression"] = 11] = "Expression";
+        NodeType[NodeType["BinaryExpression"] = 12] = "BinaryExpression";
+        NodeType[NodeType["Term"] = 13] = "Term";
+        NodeType[NodeType["Value"] = 14] = "Value";
+        NodeType[NodeType["RealWord"] = 15] = "RealWord";
+        NodeType[NodeType["ChoiceCommand"] = 16] = "ChoiceCommand";
+        NodeType[NodeType["ChoiceOption"] = 17] = "ChoiceOption";
+        NodeType[NodeType["MultiReplace"] = 18] = "MultiReplace";
+        NodeType[NodeType["PrintVariable"] = 19] = "PrintVariable";
+        NodeType[NodeType["NumericValue"] = 20] = "NumericValue";
+        NodeType[NodeType["Boolean"] = 21] = "Boolean";
+        NodeType[NodeType["Indentation"] = 22] = "Indentation";
+        NodeType[NodeType["VariableDeclaration"] = 23] = "VariableDeclaration";
+        NodeType[NodeType["LabelDeclaration"] = 24] = "LabelDeclaration";
+        NodeType[NodeType["FlowCommand"] = 25] = "FlowCommand";
+        // ...
+        NodeType[NodeType["HexColorValue"] = 26] = "HexColorValue";
+        NodeType[NodeType["Variable"] = 27] = "Variable";
+        NodeType[NodeType["CreateVariable"] = 28] = "CreateVariable";
+        NodeType[NodeType["If"] = 29] = "If";
+        NodeType[NodeType["Else"] = 30] = "Else";
+        NodeType[NodeType["For"] = 31] = "For";
+        NodeType[NodeType["Each"] = 32] = "Each";
+        NodeType[NodeType["While"] = 33] = "While";
+        NodeType[NodeType["MixinContent"] = 34] = "MixinContent";
+        NodeType[NodeType["Media"] = 35] = "Media";
+        NodeType[NodeType["Keyframe"] = 36] = "Keyframe";
+        NodeType[NodeType["FontFace"] = 37] = "FontFace";
+        NodeType[NodeType["Import"] = 38] = "Import";
+        NodeType[NodeType["Namespace"] = 39] = "Namespace";
+        NodeType[NodeType["Invocation"] = 40] = "Invocation";
+        NodeType[NodeType["FunctionDeclaration"] = 41] = "FunctionDeclaration";
+        NodeType[NodeType["ReturnStatement"] = 42] = "ReturnStatement";
+        NodeType[NodeType["MediaQuery"] = 43] = "MediaQuery";
+        NodeType[NodeType["FunctionParameter"] = 44] = "FunctionParameter";
+        NodeType[NodeType["FunctionArgument"] = 45] = "FunctionArgument";
+        NodeType[NodeType["KeyframeSelector"] = 46] = "KeyframeSelector";
+        NodeType[NodeType["ViewPort"] = 47] = "ViewPort";
+        NodeType[NodeType["Document"] = 48] = "Document";
+        NodeType[NodeType["AtApplyRule"] = 49] = "AtApplyRule";
+        NodeType[NodeType["CustomPropertyDeclaration"] = 50] = "CustomPropertyDeclaration";
+        NodeType[NodeType["CustomPropertySet"] = 51] = "CustomPropertySet";
+        NodeType[NodeType["ListEntry"] = 52] = "ListEntry";
+        NodeType[NodeType["Supports"] = 53] = "Supports";
+        NodeType[NodeType["SupportsCondition"] = 54] = "SupportsCondition";
+        NodeType[NodeType["NamespacePrefix"] = 55] = "NamespacePrefix";
+        NodeType[NodeType["GridLine"] = 56] = "GridLine";
+        NodeType[NodeType["Plugin"] = 57] = "Plugin";
+        NodeType[NodeType["UnknownAtRule"] = 58] = "UnknownAtRule";
+        NodeType[NodeType["Command"] = 59] = "Command";
+        NodeType[NodeType["StandardCommand"] = 60] = "StandardCommand";
+        NodeType[NodeType["InvalidBuiltin"] = 61] = "InvalidBuiltin";
+    })(NodeType = exports.NodeType || (exports.NodeType = {}));
+    var ReferenceType;
+    (function (ReferenceType) {
+        ReferenceType[ReferenceType["Label"] = 0] = "Label";
+        ReferenceType[ReferenceType["Variable"] = 1] = "Variable";
+        ReferenceType[ReferenceType["Unknown"] = 2] = "Unknown";
+    })(ReferenceType = exports.ReferenceType || (exports.ReferenceType = {}));
+    function getNodeAtOffset(node, offset) {
+        var candidate = null;
+        if (!node || offset < node.offset || offset > node.end) {
+            return null;
+        }
+        // Find the shortest node at the position
+        node.accept(function (node) {
+            if (node.offset === -1 && node.length === -1) {
+                return true;
+            }
+            if (node.offset <= offset && node.end >= offset) {
+                if (!candidate) {
+                    candidate = node;
+                }
+                else if (node.length <= candidate.length) {
+                    candidate = node;
+                }
+                return true;
+            }
+            return false;
+        });
+        return candidate;
+    }
+    exports.getNodeAtOffset = getNodeAtOffset;
+    function getNodePath(node, offset) {
+        var candidate = getNodeAtOffset(node, offset);
+        var path = [];
+        while (candidate) {
+            path.unshift(candidate);
+            candidate = candidate.parent;
+        }
+        return path;
+    }
+    exports.getNodePath = getNodePath;
+    var Node = /** @class */ (function () {
+        function Node(offset, len, nodeType) {
+            if (offset === void 0) { offset = -1; }
+            if (len === void 0) { len = -1; }
+            this.parent = null;
+            this.offset = offset;
+            this.length = len;
+            if (nodeType) {
+                this.nodeType = nodeType;
+            }
+        }
+        Object.defineProperty(Node.prototype, "end", {
+            get: function () { return this.offset + this.length; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Node.prototype, "type", {
+            get: function () {
+                return this.nodeType || NodeType.Undefined;
+            },
+            set: function (type) {
+                this.nodeType = type;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Node.prototype.getTextProvider = function () {
+            var node = this;
+            while (node && !node.textProvider) {
+                node = node.parent;
+            }
+            if (node) {
+                return node.textProvider;
+            }
+            return function () { return 'unknown'; };
+        };
+        Node.prototype.getText = function () {
+            return this.getTextProvider()(this.offset, this.length);
+        };
+        Node.prototype.matches = function (str) {
+            return this.length === str.length && this.getTextProvider()(this.offset, this.length) === str;
+        };
+        Node.prototype.startsWith = function (str) {
+            return this.length >= str.length && this.getTextProvider()(this.offset, str.length) === str;
+        };
+        Node.prototype.endsWith = function (str) {
+            return this.length >= str.length && this.getTextProvider()(this.end - str.length, str.length) === str;
+        };
+        Node.prototype.accept = function (visitor) {
+            if (visitor(this) && this.children) {
+                for (var _i = 0, _a = this.children; _i < _a.length; _i++) {
+                    var child = _a[_i];
+                    child.accept(visitor);
+                }
+            }
+        };
+        Node.prototype.acceptVisitor = function (visitor) {
+            this.accept(visitor.visitNode.bind(visitor));
+        };
+        Node.prototype.adoptChild = function (node, index) {
+            if (index === void 0) { index = -1; }
+            if (node.parent && node.parent.children) {
+                var idx = node.parent.children.indexOf(node);
+                if (idx >= 0) {
+                    node.parent.children.splice(idx, 1);
+                }
+            }
+            node.parent = this;
+            var children = this.children;
+            if (!children) {
+                children = this.children = [];
+            }
+            if (index !== -1) {
+                children.splice(index, 0, node);
+            }
+            else {
+                children.push(node);
+            }
+            return node;
+        };
+        Node.prototype.attachTo = function (parent, index) {
+            if (index === void 0) { index = -1; }
+            if (parent) {
+                parent.adoptChild(this, index);
+            }
+            return this;
+        };
+        Node.prototype.collectIssues = function (results) {
+            if (this.issues) {
+                results.push.apply(results, this.issues);
+            }
+        };
+        Node.prototype.addIssue = function (issue) {
+            if (!this.issues) {
+                this.issues = [];
+            }
+            this.issues.push(issue);
+        };
+        Node.prototype.hasIssue = function (rule) {
+            return Array.isArray(this.issues) && this.issues.some(function (i) { return i.getRule() === rule; });
+        };
+        Node.prototype.isErroneous = function (recursive) {
+            if (recursive === void 0) { recursive = false; }
+            if (this.issues && this.issues.length > 0) {
+                return true;
+            }
+            return recursive && Array.isArray(this.children) && this.children.some(function (c) { return c.isErroneous(true); });
+        };
+        Node.prototype.setNode = function (field, node, index) {
+            if (index === void 0) { index = -1; }
+            if (node) {
+                node.attachTo(this, index);
+                this[field] = node;
+                return true;
+            }
+            return false;
+        };
+        Node.prototype.addChild = function (node) {
+            if (node) {
+                if (!this.children) {
+                    this.children = [];
+                }
+                node.attachTo(this);
+                this.updateOffsetAndLength(node);
+                return true;
+            }
+            return false;
+        };
+        Node.prototype.updateOffsetAndLength = function (node) {
+            if (node.offset < this.offset || this.offset === -1) {
+                this.offset = node.offset;
+            }
+            var nodeEnd = node.end;
+            if ((nodeEnd > this.end) || this.length === -1) {
+                this.length = nodeEnd - this.offset;
+            }
+        };
+        Node.prototype.hasChildren = function () {
+            return this.children && this.children.length > 0;
+        };
+        Node.prototype.getChildren = function () {
+            return this.children ? this.children.slice(0) : [];
+        };
+        Node.prototype.getChild = function (index) {
+            if (this.children && index < this.children.length) {
+                return this.children[index];
+            }
+            return null;
+        };
+        Node.prototype.addChildren = function (nodes) {
+            for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
+                var node = nodes_1[_i];
+                this.addChild(node);
+            }
+        };
+        Node.prototype.findFirstChildBeforeOffset = function (offset) {
+            if (this.children) {
+                var current = null;
+                for (var i = this.children.length - 1; i >= 0; i--) {
+                    // iterate until we find a child that has a start offset smaller than the input offset
+                    current = this.children[i];
+                    if (current.offset <= offset) {
+                        return current;
+                    }
+                }
+            }
+            return null;
+        };
+        Node.prototype.findChildAtOffset = function (offset, goDeep) {
+            var current = this.findFirstChildBeforeOffset(offset);
+            if (current && current.end >= offset) {
+                if (goDeep) {
+                    return current.findChildAtOffset(offset, true) || current;
+                }
+                return current;
+            }
+            return null;
+        };
+        Node.prototype.encloses = function (candidate) {
+            return this.offset <= candidate.offset && this.offset + this.length >= candidate.offset + candidate.length;
+        };
+        Node.prototype.getParent = function () {
+            var result = this.parent;
+            while (result instanceof Nodelist) {
+                result = result.parent;
+            }
+            return result;
+        };
+        Node.prototype.findParent = function (type) {
+            var result = this;
+            while (result && result.type !== type) {
+                result = result.parent;
+            }
+            return result;
+        };
+        Node.prototype.setData = function (key, value) {
+            if (!this.options) {
+                this.options = {};
+            }
+            this.options[key] = value;
+        };
+        Node.prototype.getData = function (key) {
+            if (!this.options || !this.options.hasOwnProperty(key)) {
+                return null;
+            }
+            return this.options[key];
+        };
+        return Node;
+    }());
+    exports.Node = Node;
+    var Nodelist = /** @class */ (function (_super) {
+        __extends(Nodelist, _super);
+        function Nodelist(parent, index) {
+            if (index === void 0) { index = -1; }
+            var _this = _super.call(this, -1, -1) || this;
+            _this.attachTo(parent, index);
+            _this.offset = -1;
+            _this.length = -1;
+            return _this;
+        }
+        return Nodelist;
+    }(Node));
+    exports.Nodelist = Nodelist;
+    var ChoiceScriptStatement = /** @class */ (function (_super) {
+        __extends(ChoiceScriptStatement, _super);
+        function ChoiceScriptStatement() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        Object.defineProperty(ChoiceScriptStatement.prototype, "type", {
+            get: function () {
+                return NodeType.ChoiceScriptStatement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return ChoiceScriptStatement;
+    }(Node));
+    exports.ChoiceScriptStatement = ChoiceScriptStatement;
+    var ChoiceScriptComment = /** @class */ (function (_super) {
+        __extends(ChoiceScriptComment, _super);
+        function ChoiceScriptComment() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        Object.defineProperty(ChoiceScriptComment.prototype, "type", {
+            get: function () {
+                return NodeType.ChoiceScriptComment;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return ChoiceScriptComment;
+    }(Node));
+    exports.ChoiceScriptComment = ChoiceScriptComment;
+    var Identifier = /** @class */ (function (_super) {
+        __extends(Identifier, _super);
+        function Identifier(offset, length) {
+            var _this = _super.call(this, offset, length) || this;
+            _this.isCustomProperty = false;
+            return _this;
+        }
+        Object.defineProperty(Identifier.prototype, "type", {
+            get: function () {
+                return NodeType.Identifier;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Identifier.prototype.containsInterpolation = function () {
+            return this.hasChildren();
+        };
+        return Identifier;
+    }(Node));
+    exports.Identifier = Identifier;
+    var Scene = /** @class */ (function (_super) {
+        __extends(Scene, _super);
+        function Scene(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Scene.prototype, "type", {
+            get: function () {
+                return NodeType.Scene;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Scene.prototype.setName = function (value) {
+            this.name = value;
+        };
+        return Scene;
+    }(Node));
+    exports.Scene = Scene;
+    var Command = /** @class */ (function (_super) {
+        __extends(Command, _super);
+        // FIXME could we get a clever way of generic handling/modelling of params/args here?
+        function Command(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Command.prototype, "type", {
+            get: function () {
+                return NodeType.Command;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Command;
+    }(Node));
+    exports.Command = Command;
+    var Label = /** @class */ (function (_super) {
+        __extends(Label, _super);
+        function Label(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Label.prototype, "type", {
+            get: function () {
+                return NodeType.Label;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Label.prototype.getName = function () {
+            return this.name || this.getText();
+        };
+        return Label;
+    }(Command));
+    exports.Label = Label;
+    var StandardCommand = /** @class */ (function (_super) {
+        __extends(StandardCommand, _super);
+        function StandardCommand(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(StandardCommand.prototype, "type", {
+            get: function () {
+                return NodeType.StandardCommand;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return StandardCommand;
+    }(Command));
+    exports.StandardCommand = StandardCommand;
+    var FlowCommand = /** @class */ (function (_super) {
+        __extends(FlowCommand, _super);
+        function FlowCommand(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(FlowCommand.prototype, "type", {
+            get: function () {
+                return NodeType.FlowCommand;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return FlowCommand;
+    }(Command));
+    exports.FlowCommand = FlowCommand;
+    var SetCommand = /** @class */ (function (_super) {
+        __extends(SetCommand, _super);
+        // FIXME: Getters?
+        function SetCommand(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        SetCommand.prototype.setVariable = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.variable = node;
+                return true;
+            }
+            return false;
+        };
+        SetCommand.prototype.setValue = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.value = node;
+                return true;
+            }
+            return false;
+        };
+        Object.defineProperty(SetCommand.prototype, "type", {
+            get: function () {
+                return NodeType.FlowCommand;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return SetCommand;
+    }(Command));
+    exports.SetCommand = SetCommand;
+    var ChoiceCommand = /** @class */ (function (_super) {
+        __extends(ChoiceCommand, _super);
+        // FIXME member array for choice options?
+        function ChoiceCommand(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(ChoiceCommand.prototype, "type", {
+            get: function () {
+                return NodeType.ChoiceCommand;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return ChoiceCommand;
+    }(StandardCommand));
+    exports.ChoiceCommand = ChoiceCommand;
+    var ChoiceOption = /** @class */ (function (_super) {
+        __extends(ChoiceOption, _super);
+        function ChoiceOption(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(ChoiceOption.prototype, "type", {
+            get: function () {
+                return NodeType.ChoiceOption;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return ChoiceOption;
+    }(Node));
+    exports.ChoiceOption = ChoiceOption;
+    var RealWord = /** @class */ (function (_super) {
+        __extends(RealWord, _super);
+        function RealWord(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(RealWord.prototype, "type", {
+            get: function () {
+                return NodeType.RealWord;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return RealWord;
+    }(Node));
+    exports.RealWord = RealWord;
+    var Line = /** @class */ (function (_super) {
+        __extends(Line, _super);
+        function Line(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Line.prototype.getLineNum = function () {
+            return this.lineNumber;
+        };
+        Line.prototype.setLineNum = function (lineNum) {
+            if (lineNum > 0) {
+                this.lineNumber = lineNum;
+                return true;
+            }
+            return false;
+        };
+        return Line;
+    }(Node));
+    exports.Line = Line;
+    var TextLine = /** @class */ (function (_super) {
+        __extends(TextLine, _super);
+        function TextLine(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        return TextLine;
+    }(Line));
+    exports.TextLine = TextLine;
+    var ChoiceScriptLine = /** @class */ (function (_super) {
+        __extends(ChoiceScriptLine, _super);
+        function ChoiceScriptLine(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        return ChoiceScriptLine;
+    }(Line));
+    exports.ChoiceScriptLine = ChoiceScriptLine;
+    var AtApplyRule = /** @class */ (function (_super) {
+        __extends(AtApplyRule, _super);
+        function AtApplyRule(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(AtApplyRule.prototype, "type", {
+            get: function () {
+                return NodeType.AtApplyRule;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        AtApplyRule.prototype.setIdentifier = function (node) {
+            return this.setNode('identifier', node, 0);
+        };
+        AtApplyRule.prototype.getIdentifier = function () {
+            return this.identifier;
+        };
+        AtApplyRule.prototype.getName = function () {
+            return this.identifier ? this.identifier.getText() : '';
+        };
+        return AtApplyRule;
+    }(Node));
+    exports.AtApplyRule = AtApplyRule;
+    var AbstractDeclaration = /** @class */ (function (_super) {
+        __extends(AbstractDeclaration, _super);
+        function AbstractDeclaration(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        return AbstractDeclaration;
+    }(Node));
+    exports.AbstractDeclaration = AbstractDeclaration;
+    var Invocation = /** @class */ (function (_super) {
+        __extends(Invocation, _super);
+        function Invocation(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Invocation.prototype, "type", {
+            get: function () {
+                return NodeType.Invocation;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Invocation.prototype.getArguments = function () {
+            if (!this.arguments) {
+                this.arguments = new Nodelist(this);
+            }
+            return this.arguments;
+        };
+        return Invocation;
+    }(Node));
+    exports.Invocation = Invocation;
+    var FunctionParameter = /** @class */ (function (_super) {
+        __extends(FunctionParameter, _super);
+        function FunctionParameter(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(FunctionParameter.prototype, "type", {
+            get: function () {
+                return NodeType.FunctionParameter;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        FunctionParameter.prototype.setIdentifier = function (node) {
+            return this.setNode('identifier', node, 0);
+        };
+        FunctionParameter.prototype.getIdentifier = function () {
+            return this.identifier;
+        };
+        FunctionParameter.prototype.getName = function () {
+            return this.identifier ? this.identifier.getText() : '';
+        };
+        FunctionParameter.prototype.setDefaultValue = function (node) {
+            return this.setNode('defaultValue', node, 0);
+        };
+        FunctionParameter.prototype.getDefaultValue = function () {
+            return this.defaultValue;
+        };
+        return FunctionParameter;
+    }(Node));
+    exports.FunctionParameter = FunctionParameter;
+    var FunctionArgument = /** @class */ (function (_super) {
+        __extends(FunctionArgument, _super);
+        function FunctionArgument(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(FunctionArgument.prototype, "type", {
+            get: function () {
+                return NodeType.FunctionArgument;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        FunctionArgument.prototype.setIdentifier = function (node) {
+            return this.setNode('identifier', node, 0);
+        };
+        FunctionArgument.prototype.getIdentifier = function () {
+            return this.identifier;
+        };
+        FunctionArgument.prototype.getName = function () {
+            return this.identifier ? this.identifier.getText() : '';
+        };
+        FunctionArgument.prototype.setValue = function (node) {
+            return this.setNode('value', node, 0);
+        };
+        FunctionArgument.prototype.getValue = function () {
+            return this.value;
+        };
+        return FunctionArgument;
+    }(Node));
+    exports.FunctionArgument = FunctionArgument;
+    var Import = /** @class */ (function (_super) {
+        __extends(Import, _super);
+        function Import(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Import.prototype, "type", {
+            get: function () {
+                return NodeType.Import;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Import.prototype.setMedialist = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.medialist = node;
+                return true;
+            }
+            return false;
+        };
+        return Import;
+    }(Node));
+    exports.Import = Import;
+    var Namespace = /** @class */ (function (_super) {
+        __extends(Namespace, _super);
+        function Namespace(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Namespace.prototype, "type", {
+            get: function () {
+                return NodeType.Namespace;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Namespace;
+    }(Node));
+    exports.Namespace = Namespace;
+    var MediaQuery = /** @class */ (function (_super) {
+        __extends(MediaQuery, _super);
+        function MediaQuery(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(MediaQuery.prototype, "type", {
+            get: function () {
+                return NodeType.MediaQuery;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return MediaQuery;
+    }(Node));
+    exports.MediaQuery = MediaQuery;
+    var SupportsCondition = /** @class */ (function (_super) {
+        __extends(SupportsCondition, _super);
+        function SupportsCondition(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(SupportsCondition.prototype, "type", {
+            get: function () {
+                return NodeType.SupportsCondition;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return SupportsCondition;
+    }(Node));
+    exports.SupportsCondition = SupportsCondition;
+    var Expression = /** @class */ (function (_super) {
+        __extends(Expression, _super);
+        function Expression(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Expression.prototype, "type", {
+            get: function () {
+                return NodeType.Expression;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Expression;
+    }(Node));
+    exports.Expression = Expression;
+    var BinaryExpression = /** @class */ (function (_super) {
+        __extends(BinaryExpression, _super);
+        function BinaryExpression(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(BinaryExpression.prototype, "type", {
+            get: function () {
+                return NodeType.BinaryExpression;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        BinaryExpression.prototype.setLeft = function (left) {
+            return this.setNode('left', left);
+        };
+        BinaryExpression.prototype.getLeft = function () {
+            return this.left;
+        };
+        BinaryExpression.prototype.setRight = function (right) {
+            return this.setNode('right', right);
+        };
+        BinaryExpression.prototype.getRight = function () {
+            return this.right;
+        };
+        BinaryExpression.prototype.setOperator = function (value) {
+            return this.setNode('operator', value);
+        };
+        BinaryExpression.prototype.getOperator = function () {
+            return this.operator;
+        };
+        return BinaryExpression;
+    }(Node));
+    exports.BinaryExpression = BinaryExpression;
+    var Term = /** @class */ (function (_super) {
+        __extends(Term, _super);
+        function Term(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Term.prototype, "type", {
+            get: function () {
+                return NodeType.Term;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Term.prototype.setOperator = function (value) {
+            return this.setNode('operator', value);
+        };
+        Term.prototype.getOperator = function () {
+            return this.operator;
+        };
+        Term.prototype.setExpression = function (value) {
+            return this.setNode('expression', value);
+        };
+        Term.prototype.getExpression = function () {
+            return this.expression;
+        };
+        return Term;
+    }(Node));
+    exports.Term = Term;
+    var Operator = /** @class */ (function (_super) {
+        __extends(Operator, _super);
+        function Operator(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Operator.prototype, "type", {
+            get: function () {
+                return NodeType.Operator;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Operator;
+    }(Node));
+    exports.Operator = Operator;
+    var HexColorValue = /** @class */ (function (_super) {
+        __extends(HexColorValue, _super);
+        function HexColorValue(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(HexColorValue.prototype, "type", {
+            get: function () {
+                return NodeType.HexColorValue;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return HexColorValue;
+    }(Node));
+    exports.HexColorValue = HexColorValue;
+    var NumericValue = /** @class */ (function (_super) {
+        __extends(NumericValue, _super);
+        function NumericValue(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(NumericValue.prototype, "type", {
+            get: function () {
+                return NodeType.NumericValue;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        NumericValue.prototype.getValue = function () {
+            var raw = this.getText();
+            var unitIdx = 0, code, _dot = '.'.charCodeAt(0), _0 = '0'.charCodeAt(0), _9 = '9'.charCodeAt(0);
+            for (var i = 0, len = raw.length; i < len; i++) {
+                code = raw.charCodeAt(i);
+                if (!(_0 <= code && code <= _9 || code === _dot)) {
+                    break;
+                }
+                unitIdx += 1;
+            }
+            return {
+                value: raw.substring(0, unitIdx),
+                unit: unitIdx < raw.length ? raw.substring(unitIdx) : undefined
+            };
+        };
+        return NumericValue;
+    }(Node));
+    exports.NumericValue = NumericValue;
+    var VariableDeclaration = /** @class */ (function (_super) {
+        __extends(VariableDeclaration, _super);
+        function VariableDeclaration(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(VariableDeclaration.prototype, "type", {
+            get: function () {
+                return NodeType.VariableDeclaration;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        VariableDeclaration.prototype.setVariable = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.variable = node;
+                return true;
+            }
+            return false;
+        };
+        VariableDeclaration.prototype.getVariable = function () {
+            return this.variable;
+        };
+        VariableDeclaration.prototype.getName = function () {
+            return this.variable ? this.variable.getName() : '';
+        };
+        VariableDeclaration.prototype.setValue = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.value = node;
+                return true;
+            }
+            return false;
+        };
+        VariableDeclaration.prototype.getValue = function () {
+            return this.value;
+        };
+        return VariableDeclaration;
+    }(AbstractDeclaration));
+    exports.VariableDeclaration = VariableDeclaration;
+    var LabelDeclaration = /** @class */ (function (_super) {
+        __extends(LabelDeclaration, _super);
+        function LabelDeclaration(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(LabelDeclaration.prototype, "type", {
+            get: function () {
+                return NodeType.LabelDeclaration;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LabelDeclaration.prototype.setLabel = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.label = node;
+                return true;
+            }
+            return false;
+        };
+        LabelDeclaration.prototype.getLabel = function () {
+            return this.label;
+        };
+        return LabelDeclaration;
+    }(AbstractDeclaration));
+    exports.LabelDeclaration = LabelDeclaration;
+    var Variable = /** @class */ (function (_super) {
+        __extends(Variable, _super);
+        function Variable(offset, length) {
+            return _super.call(this, offset, length) || this;
+        }
+        Object.defineProperty(Variable.prototype, "type", {
+            get: function () {
+                return NodeType.CreateVariable;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Variable.prototype.getName = function () {
+            return this.getText();
+        };
+        Variable.prototype.getValue = function () {
+            return this.value;
+        };
+        return Variable;
+    }(Node));
+    exports.Variable = Variable;
+    var ListEntry = /** @class */ (function (_super) {
+        __extends(ListEntry, _super);
+        function ListEntry() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        Object.defineProperty(ListEntry.prototype, "type", {
+            get: function () {
+                return NodeType.ListEntry;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ListEntry.prototype.setKey = function (node) {
+            return this.setNode('key', node, 0);
+        };
+        ListEntry.prototype.setValue = function (node) {
+            return this.setNode('value', node, 1);
+        };
+        return ListEntry;
+    }(Node));
+    exports.ListEntry = ListEntry;
+    var LessGuard = /** @class */ (function (_super) {
+        __extends(LessGuard, _super);
+        function LessGuard() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        LessGuard.prototype.getConditions = function () {
+            if (!this.conditions) {
+                this.conditions = new Nodelist(this);
+            }
+            return this.conditions;
+        };
+        return LessGuard;
+    }(Node));
+    exports.LessGuard = LessGuard;
+    var GuardCondition = /** @class */ (function (_super) {
+        __extends(GuardCondition, _super);
+        function GuardCondition() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        GuardCondition.prototype.setVariable = function (node) {
+            return this.setNode('variable', node);
+        };
+        return GuardCondition;
+    }(Node));
+    exports.GuardCondition = GuardCondition;
+    var Level;
+    (function (Level) {
+        Level[Level["Ignore"] = 1] = "Ignore";
+        Level[Level["Warning"] = 2] = "Warning";
+        Level[Level["Error"] = 4] = "Error";
+    })(Level = exports.Level || (exports.Level = {}));
+    var Marker = /** @class */ (function () {
+        function Marker(node, rule, level, message, offset, length) {
+            if (offset === void 0) { offset = node.offset; }
+            if (length === void 0) { length = node.length; }
+            this.node = node;
+            this.rule = rule;
+            this.level = level;
+            this.message = message || rule.message;
+            this.offset = offset;
+            this.length = length;
+        }
+        Marker.prototype.getRule = function () {
+            return this.rule;
+        };
+        Marker.prototype.getLevel = function () {
+            return this.level;
+        };
+        Marker.prototype.getOffset = function () {
+            return this.offset;
+        };
+        Marker.prototype.getLength = function () {
+            return this.length;
+        };
+        Marker.prototype.getNode = function () {
+            return this.node;
+        };
+        Marker.prototype.getMessage = function () {
+            return this.message;
+        };
+        return Marker;
+    }());
+    exports.Marker = Marker;
+    /*
+    export class DefaultVisitor implements IVisitor {
+    
+        public visitNode(node:Node):boolean {
+            switch (node.type) {
+                case NodeType.Stylesheet:
+                    return this.visitStylesheet(<Stylesheet> node);
+                case NodeType.FontFace:
+                    return this.visitFontFace(<FontFace> node);
+                case NodeType.Ruleset:
+                    return this.visitRuleSet(<RuleSet> node);
+                case NodeType.Selector:
+                    return this.visitSelector(<Selector> node);
+                case NodeType.SimpleSelector:
+                    return this.visitSimpleSelector(<SimpleSelector> node);
+                case NodeType.Declaration:
+                    return this.visitDeclaration(<Declaration> node);
+                case NodeType.Function:
+                    return this.visitFunction(<Function> node);
+                case NodeType.FunctionDeclaration:
+                    return this.visitFunctionDeclaration(<FunctionDeclaration> node);
+                case NodeType.FunctionParameter:
+                    return this.visitFunctionParameter(<FunctionParameter> node);
+                case NodeType.FunctionArgument:
+                    return this.visitFunctionArgument(<FunctionArgument> node);
+                case NodeType.Term:
+                    return this.visitTerm(<Term> node);
+                case NodeType.Declaration:
+                    return this.visitExpression(<Expression> node);
+                case NodeType.NumericValue:
+                    return this.visitNumericValue(<NumericValue> node);
+                case NodeType.Page:
+                    return this.visitPage(<Page> node);
+                case NodeType.PageBoxMarginBox:
+                    return this.visitPageBoxMarginBox(<PageBoxMarginBox> node);
+                case NodeType.Property:
+                    return this.visitProperty(<Property> node);
+                case NodeType.NumericValue:
+                    return this.visitNodelist(<Nodelist> node);
+                case NodeType.Import:
+                    return this.visitImport(<Import> node);
+                case NodeType.Namespace:
+                    return this.visitNamespace(<Namespace> node);
+                case NodeType.Keyframe:
+                    return this.visitKeyframe(<Keyframe> node);
+                case NodeType.KeyframeSelector:
+                    return this.visitKeyframeSelector(<KeyframeSelector> node);
+                case NodeType.MixinDeclaration:
+                    return this.visitMixinDeclaration(<MixinDeclaration> node);
+                case NodeType.MixinReference:
+                    return this.visitMixinReference(<MixinReference> node);
+                case NodeType.Variable:
+                    return this.visitVariable(<Variable> node);
+                case NodeType.VariableDeclaration:
+                    return this.visitVariableDeclaration(<VariableDeclaration> node);
+            }
+            return this.visitUnknownNode(node);
+        }
+    
+        public visitFontFace(node:FontFace):boolean {
+            return true;
+        }
+    
+        public visitKeyframe(node:Keyframe):boolean {
+            return true;
+        }
+    
+        public visitKeyframeSelector(node:KeyframeSelector):boolean {
+            return true;
+        }
+    
+        public visitStylesheet(node:Stylesheet):boolean {
+            return true;
+        }
+    
+        public visitProperty(Node:Property):boolean {
+            return true;
+        }
+    
+        public visitRuleSet(node:RuleSet):boolean {
+            return true;
+        }
+    
+        public visitSelector(node:Selector):boolean {
+            return true;
+        }
+    
+        public visitSimpleSelector(node:SimpleSelector):boolean {
+            return true;
+        }
+    
+        public visitDeclaration(node:Declaration):boolean {
+            return true;
+        }
+    
+        public visitFunction(node:Function):boolean {
+            return true;
+        }
+    
+        public visitFunctionDeclaration(node:FunctionDeclaration):boolean {
+            return true;
+        }
+    
+        public visitInvocation(node:Invocation):boolean {
+            return true;
+        }
+    
+        public visitTerm(node:Term):boolean {
+            return true;
+        }
+    
+        public visitImport(node:Import):boolean {
+            return true;
+        }
+    
+        public visitNamespace(node:Namespace):boolean {
+            return true;
+        }
+    
+        public visitExpression(node:Expression):boolean {
+            return true;
+        }
+    
+        public visitNumericValue(node:NumericValue):boolean {
+            return true;
+        }
+    
+        public visitPage(node:Page):boolean {
+            return true;
+        }
+    
+        public visitPageBoxMarginBox(node:PageBoxMarginBox):boolean {
+            return true;
+        }
+    
+        public visitNodelist(node:Nodelist):boolean {
+            return true;
+        }
+    
+        public visitVariableDeclaration(node:VariableDeclaration):boolean {
+            return true;
+        }
+    
+        public visitVariable(node:Variable):boolean {
+            return true;
+        }
+    
+        public visitMixinDeclaration(node:MixinDeclaration):boolean {
+            return true;
+        }
+    
+        public visitMixinReference(node:MixinReference):boolean {
+            return true;
+        }
+    
+        public visitUnknownNode(node:Node):boolean {
+            return true;
+        }
+    }
+    */
+    var ParseErrorCollector = /** @class */ (function () {
+        function ParseErrorCollector() {
+            this.entries = [];
+        }
+        ParseErrorCollector.entries = function (node) {
+            var visitor = new ParseErrorCollector();
+            node.acceptVisitor(visitor);
+            return visitor.entries;
+        };
+        ParseErrorCollector.prototype.visitNode = function (node) {
+            if (node.isErroneous()) {
+                node.collectIssues(this.entries);
+            }
+            return true;
+        };
+        return ParseErrorCollector;
+    }());
+    exports.ParseErrorCollector = ParseErrorCollector;
+});
+//# sourceMappingURL=cssNodes.js.map;
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+define('vscode-nls/vscode-nls',["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function format(message, args) {
+        var result;
+        if (args.length === 0) {
+            result = message;
+        }
+        else {
+            result = message.replace(/\{(\d+)\}/g, function (match, rest) {
+                var index = rest[0];
+                return typeof args[index] !== 'undefined' ? args[index] : match;
+            });
+        }
+        return result;
+    }
+    function localize(key, message) {
+        var args = [];
+        for (var _i = 2; _i < arguments.length; _i++) {
+            args[_i - 2] = arguments[_i];
+        }
+        return format(message, args);
+    }
+    function loadMessageBundle(file) {
+        return localize;
+    }
+    exports.loadMessageBundle = loadMessageBundle;
+    function config(opt) {
+        return loadMessageBundle;
+    }
+    exports.config = config;
+});
+
+define('vscode-nls', ['vscode-nls/vscode-nls'], function (main) { return main; });
+
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/parser/cssErrors',["require", "exports", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var CSSIssueType = /** @class */ (function () {
+        function CSSIssueType(id, message) {
+            this.id = id;
+            this.message = message;
+        }
+        return CSSIssueType;
+    }());
+    exports.CSSIssueType = CSSIssueType;
+    exports.ParseError = {
+        UnknownCommand: new CSSIssueType('cs-unknowncommand', localize('unknown.command', "unknown command")),
+        NoChoiceOption: new CSSIssueType('cs-nochoiceoption', localize('no.choice.command', "expected at least one choice option")),
+        NumberExpected: new CSSIssueType('css-numberexpected', localize('expected.number', "number expected")),
+        ConditionExpected: new CSSIssueType('css-conditionexpected', localize('expected.condt', "condition expected")),
+        RuleOrSelectorExpected: new CSSIssueType('css-ruleorselectorexpected', localize('expected.ruleorselector', "at-rule or selector expected")),
+        DotExpected: new CSSIssueType('css-dotexpected', localize('expected.dot', "dot expected")),
+        ColonExpected: new CSSIssueType('css-colonexpected', localize('expected.colon', "colon expected")),
+        SemiColonExpected: new CSSIssueType('css-semicolonexpected', localize('expected.semicolon', "semi-colon expected")),
+        TermExpected: new CSSIssueType('css-termexpected', localize('expected.term', "term expected")),
+        ExpressionExpected: new CSSIssueType('css-expressionexpected', localize('expected.expression', "expression expected")),
+        OperatorExpected: new CSSIssueType('css-operatorexpected', localize('expected.operator', "operator expected")),
+        IdentifierExpected: new CSSIssueType('css-identifierexpected', localize('expected.ident', "identifier expected")),
+        PercentageExpected: new CSSIssueType('css-percentageexpected', localize('expected.percentage', "percentage expected")),
+        URIOrStringExpected: new CSSIssueType('css-uriorstringexpected', localize('expected.uriorstring', "uri or string expected")),
+        URIExpected: new CSSIssueType('css-uriexpected', localize('expected.uri', "URI expected")),
+        LabelNameExpected: new CSSIssueType('cs-labelnamexpected', localize('expected.labelname', "label name expected")),
+        VariableNameExpected: new CSSIssueType('css-varnameexpected', localize('expected.varname', "variable name expected")),
+        VariableValueExpected: new CSSIssueType('css-varvalueexpected', localize('expected.varvalue', "variable value expected")),
+        PropertyValueExpected: new CSSIssueType('css-propertyvalueexpected', localize('expected.propvalue', "property value expected")),
+        LeftCurlyExpected: new CSSIssueType('css-lcurlyexpected', localize('expected.lcurly', "{ expected")),
+        RightCurlyExpected: new CSSIssueType('css-rcurlyexpected', localize('expected.rcurly', "} expected")),
+        LeftSquareBracketExpected: new CSSIssueType('css-rbracketexpected', localize('expected.lsquare', "[ expected")),
+        RightSquareBracketExpected: new CSSIssueType('css-lbracketexpected', localize('expected.rsquare', "] expected")),
+        LeftParenthesisExpected: new CSSIssueType('css-lparentexpected', localize('expected.lparen', "( expected")),
+        RightParenthesisExpected: new CSSIssueType('css-rparentexpected', localize('expected.rparent', ") expected")),
+        CommaExpected: new CSSIssueType('css-commaexpected', localize('expected.comma', "comma expected")),
+        PageDirectiveOrDeclarationExpected: new CSSIssueType('css-pagedirordeclexpected', localize('expected.pagedirordecl', "page directive or declaraton expected")),
+        UnknownAtRule: new CSSIssueType('css-unknownatrule', localize('unknown.atrule', "at-rule unknown")),
+        SelectorExpected: new CSSIssueType('css-selectorexpected', localize('expected.selector', "selector expected")),
+        StringLiteralExpected: new CSSIssueType('css-stringliteralexpected', localize('expected.stringliteral', "string literal expected")),
+        WhitespaceExpected: new CSSIssueType('css-whitespaceexpected', localize('expected.whitespace', "whitespace expected")),
+        MediaQueryExpected: new CSSIssueType('css-mediaqueryexpected', localize('expected.mediaquery', "media query expected"))
+    };
+});
+//# sourceMappingURL=cssErrors.js.map;
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/data/commands',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.standardCommands = {
+        abort: { desc: "" },
+        achieve: { desc: "*achieve my_unique_achievement_id" },
+        achievement: { desc: "*achievement unique_id true 100 Achievement Title\n\tPre-earned description.\n\tPost-earned description." },
+        advertisement: { desc: "" },
+        allow_reuse: { desc: "*choice\n\t#Delete the file\n\t\t*gosub delete_file\n\t*allow_reuse #Log out\n\t\t*goto log_out" },
+        author: { desc: "*author Jane Doe" },
+        bug: { desc: "*bug Oops! Something broke. Please report this bug." },
+        check_achievements: { desc: "" },
+        check_purchase: { desc: "" },
+        check_registration: { desc: "" },
+        choice: { desc: "*choice\n\t#Option 1\n\t\t*comment code here\n\t\t*goto label1\n\t#Option 2\n\t\t*comment code here\n\t\t*goto label2" },
+        create: { desc: "*create name \"Joe\"" },
+        delay_break: { desc: "" },
+        delay_ending: { desc: "" },
+        delete: { desc: "" },
+        disable_reuse: { desc: "*choice\n\t*disable_reuse #Delete the file\n\t\t*gosub delete_file\n\t#Log out\n\t\t*goto log_out" },
+        else: { desc: "*if (success)\n\t*goto_scene victory\n*else\n\t*goto_scene defeat" },
+        elseif: { desc: "*if (class = \"wizard\")\n\tYou are a wise wizard!\n*elseif (class = \"warrior\")\n\tYou are a loyal warrior!\n*else\n\tYou must be a wily rouge!" },
+        elsif: { desc: "*if (class = \"wizard\")\n\tYou are a wise wizard!\n*elsif (class = \"warrior\")\n\tYou are a loyal warrior!\n*else\n\tYou must be a wily rouge!" },
+        end_trial: { desc: "" },
+        ending: { desc: "Thanks for playing!\n*ending" },
+        fake_choice: { desc: "What is your favorite colour?\n\n*fake_choice\n\t#Red\n\t#Green\n\t#Blue\n\nHow interesting! That's mine too!" },
+        finish: { desc: "Thus ends the chapter!\n*finish" },
+        hide_reuse: { desc: "*choice\n\t*hide_reuse #Delete the file\n\t\t*gosub delete_file\n\t#Log out\n\t\t*goto log_out" },
+        if: { desc: "*if (is_warrior)\n\t*set strength (strength + 5)" },
+        image: { desc: "*image myimage.png" },
+        input_number: { desc: "*input_number percentage 1 100" },
+        input_text: { desc: "*temp name \"\"\n*input_text name\nHello ${name}" },
+        line_break: { desc: "" },
+        link: { desc: "*link http://www.choiceofgames.com/" },
+        link_button: { desc: "" },
+        login: { desc: "" },
+        looplimit: { desc: "(Unimplemented)" },
+        more_games: { desc: "" },
+        page_break: { desc: "*page_break Optional Button Text" },
+        params: { desc: "*gosub sub_routine \"Jane\" \"Doe\"\n-----------\n*label sub_routine\n*params firstname lastname\nHi ${firstname} ${lastname}!\n*return" },
+        print: { desc: "This command is deprecated. Please use the ${var} notation." },
+        purchase: { desc: "" },
+        rand: { desc: "*rand dice_roll 1 6" },
+        reset: { desc: "" },
+        restart: { desc: "" },
+        restore_game: { desc: "" },
+        restore_purchases: { desc: "" },
+        save_game: { desc: "" },
+        scene_list: { desc: "*scene_list\n\tscene_01\n\tscene_02\n\tscene_03" },
+        script: { desc: "(Unsupported)" },
+        selectable_if: { desc: "*choice\n\t*selectable_if (strength > 10) #Pump some iron\n\t\t...\n\t#Take a break\n\t\t..." },
+        set: { desc: "*set n 5" },
+        setref: { desc: "This command is deprecated.\nPlease use the *set {var} notation." },
+        share_this_game: { desc: "" },
+        show_password: { desc: "" },
+        sound: { desc: "*sound mysoundfile.mp3" },
+        stat_chart: { desc: "" },
+        subscribe: { desc: "" },
+        temp: { desc: "*temp " },
+        title: { desc: "*title My Brand New Game" }
+    };
+    exports.flowCommands = {
+        gosub: { desc: "*gosub my_label ?param1 ?param2 ?..." },
+        gosub_scene: { desc: "*gosub_scene my_scene ?my_label " },
+        goto: { desc: "*goto my_label" },
+        goto_random_scene: { desc: "" },
+        goto_scene: { desc: "*goto_scene my_scene ?my_label" },
+        gotoref: { desc: "This command is deprecated.\nPlease use the *goto {var} notation." },
+        label: { desc: "*label my_label" },
+        redirect_scene: { desc: "" },
+        return: { desc: "" }
+    };
+    exports.standardCommandList = Object.keys(exports.standardCommands);
+    exports.flowCommandList = Object.keys(exports.flowCommands);
+    exports.fullCommandList = exports.standardCommandList.concat(exports.flowCommandList);
+});
+//# sourceMappingURL=commands.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/parser/cssParser',["require", "exports", "./cssScanner", "./cssNodes", "./cssErrors", "../data/commands"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var cssScanner_1 = require("./cssScanner");
+    var nodes = require("./cssNodes");
+    var cssErrors_1 = require("./cssErrors");
+    var commands_1 = require("../data/commands");
+    /// <summary>
+    /// A parser for the css core specification. See for reference:
+    /// https://www.w3.org/TR/CSS21/grammar.html
+    /// http://www.w3.org/TR/CSS21/syndata.html#tokenization
+    /// </summary>
+    var Parser = /** @class */ (function () {
+        function Parser(scnr) {
+            if (scnr === void 0) { scnr = new cssScanner_1.Scanner(); }
+            this.scanner = scnr;
+            this.token = null;
+            this.prevToken = null;
+        }
+        Parser.prototype.peekIdent = function (text) {
+            return cssScanner_1.TokenType.Ident === this.token.type && text.length === this.token.text.length && text === this.token.text.toLowerCase();
+        };
+        Parser.prototype.peekKeyword = function (text) {
+            return cssScanner_1.TokenType.AtKeyword === this.token.type && text.length === this.token.text.length && text === this.token.text.toLowerCase();
+        };
+        Parser.prototype.peekDelim = function (text) {
+            return cssScanner_1.TokenType.Delim === this.token.type && text === this.token.text;
+        };
+        Parser.prototype.peek = function (type) {
+            return type === this.token.type;
+        };
+        Parser.prototype.peekRegExp = function (type, regEx) {
+            if (type !== this.token.type) {
+                return false;
+            }
+            return regEx.test(this.token.text);
+        };
+        Parser.prototype.hasWhitespace = function () {
+            return this.prevToken && (this.prevToken.offset + this.prevToken.len !== this.token.offset);
+        };
+        Parser.prototype.consumeToken = function () {
+            this.prevToken = this.token;
+            this.token = this.scanner.scan();
+        };
+        Parser.prototype.mark = function () {
+            return {
+                prev: this.prevToken,
+                curr: this.token,
+                pos: this.scanner.pos()
+            };
+        };
+        Parser.prototype.restoreAtMark = function (mark) {
+            this.prevToken = mark.prev;
+            this.token = mark.curr;
+            this.scanner.goBackTo(mark.pos);
+        };
+        Parser.prototype.try = function (func) {
+            var pos = this.mark();
+            var node = func();
+            if (!node) {
+                this.restoreAtMark(pos);
+                return null;
+            }
+            return node;
+        };
+        Parser.prototype.acceptOneKeyword = function (keywords) {
+            if (cssScanner_1.TokenType.Builtin === this.token.type) {
+                for (var _i = 0, keywords_1 = keywords; _i < keywords_1.length; _i++) {
+                    var keyword = keywords_1[_i];
+                    if (keyword.length === this.token.text.length && keyword === this.token.text.toLowerCase()) {
+                        this.consumeToken();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+        Parser.prototype.accept = function (type) {
+            if (type === this.token.type) {
+                this.consumeToken();
+                return true;
+            }
+            return false;
+        };
+        Parser.prototype.acceptIdent = function (text) {
+            if (this.peekIdent(text)) {
+                this.consumeToken();
+                return true;
+            }
+            return false;
+        };
+        Parser.prototype.acceptKeyword = function (text) {
+            if (this.peekKeyword(text)) {
+                this.consumeToken();
+                return true;
+            }
+            return false;
+        };
+        Parser.prototype.acceptFromRawTextList = function (keywords) {
+            for (var _i = 0, keywords_2 = keywords; _i < keywords_2.length; _i++) {
+                var keyword = keywords_2[_i];
+                if (keyword.length === this.token.text.length && keyword === this.token.text.toLowerCase()) {
+                    this.consumeToken();
+                    return true;
+                }
+            }
+            return false;
+        };
+        Parser.prototype.acceptDelim = function (text) {
+            if (this.peekDelim(text)) {
+                this.consumeToken();
+                return true;
+            }
+            return false;
+        };
+        Parser.prototype.acceptUnquotedString = function () {
+            var pos = this.scanner.pos();
+            this.scanner.goBackTo(this.token.offset);
+            var unquoted = this.scanner.scanUnquotedString();
+            if (unquoted) {
+                this.token = unquoted;
+                this.consumeToken();
+                return true;
+            }
+            this.scanner.goBackTo(pos);
+            return false;
+        };
+        Parser.prototype.resync = function (resyncTokens, resyncStopTokens) {
+            while (true) {
+                if (resyncTokens && resyncTokens.indexOf(this.token.type) !== -1) {
+                    this.consumeToken();
+                    return true;
+                }
+                else if (resyncStopTokens && resyncStopTokens.indexOf(this.token.type) !== -1) {
+                    return true;
+                }
+                else {
+                    if (this.token.type === cssScanner_1.TokenType.EOF) {
+                        return false;
+                    }
+                    this.token = this.scanner.scan();
+                }
+            }
+        };
+        Parser.prototype.createNode = function (nodeType) {
+            return new nodes.Node(this.token.offset, this.token.len, nodeType);
+        };
+        Parser.prototype.create = function (ctor) {
+            var obj = Object.create(ctor.prototype);
+            ctor.apply(obj, [this.token.offset, this.token.len]);
+            return obj;
+        };
+        Parser.prototype.finish = function (node, error, resyncTokens, resyncStopTokens) {
+            // parseNumeric misuses error for boolean flagging (however the real error mustn't be a false)
+            // + nodelist offsets mustn't be modified, because there is a offset hack in rulesets for smartselection
+            if (!(node instanceof nodes.Nodelist)) {
+                if (error) {
+                    this.markError(node, error, resyncTokens, resyncStopTokens);
+                }
+                // set the node end position
+                if (this.prevToken !== null) {
+                    // length with more elements belonging together
+                    var prevEnd = this.prevToken.offset + this.prevToken.len;
+                    node.length = prevEnd > node.offset ? prevEnd - node.offset : 0; // offset is taken from current token, end from previous: Use 0 for empty nodes
+                }
+            }
+            return node;
+        };
+        Parser.prototype.markError = function (node, error, resyncTokens, resyncStopTokens) {
+            if (this.token !== this.lastErrorToken) { // do not report twice on the same token
+                node.addIssue(new nodes.Marker(node, error, nodes.Level.Error, null, this.token.offset, this.token.len));
+                this.lastErrorToken = this.token;
+            }
+            if (resyncTokens || resyncStopTokens) {
+                this.resync(resyncTokens, resyncStopTokens);
+            }
+        };
+        Parser.prototype.parseScene = function (textDocument) {
+            var versionId = textDocument.version;
+            var textProvider = function (offset, length) {
+                if (textDocument.version !== versionId) {
+                    throw new Error('Underlying model has changed, AST is no longer valid');
+                }
+                return textDocument.getText().substr(offset, length);
+            };
+            return this.internalParse(textDocument.getText(), this._parseScene, textProvider);
+        };
+        Parser.prototype.internalParse = function (input, parseFunc, textProvider) {
+            this.scanner.setSource(input);
+            this.token = this.scanner.scan();
+            var node = parseFunc.bind(this)();
+            if (node) {
+                if (textProvider) {
+                    node.textProvider = textProvider;
+                }
+                else {
+                    node.textProvider = function (offset, length) { return input.substr(offset, length); };
+                }
+            }
+            return node;
+        };
+        Parser.prototype._parseScene = function () {
+            var lineNum = 1;
+            var node = this.create(nodes.Scene);
+            do {
+                var hasMatch = false;
+                do {
+                    hasMatch = false;
+                    var line = this._parseLine();
+                    // Hmm...
+                    if (line) {
+                        line.setLineNum(lineNum++);
+                        node.addChild(line);
+                        while (!this.accept(cssScanner_1.TokenType.EOL) && !this.accept(cssScanner_1.TokenType.EOF)) {
+                            this.consumeToken();
+                        }
+                        hasMatch = true;
+                    }
+                } while (hasMatch);
+                if (this.peek(cssScanner_1.TokenType.EOF)) {
+                    break;
+                }
+                this.consumeToken();
+            } while (!this.peek(cssScanner_1.TokenType.EOF));
+            return this.finish(node);
+        };
+        Parser.prototype._parseLine = function () {
+            var line;
+            if (this.peek(cssScanner_1.TokenType.SingleLineComment)) {
+                line = this.create(nodes.Line);
+                var comment = this.create(nodes.ChoiceScriptComment);
+                this.consumeToken();
+                line.addChild(comment);
+            }
+            else if (this.peek(cssScanner_1.TokenType.Builtin) || this.peek(cssScanner_1.TokenType.Invalid)) {
+                line = this.create(nodes.ChoiceScriptLine);
+                line.addChild(this._parseChoiceScriptStatement());
+            }
+            else {
+                line = this._parseTextLine();
+            }
+            if (line.hasChildren()) {
+                return line;
+            }
+            return null;
+        };
+        Parser.prototype._parseTextLine = function () {
+            var textLine = this.create(nodes.TextLine);
+            while (true) {
+                if (textLine.addChild(this._parseWord())) {
+                    continue;
+                }
+                else if (!this.peek(cssScanner_1.TokenType.EOL) && !this.peek(cssScanner_1.TokenType.EOF)) {
+                    // FIXME: Consider adding more than words to the node tree?
+                    this.consumeToken();
+                }
+                else {
+                    break;
+                }
+            }
+            return textLine;
+        };
+        Parser.prototype._parseWord = function () {
+            // FIXME: Differentiate words and identifiers
+            if (this.peek(cssScanner_1.TokenType.Word) || this.peek(cssScanner_1.TokenType.Ident)) {
+                var word = this.createNode(nodes.NodeType.RealWord);
+                this.consumeToken();
+                return this.finish(word);
+            }
+            return null;
+        };
+        Parser.prototype._parseChoiceScriptStatement = function () {
+            return this._parseChoiceScriptCommand();
+        };
+        Parser.prototype._parseChoiceScriptCommand = function () {
+            return this._parseVariableDeclaration()
+                || this._parseLabelDeclaration()
+                || this._parseSetCommand()
+                || this._parseChoiceCommand()
+                || this._parseFlowCommand()
+                || this._parseStandardCommand()
+                || this._parseInvalidCommand();
+        };
+        Parser.prototype._parseLabelDeclaration = function () {
+            var declaration = this.create(nodes.LabelDeclaration);
+            var command = this.create(nodes.FlowCommand);
+            if (!this.acceptOneKeyword(["*label"])) {
+                return null;
+            }
+            declaration.addChild(this.finish(command));
+            if (!declaration.setLabel(this._parseLabel())) {
+                return this.finish(declaration, cssErrors_1.ParseError.LabelNameExpected);
+            }
+            return this.finish(declaration);
+        };
+        Parser.prototype._parseVariableDeclaration = function () {
+            var declaration = this.create(nodes.VariableDeclaration);
+            var command = this.create(nodes.StandardCommand);
+            if (!this.acceptOneKeyword(["*create", "*temp"])) {
+                return null;
+            }
+            declaration.addChild(this.finish(command));
+            if (!declaration.setVariable(this._parseVariable())) {
+                return this.finish(declaration, cssErrors_1.ParseError.VariableNameExpected);
+            }
+            if (!declaration.setValue(this._parseExpr())) {
+                return this.finish(declaration, cssErrors_1.ParseError.VariableValueExpected);
+            }
+            return this.finish(declaration);
+        };
+        Parser.prototype._parseVariable = function () {
+            var node = this.create(nodes.Variable);
+            if (!this.accept(cssScanner_1.TokenType.Ident)) {
+                return null;
+            }
+            return node; // feel like this should be this.finish, but LESS example says otherwise;
+        };
+        Parser.prototype._parseLabel = function () {
+            var node = this.create(nodes.Label);
+            if (!this.accept(cssScanner_1.TokenType.Ident)) {
+                return null;
+            }
+            return node; // feel like this should be this.finish, but LESS example says otherwise;
+        };
+        Parser.prototype._parsePrintVariable = function () {
+            var node = this.create(nodes.Variable);
+            var mark = this.mark();
+            if (!this.accept(cssScanner_1.TokenType.Dollar)) {
+                return null;
+            }
+            if (!this.accept(cssScanner_1.TokenType.CurlyL)) {
+                this.restoreAtMark(mark); // not a print var statement
+                return null;
+            }
+            if (!this.accept(cssScanner_1.TokenType.Ident)) {
+                return this.finish(node, cssErrors_1.ParseError.VariableNameExpected);
+            }
+            if (!this.accept(cssScanner_1.TokenType.CurlyR)) {
+                return this.finish(node, cssErrors_1.ParseError.RightCurlyExpected);
+            }
+            return this.finish(node); // feel like this should be this.finish, but LESS example says otherwise;
+        };
+        Parser.prototype._parseFlowCommand = function () {
+            var node = this.create(nodes.FlowCommand);
+            if (this.acceptOneKeyword(commands_1.flowCommandList.map(function (cmd) { return '*' + cmd; }))) {
+                return this.finish(node);
+            }
+            return null;
+        };
+        Parser.prototype._parseIfCommand = function () {
+            var node = this.create(nodes.Node);
+            if (!this.acceptFromRawTextList(["*if", "*selectable_if"])) {
+                return null;
+            }
+            else {
+                while (!this.peek(cssScanner_1.TokenType.EOL) && !this.peek(cssScanner_1.TokenType.EOF)) {
+                    this.consumeToken();
+                }
+                this.accept(cssScanner_1.TokenType.EOL);
+                return this.finish(node);
+            }
+        };
+        Parser.prototype._parseChoiceLine = function () {
+            // FIXME actually build IF/Option node structure properly.
+            this._parseIfCommand();
+            return this._parseChoiceOption();
+        };
+        Parser.prototype._parseChoiceOption = function () {
+            if (!this.peek(cssScanner_1.TokenType.Hash) && !this.peekDelim('#')) {
+                return null;
+            }
+            var node = this.create(nodes.ChoiceOption);
+            if (this.acceptDelim('#')) {
+                return this.finish(node);
+            }
+            else {
+                this.consumeToken(); // TokenType.Hash
+                while (!this.peek(cssScanner_1.TokenType.EOL) && !this.peek(cssScanner_1.TokenType.EOF)) {
+                    this.consumeToken();
+                }
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseChoiceCommand = function () {
+            var node = this.create(nodes.ChoiceCommand);
+            if (this.acceptOneKeyword(["*choice"])) {
+                if (this.accept(cssScanner_1.TokenType.EOL)) {
+                    while (node.addChild(this._parseChoiceLine())) {
+                        this.accept(cssScanner_1.TokenType.EOL); // EOL
+                    }
+                    if (node.hasChildren()) {
+                        return this.finish(node);
+                    }
+                    else {
+                        return this.finish(node, cssErrors_1.ParseError.NoChoiceOption);
+                    }
+                }
+                return this.finish(node, cssErrors_1.ParseError.NoChoiceOption);
+            }
+            return null;
+        };
+        Parser.prototype._parseSetCommand = function () {
+            var command = this.create(nodes.SetCommand);
+            if (!this.acceptOneKeyword(["*set"])) { // FIXME: not sure a function for every command is scalable
+                return null;
+            }
+            // this is VERY similar to create/temp commands (VariableDeclaration) can they share the logic? FIXME
+            if (!command.setVariable(this._parseVariable())) {
+                return this.finish(command, cssErrors_1.ParseError.VariableNameExpected);
+            }
+            if (!command.setValue(this._parseVariable() || this._parseExpr())) {
+                return this.finish(command, cssErrors_1.ParseError.VariableValueExpected);
+            }
+            return this.finish(command);
+        };
+        Parser.prototype._parseStandardCommand = function () {
+            var node = this.create(nodes.StandardCommand);
+            if (this.acceptOneKeyword(commands_1.standardCommandList.map(function (cmd) { return '*' + cmd; }))) {
+                return this.finish(node);
+            }
+            return null;
+        };
+        Parser.prototype._parseInvalidCommand = function () {
+            var node = this.create(nodes.Command);
+            this.markError(node, cssErrors_1.ParseError.UnknownCommand);
+            this.consumeToken();
+            return this.finish(node);
+        };
+        Parser.prototype._parseStylesheetAtStatement = function () {
+            return this._parseDocument();
+        };
+        /**
+         * Parses declarations like:
+         *   @apply --my-theme;
+         *
+         * Follows https://tabatkins.github.io/specs/css-apply-rule/#using
+         */
+        Parser.prototype._parseAtApply = function () {
+            if (!this.peekKeyword('@apply')) {
+                return null;
+            }
+            var node = this.create(nodes.AtApplyRule);
+            this.consumeToken();
+            if (!node.setIdentifier(this._parseIdent([nodes.ReferenceType.Variable]))) {
+                return this.finish(node, cssErrors_1.ParseError.IdentifierExpected);
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._needsSemicolonAfter = function (node) {
+            switch (node.type) {
+                case nodes.NodeType.Keyframe:
+                case nodes.NodeType.ViewPort:
+                case nodes.NodeType.Media:
+                case nodes.NodeType.Namespace:
+                case nodes.NodeType.If:
+                case nodes.NodeType.For:
+                case nodes.NodeType.Each:
+                case nodes.NodeType.While:
+                case nodes.NodeType.FunctionDeclaration:
+                    return false;
+                case nodes.NodeType.VariableDeclaration:
+                case nodes.NodeType.MixinContent:
+                case nodes.NodeType.ReturnStatement:
+                case nodes.NodeType.MediaQuery:
+                case nodes.NodeType.Import:
+                case nodes.NodeType.AtApplyRule:
+                case nodes.NodeType.CustomPropertyDeclaration:
+                    return true;
+            }
+            return false;
+        };
+        Parser.prototype._parseDeclarations = function (parseDeclaration) {
+            var node = this.create(nodes.Declarations);
+            if (!this.accept(cssScanner_1.TokenType.CurlyL)) {
+                return null;
+            }
+            var decl = parseDeclaration();
+            while (node.addChild(decl)) {
+                if (this.peek(cssScanner_1.TokenType.CurlyR)) {
+                    break;
+                }
+                if (this._needsSemicolonAfter(decl) && !this.accept(cssScanner_1.TokenType.SemiColon)) {
+                    return this.finish(node, cssErrors_1.ParseError.SemiColonExpected, [cssScanner_1.TokenType.SemiColon, cssScanner_1.TokenType.CurlyR]);
+                }
+                while (this.accept(cssScanner_1.TokenType.SemiColon)) {
+                    // accept empty statements
+                }
+                decl = parseDeclaration();
+            }
+            if (!this.accept(cssScanner_1.TokenType.CurlyR)) {
+                return this.finish(node, cssErrors_1.ParseError.RightCurlyExpected, [cssScanner_1.TokenType.CurlyR, cssScanner_1.TokenType.SemiColon]);
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseBody = function (node, parseDeclaration) {
+            if (!node.setDeclarations(this._parseDeclarations(parseDeclaration))) {
+                return this.finish(node, cssErrors_1.ParseError.LeftCurlyExpected, [cssScanner_1.TokenType.CurlyR, cssScanner_1.TokenType.SemiColon]);
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parsePropertyIdentifier = function () {
+            return this._parseIdent();
+        };
+        Parser.prototype._parseCharset = function () {
+            if (!this.peek(cssScanner_1.TokenType.Charset)) {
+                return null;
+            }
+            var node = this.create(nodes.Node);
+            this.consumeToken(); // charset
+            if (!this.accept(cssScanner_1.TokenType.String)) {
+                return this.finish(node, cssErrors_1.ParseError.IdentifierExpected);
+            }
+            if (!this.accept(cssScanner_1.TokenType.SemiColon)) {
+                return this.finish(node, cssErrors_1.ParseError.SemiColonExpected);
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseDocument = function () {
+            // -moz-document is experimental but has been pushed to css4
+            if (!this.peekKeyword('@-moz-document')) {
+                return null;
+            }
+            var node = this.create(nodes.Document);
+            this.consumeToken(); // @-moz-document
+            this.resync([], [cssScanner_1.TokenType.CurlyL]); // ignore all the rules
+            return this._parseBody(node, this._parseScene.bind(this));
+        };
+        Parser.prototype._parseOperator = function () {
+            // these are operators for binary expressions
+            if (this.peekDelim('/') ||
+                this.peekDelim('*') ||
+                this.peekDelim('+') ||
+                this.peekDelim('-') ||
+                this.peekDelim('%') ||
+                this.peekDelim('!') ||
+                this.peekDelim('&') ||
+                this.peek(cssScanner_1.TokenType.Dashmatch) ||
+                this.peek(cssScanner_1.TokenType.Includes) ||
+                this.peek(cssScanner_1.TokenType.SubstringOperator) ||
+                this.peek(cssScanner_1.TokenType.PrefixOperator) ||
+                this.peek(cssScanner_1.TokenType.SuffixOperator) ||
+                this.peekDelim('=')) { // doesn't stick to the standard here
+                var node = this.createNode(nodes.NodeType.Operator);
+                this.consumeToken();
+                return this.finish(node);
+            }
+            else {
+                return null;
+            }
+        };
+        Parser.prototype._parseUnaryOperator = function () {
+            if (!this.peekDelim('+') && !this.peekDelim('-')) {
+                return null;
+            }
+            var node = this.create(nodes.Node);
+            this.consumeToken();
+            return this.finish(node);
+        };
+        Parser.prototype._parseSelectorIdent = function () {
+            return this._parseIdent();
+        };
+        Parser.prototype._parseHash = function () {
+            if (!this.peek(cssScanner_1.TokenType.Hash) && !this.peekDelim('#')) {
+                return null;
+            }
+            var node = this.createNode(nodes.NodeType.ChoiceOption);
+            if (this.acceptDelim('#')) {
+                if (this.hasWhitespace() || !node.addChild(this._parseSelectorIdent())) {
+                    return this.finish(node, cssErrors_1.ParseError.IdentifierExpected);
+                }
+            }
+            else {
+                this.consumeToken(); // TokenType.Hash
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseNamespacePrefix = function () {
+            var pos = this.mark();
+            var node = this.createNode(nodes.NodeType.NamespacePrefix);
+            if (!node.addChild(this._parseIdent()) && !this.acceptDelim('*')) {
+                // ns is optional
+            }
+            if (!this.acceptDelim('|')) {
+                this.restoreAtMark(pos);
+                return null;
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseExpr = function (stopOnComma) {
+            if (stopOnComma === void 0) { stopOnComma = false; }
+            var expr = this._parseStringLiteral()
+                || this._parseNumeric()
+                || this._parseBinaryExpr()
+                || null;
+            return expr;
+            // FIXME support actual expressions, not simple value
+        };
+        Parser.prototype._parseNamedLine = function () {
+            // https://www.w3.org/TR/css-grid-1/#named-lines
+            if (!this.peek(cssScanner_1.TokenType.BracketL)) {
+                return null;
+            }
+            var node = this.createNode(nodes.NodeType.GridLine);
+            this.consumeToken();
+            while (node.addChild(this._parseIdent())) {
+                // repeat
+            }
+            if (!this.accept(cssScanner_1.TokenType.BracketR)) {
+                return this.finish(node, cssErrors_1.ParseError.RightSquareBracketExpected);
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseBinaryExpr = function (preparsedLeft, preparsedOper) {
+            var node = this.create(nodes.BinaryExpression);
+            if (!node.setLeft((preparsedLeft || this._parseTerm()))) {
+                return null;
+            }
+            if (!node.setOperator(preparsedOper || this._parseOperator())) {
+                return this.finish(node);
+            }
+            if (!node.setRight(this._parseTerm())) {
+                return this.finish(node, cssErrors_1.ParseError.TermExpected);
+            }
+            // things needed for multiple binary expressions
+            node = this.finish(node);
+            var operator = this._parseOperator();
+            if (operator) {
+                node = this._parseBinaryExpr(node, operator);
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseTerm = function () {
+            var node = this.create(nodes.Term);
+            node.setOperator(this._parseUnaryOperator()); // optional
+            if (node.setExpression(this._parseIdent()) ||
+                node.setExpression(this._parseStringLiteral()) ||
+                node.setExpression(this._parseNumeric()) ||
+                node.setExpression(this._parseHexColor()) ||
+                node.setExpression(this._parseOperation()) ||
+                node.setExpression(this._parseNamedLine())) {
+                return this.finish(node);
+            }
+            return null;
+        };
+        Parser.prototype._parseOperation = function () {
+            if (!this.peek(cssScanner_1.TokenType.ParenthesisL)) {
+                return null;
+            }
+            var node = this.create(nodes.Node);
+            this.consumeToken(); // ParenthesisL
+            node.addChild(this._parseExpr());
+            if (!this.accept(cssScanner_1.TokenType.ParenthesisR)) {
+                return this.finish(node, cssErrors_1.ParseError.RightParenthesisExpected);
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseBoolean = function () {
+            var node = this.create(nodes.BinaryExpression);
+            if (!this.acceptFromRawTextList(["true", "false"])) {
+                return null;
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseNumeric = function () {
+            if (this.peek(cssScanner_1.TokenType.Num)) {
+                var node = this.create(nodes.NumericValue);
+                this.consumeToken();
+                return this.finish(node);
+            }
+            return null;
+        };
+        Parser.prototype._parseStringLiteral = function () {
+            if (!this.peek(cssScanner_1.TokenType.String) && !this.peek(cssScanner_1.TokenType.BadString)) {
+                return null;
+            }
+            var node = this.createNode(nodes.NodeType.StringLiteral);
+            this.consumeToken();
+            return this.finish(node);
+        };
+        Parser.prototype._parseURLArgument = function () {
+            var node = this.create(nodes.Node);
+            if (!this.accept(cssScanner_1.TokenType.String) && !this.accept(cssScanner_1.TokenType.BadString) && !this.acceptUnquotedString()) {
+                return null;
+            }
+            return this.finish(node);
+        };
+        Parser.prototype._parseIdent = function (referenceTypes) {
+            if (!this.peek(cssScanner_1.TokenType.Ident)) {
+                return null;
+            }
+            var node = this.create(nodes.Identifier);
+            if (referenceTypes) {
+                node.referenceTypes = referenceTypes;
+            }
+            this.consumeToken();
+            return this.finish(node);
+        };
+        Parser.prototype._parseFunctionArgument = function () {
+            var node = this.create(nodes.FunctionArgument);
+            if (node.setValue(this._parseExpr(true))) {
+                return this.finish(node);
+            }
+            return null;
+        };
+        Parser.prototype._parseHexColor = function () {
+            if (this.peekRegExp(cssScanner_1.TokenType.Hash, /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{4}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/g)) {
+                var node = this.create(nodes.HexColorValue);
+                this.consumeToken();
+                return this.finish(node);
+            }
+            else {
+                return null;
+            }
+        };
+        return Parser;
+    }());
+    exports.Parser = Parser;
+});
+//# sourceMappingURL=cssParser.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/utils/arrays',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * Takes a sorted array and a function p. The array is sorted in such a way that all elements where p(x) is false
+     * are located before all elements where p(x) is true.
+     * @returns the least x for which p(x) is true or array.length if no element fullfills the given function.
+     */
+    function findFirst(array, p) {
+        var low = 0, high = array.length;
+        if (high === 0) {
+            return 0; // no children
+        }
+        while (low < high) {
+            var mid = Math.floor((low + high) / 2);
+            if (p(array[mid])) {
+                high = mid;
+            }
+            else {
+                low = mid + 1;
+            }
+        }
+        return low;
+    }
+    exports.findFirst = findFirst;
+});
+//# sourceMappingURL=arrays.js.map;
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/parser/choicescriptSymbolScope',["require", "exports", "./cssNodes", "../utils/arrays"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("./cssNodes");
+    var arrays_1 = require("../utils/arrays");
+    var Scope = /** @class */ (function () {
+        function Scope(offset, length) {
+            this.offset = offset;
+            this.length = length;
+            this.symbols = [];
+            this.parent = null;
+            this.children = [];
+        }
+        Scope.prototype.addChild = function (scope) {
+            this.children.push(scope);
+            scope.setParent(this);
+        };
+        Scope.prototype.setParent = function (scope) {
+            this.parent = scope;
+        };
+        Scope.prototype.findScope = function (offset, length) {
+            if (length === void 0) { length = 0; }
+            if (this.offset <= offset && this.offset + this.length > offset + length || this.offset === offset && this.length === length) {
+                return this.findInScope(offset, length);
+            }
+            return null;
+        };
+        Scope.prototype.findInScope = function (offset, length) {
+            if (length === void 0) { length = 0; }
+            // find the first scope child that has an offset larger than offset + length
+            var end = offset + length;
+            var idx = arrays_1.findFirst(this.children, function (s) { return s.offset > end; });
+            if (idx === 0) {
+                // all scopes have offsets larger than our end
+                return this;
+            }
+            var res = this.children[idx - 1];
+            if (res.offset <= offset && res.offset + res.length >= offset + length) {
+                return res.findInScope(offset, length);
+            }
+            return this;
+        };
+        Scope.prototype.addSymbol = function (symbol) {
+            this.symbols.push(symbol);
+        };
+        Scope.prototype.getSymbol = function (name, type) {
+            for (var index = 0; index < this.symbols.length; index++) {
+                var symbol = this.symbols[index];
+                if (symbol.name === name && symbol.type === type) {
+                    return symbol;
+                }
+            }
+            return null;
+        };
+        Scope.prototype.getSymbols = function () {
+            return this.symbols;
+        };
+        return Scope;
+    }());
+    exports.Scope = Scope;
+    var GlobalScope = /** @class */ (function (_super) {
+        __extends(GlobalScope, _super);
+        function GlobalScope() {
+            return _super.call(this, 0, Number.MAX_VALUE) || this;
+        }
+        return GlobalScope;
+    }(Scope));
+    exports.GlobalScope = GlobalScope;
+    var Symbol = /** @class */ (function () {
+        function Symbol(name, value, node, type) {
+            this.name = name;
+            this.value = value;
+            this.node = node;
+            this.type = type;
+        }
+        return Symbol;
+    }());
+    exports.Symbol = Symbol;
+    var ScopeBuilder = /** @class */ (function () {
+        function ScopeBuilder(scope) {
+            this.scope = scope;
+        }
+        ScopeBuilder.prototype.addSymbol = function (node, name, value, type) {
+            if (node.offset !== -1) {
+                var current = this.scope.findScope(node.offset, node.length);
+                if (current) {
+                    current.addSymbol(new Symbol(name, value, node, type));
+                }
+            }
+        };
+        ScopeBuilder.prototype.addScope = function (node) {
+            if (node.offset !== -1) {
+                var current = this.scope.findScope(node.offset, node.length);
+                if (current && (current.offset !== node.offset || current.length !== node.length)) { // scope already known?
+                    var newScope = new Scope(node.offset, node.length);
+                    current.addChild(newScope);
+                    return newScope;
+                }
+                return current;
+            }
+            return null;
+        };
+        ScopeBuilder.prototype.addSymbolToChildScope = function (scopeNode, node, name, value, type) {
+            if (scopeNode && scopeNode.offset !== -1) {
+                var current = this.addScope(scopeNode); // create the scope or gets the existing one
+                if (current) {
+                    current.addSymbol(new Symbol(name, value, node, type));
+                }
+            }
+        };
+        ScopeBuilder.prototype.visitNode = function (node) {
+            switch (node.type) {
+                // achievement, scene_list ...
+                case nodes.NodeType.FlowCommand:
+                case nodes.NodeType.ChoiceCommand:
+                    this.addScope(node);
+                    return true;
+                case nodes.NodeType.VariableDeclaration:
+                    return this.visitVariableDeclarationNode(node);
+                case nodes.NodeType.LabelDeclaration:
+                    return this.visitLabelDeclarationNode(node);
+                /*case nodes.NodeType.FunctionParameter: {
+                    return this.visitFunctionParameterNode(<nodes.FunctionParameter>node);
+                }*/
+            }
+            return true;
+        };
+        ScopeBuilder.prototype.visitVariableDeclarationNode = function (node) {
+            var value = node.getValue() ? node.getValue().getText() : void 0;
+            this.addSymbol(node, node.getName(), value, nodes.ReferenceType.Variable);
+            return true;
+        };
+        ScopeBuilder.prototype.visitLabelDeclarationNode = function (node) {
+            this.addSymbol(node, node.getLabel().getName(), null, nodes.ReferenceType.Label);
+            return true;
+        };
+        ScopeBuilder.prototype.visitFunctionParameterNode = function (node) {
+            // parameters are part of the body scope
+            var scopeNode = node.getParent().getDeclarations();
+            if (scopeNode) {
+                var valueNode = node.getDefaultValue();
+                var value = valueNode ? valueNode.getText() : void 0;
+                this.addSymbolToChildScope(scopeNode, node, node.getName(), value, nodes.ReferenceType.Variable);
+            }
+            return true;
+        };
+        ScopeBuilder.prototype.addCSSVariable = function (node, name, value, type) {
+            if (node.offset !== -1) {
+                this.scope.addSymbol(new Symbol(name, value, node, type));
+            }
+        };
+        return ScopeBuilder;
+    }());
+    exports.ScopeBuilder = ScopeBuilder;
+    var Symbols = /** @class */ (function () {
+        function Symbols(node) {
+            this.global = new GlobalScope();
+            node.acceptVisitor(new ScopeBuilder(this.global));
+        }
+        Symbols.prototype.findSymbolsAtOffset = function (offset, referenceType) {
+            var scope = this.global.findScope(offset, 0);
+            var result = [];
+            var names = {};
+            while (scope) {
+                var symbols = scope.getSymbols();
+                for (var i = 0; i < symbols.length; i++) {
+                    var symbol = symbols[i];
+                    if (symbol.type === referenceType && !names[symbol.name]) {
+                        result.push(symbol);
+                        names[symbol.name] = true;
+                    }
+                }
+                scope = scope.parent;
+            }
+            return result;
+        };
+        Symbols.prototype.internalFindSymbol = function (node, referenceTypes) {
+            var scopeNode = node;
+            if (!scopeNode) {
+                return null;
+            }
+            var name = node.getText();
+            var scope = this.global.findScope(scopeNode.offset, scopeNode.length);
+            console.log("internalFindSymbol", node, referenceTypes, name, scope);
+            while (scope) {
+                for (var index = 0; index < referenceTypes.length; index++) {
+                    var type = referenceTypes[index];
+                    var symbol = scope.getSymbol(name, type);
+                    if (symbol) {
+                        return symbol;
+                    }
+                }
+                scope = scope.parent;
+            }
+            return null;
+        };
+        Symbols.prototype.evaluateReferenceTypes = function (node) {
+            /*if (node instanceof nodes.Identifier) {
+                let referenceTypes = (<nodes.Identifier>node).referenceTypes;
+                if (referenceTypes) {
+                    return referenceTypes;
+                } else {
+                    if (node.isCustomProperty) {
+                        return [nodes.ReferenceType.Variable];
+                    }
+                    // are a reference to a keyframe?
+                    let decl = nodes.getParentDeclaration(node);
+                    if (decl) {
+                        let propertyName = decl.getNonPrefixedPropertyName();
+                        if ((propertyName === 'animation' || propertyName === 'animation-name')
+                            && decl.getValue() && decl.getValue().offset === node.offset) {
+                            return [nodes.ReferenceType.Keyframe];
+                        }
+                    }
+                }
+            } else */
+            if (node instanceof nodes.Label) {
+                return [nodes.ReferenceType.Label];
+            }
+            if (node instanceof nodes.Variable) {
+                return [nodes.ReferenceType.Variable];
+            }
+            return null;
+        };
+        Symbols.prototype.findSymbolFromNode = function (node) {
+            if (!node) {
+                return null;
+            }
+            var referenceTypes = this.evaluateReferenceTypes(node);
+            console.log(node, referenceTypes);
+            if (referenceTypes) {
+                return this.internalFindSymbol(node, referenceTypes);
+            }
+            return null;
+        }; /*
+    
+        public matchesSymbol(node: nodes.Node, symbol: Symbol): boolean {
+            if (!node) {
+                return false;
+            }
+            while (node.type === nodes.NodeType.Interpolation) {
+                node = node.getParent();
+            }
+            if (symbol.name.length !== node.length || symbol.name !== node.getText()) {
+                return false;
+            }
+    
+            let referenceTypes = this.evaluateReferenceTypes(node);
+            if (!referenceTypes || referenceTypes.indexOf(symbol.type) === -1) {
+                return false;
+            }
+    
+            let nodeSymbol = this.internalFindSymbol(node, referenceTypes);
+            return nodeSymbol === symbol;
+        }*/
+        Symbols.prototype.findSymbol = function (name, type, offset) {
+            var scope = this.global.findScope(offset);
+            while (scope) {
+                var symbol = scope.getSymbol(name, type);
+                if (symbol) {
+                    return symbol;
+                }
+                scope = scope.parent;
+            }
+            return null;
+        };
+        return Symbols;
+    }());
+    exports.Symbols = Symbols;
+});
+//# sourceMappingURL=choicescriptSymbolScope.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/languageFacts',["require", "exports", "../data/commands", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var commands = require("../data/commands");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    exports.colors = {
+        aliceblue: '#f0f8ff',
+        antiquewhite: '#faebd7',
+        aqua: '#00ffff',
+        aquamarine: '#7fffd4',
+        azure: '#f0ffff',
+        beige: '#f5f5dc',
+        bisque: '#ffe4c4',
+        black: '#000000',
+        blanchedalmond: '#ffebcd',
+        blue: '#0000ff',
+        blueviolet: '#8a2be2',
+        brown: '#a52a2a',
+        burlywood: '#deb887',
+        cadetblue: '#5f9ea0',
+        chartreuse: '#7fff00',
+        chocolate: '#d2691e',
+        coral: '#ff7f50',
+        cornflowerblue: '#6495ed',
+        cornsilk: '#fff8dc',
+        crimson: '#dc143c',
+        cyan: '#00ffff',
+        darkblue: '#00008b',
+        darkcyan: '#008b8b',
+        darkgoldenrod: '#b8860b',
+        darkgray: '#a9a9a9',
+        darkgrey: '#a9a9a9',
+        darkgreen: '#006400',
+        darkkhaki: '#bdb76b',
+        darkmagenta: '#8b008b',
+        darkolivegreen: '#556b2f',
+        darkorange: '#ff8c00',
+        darkorchid: '#9932cc',
+        darkred: '#8b0000',
+        darksalmon: '#e9967a',
+        darkseagreen: '#8fbc8f',
+        darkslateblue: '#483d8b',
+        darkslategray: '#2f4f4f',
+        darkslategrey: '#2f4f4f',
+        darkturquoise: '#00ced1',
+        darkviolet: '#9400d3',
+        deeppink: '#ff1493',
+        deepskyblue: '#00bfff',
+        dimgray: '#696969',
+        dimgrey: '#696969',
+        dodgerblue: '#1e90ff',
+        firebrick: '#b22222',
+        floralwhite: '#fffaf0',
+        forestgreen: '#228b22',
+        fuchsia: '#ff00ff',
+        gainsboro: '#dcdcdc',
+        ghostwhite: '#f8f8ff',
+        gold: '#ffd700',
+        goldenrod: '#daa520',
+        gray: '#808080',
+        grey: '#808080',
+        green: '#008000',
+        greenyellow: '#adff2f',
+        honeydew: '#f0fff0',
+        hotpink: '#ff69b4',
+        indianred: '#cd5c5c',
+        indigo: '#4b0082',
+        ivory: '#fffff0',
+        khaki: '#f0e68c',
+        lavender: '#e6e6fa',
+        lavenderblush: '#fff0f5',
+        lawngreen: '#7cfc00',
+        lemonchiffon: '#fffacd',
+        lightblue: '#add8e6',
+        lightcoral: '#f08080',
+        lightcyan: '#e0ffff',
+        lightgoldenrodyellow: '#fafad2',
+        lightgray: '#d3d3d3',
+        lightgrey: '#d3d3d3',
+        lightgreen: '#90ee90',
+        lightpink: '#ffb6c1',
+        lightsalmon: '#ffa07a',
+        lightseagreen: '#20b2aa',
+        lightskyblue: '#87cefa',
+        lightslategray: '#778899',
+        lightslategrey: '#778899',
+        lightsteelblue: '#b0c4de',
+        lightyellow: '#ffffe0',
+        lime: '#00ff00',
+        limegreen: '#32cd32',
+        linen: '#faf0e6',
+        magenta: '#ff00ff',
+        maroon: '#800000',
+        mediumaquamarine: '#66cdaa',
+        mediumblue: '#0000cd',
+        mediumorchid: '#ba55d3',
+        mediumpurple: '#9370d8',
+        mediumseagreen: '#3cb371',
+        mediumslateblue: '#7b68ee',
+        mediumspringgreen: '#00fa9a',
+        mediumturquoise: '#48d1cc',
+        mediumvioletred: '#c71585',
+        midnightblue: '#191970',
+        mintcream: '#f5fffa',
+        mistyrose: '#ffe4e1',
+        moccasin: '#ffe4b5',
+        navajowhite: '#ffdead',
+        navy: '#000080',
+        oldlace: '#fdf5e6',
+        olive: '#808000',
+        olivedrab: '#6b8e23',
+        orange: '#ffa500',
+        orangered: '#ff4500',
+        orchid: '#da70d6',
+        palegoldenrod: '#eee8aa',
+        palegreen: '#98fb98',
+        paleturquoise: '#afeeee',
+        palevioletred: '#d87093',
+        papayawhip: '#ffefd5',
+        peachpuff: '#ffdab9',
+        peru: '#cd853f',
+        pink: '#ffc0cb',
+        plum: '#dda0dd',
+        powderblue: '#b0e0e6',
+        purple: '#800080',
+        red: '#ff0000',
+        rebeccapurple: '#663399',
+        rosybrown: '#bc8f8f',
+        royalblue: '#4169e1',
+        saddlebrown: '#8b4513',
+        salmon: '#fa8072',
+        sandybrown: '#f4a460',
+        seagreen: '#2e8b57',
+        seashell: '#fff5ee',
+        sienna: '#a0522d',
+        silver: '#c0c0c0',
+        skyblue: '#87ceeb',
+        slateblue: '#6a5acd',
+        slategray: '#708090',
+        slategrey: '#708090',
+        snow: '#fffafa',
+        springgreen: '#00ff7f',
+        steelblue: '#4682b4',
+        tan: '#d2b48c',
+        teal: '#008080',
+        thistle: '#d8bfd8',
+        tomato: '#ff6347',
+        turquoise: '#40e0d0',
+        violet: '#ee82ee',
+        wheat: '#f5deb3',
+        white: '#ffffff',
+        whitesmoke: '#f5f5f5',
+        yellow: '#ffff00',
+        yellowgreen: '#9acd32'
+    };
+    exports.colorKeywords = {
+        'currentColor': 'The value of the \'color\' property. The computed value of the \'currentColor\' keyword is the computed value of the \'color\' property. If the \'currentColor\' keyword is set on the \'color\' property itself, it is treated as \'color:inherit\' at parse time.',
+        'transparent': 'Fully transparent. This keyword can be considered a shorthand for rgba(0,0,0,0) which is its computed value.',
+    };
+    exports.positionKeywords = {
+        'bottom': 'Computes to ‘100%’ for the vertical position if one or two values are given, otherwise specifies the bottom edge as the origin for the next offset.',
+        'center': 'Computes to ‘50%’ (‘left 50%’) for the horizontal position if the horizontal position is not otherwise specified, or ‘50%’ (‘top 50%’) for the vertical position if it is.',
+        'left': 'Computes to ‘0%’ for the horizontal position if one or two values are given, otherwise specifies the left edge as the origin for the next offset.',
+        'right': 'Computes to ‘100%’ for the horizontal position if one or two values are given, otherwise specifies the right edge as the origin for the next offset.',
+        'top': 'Computes to ‘0%’ for the vertical position if one or two values are given, otherwise specifies the top edge as the origin for the next offset.'
+    };
+    exports.repeatStyleKeywords = {
+        'no-repeat': 'Placed once and not repeated in this direction.',
+        'repeat': 'Repeated in this direction as often as needed to cover the background painting area.',
+        'repeat-x': 'Computes to ‘repeat no-repeat’.',
+        'repeat-y': 'Computes to ‘no-repeat repeat’.',
+        'round': 'Repeated as often as will fit within the background positioning area. If it doesn’t fit a whole number of times, it is rescaled so that it does.',
+        'space': 'Repeated as often as will fit within the background positioning area without being clipped and then the images are spaced out to fill the area.'
+    };
+    exports.lineStyleKeywords = {
+        'dashed': 'A series of square-ended dashes.',
+        'dotted': 'A series of round dots.',
+        'double': 'Two parallel solid lines with some space between them.',
+        'groove': 'Looks as if it were carved in the canvas.',
+        'hidden': 'Same as ‘none’, but has different behavior in the border conflict resolution rules for border-collapsed tables.',
+        'inset': 'Looks as if the content on the inside of the border is sunken into the canvas.',
+        'none': 'No border. Color and width are ignored.',
+        'outset': 'Looks as if the content on the inside of the border is coming out of the canvas.',
+        'ridge': 'Looks as if it were coming out of the canvas.',
+        'solid': 'A single line segment.'
+    };
+    exports.lineWidthKeywords = ['medium', 'thick', 'thin'];
+    exports.boxKeywords = {
+        'border-box': 'The background is painted within (clipped to) the border box.',
+        'content-box': 'The background is painted within (clipped to) the content box.',
+        'padding-box': 'The background is painted within (clipped to) the padding box.'
+    };
+    exports.geometryBoxKeywords = {
+        'margin-box': 'Uses the margin box as reference box.',
+        'fill-box': 'Uses the object bounding box as reference box.',
+        'stroke-box': 'Uses the stroke bounding box as reference box.',
+        'view-box': 'Uses the nearest SVG viewport as reference box.'
+    };
+    exports.cssWideKeywords = {
+        'initial': 'Represents the value specified as the property’s initial value.',
+        'inherit': 'Represents the computed value of the property on the element’s parent.',
+        'unset': 'Acts as either `inherit` or `initial`, depending on whether the property is inherited or not.'
+    };
+    exports.colorFunctions = [
+        { func: 'rgb($red, $green, $blue)', desc: localize('css.builtin.rgb', 'Creates a Color from red, green, and blue values.') },
+        { func: 'rgba($red, $green, $blue, $alpha)', desc: localize('css.builtin.rgba', 'Creates a Color from red, green, blue, and alpha values.') },
+        { func: 'hsl($hue, $saturation, $lightness)', desc: localize('css.builtin.hsl', 'Creates a Color from hue, saturation, and lightness values.') },
+        { func: 'hsla($hue, $saturation, $lightness, $alpha)', desc: localize('css.builtin.hsla', 'Creates a Color from hue, saturation, lightness, and alpha values.') }
+    ];
+    exports.imageFunctions = {
+        'url()': 'Reference an image file by URL',
+        'image()': 'Provide image fallbacks and annotations.',
+        '-webkit-image-set()': 'Provide multiple resolutions. Remember to use unprefixed image-set() in addition.',
+        'image-set()': 'Provide multiple resolutions of an image and let the UA decide which is most appropriate in a given situation.',
+        '-moz-element()': 'Use an element in the document as an image. Remember to use unprefixed element() in addition.',
+        'element()': 'Use an element in the document as an image.',
+        'cross-fade()': 'Indicates the two images to be combined and how far along in the transition the combination is.',
+        '-webkit-gradient()': 'Deprecated. Use modern linear-gradient() or radial-gradient() instead.',
+        '-webkit-linear-gradient()': 'Linear gradient. Remember to use unprefixed version in addition.',
+        '-moz-linear-gradient()': 'Linear gradient. Remember to use unprefixed version in addition.',
+        '-o-linear-gradient()': 'Linear gradient. Remember to use unprefixed version in addition.',
+        'linear-gradient()': 'A linear gradient is created by specifying a straight gradient line, and then several colors placed along that line.',
+        '-webkit-repeating-linear-gradient()': 'Repeating Linear gradient. Remember to use unprefixed version in addition.',
+        '-moz-repeating-linear-gradient()': 'Repeating Linear gradient. Remember to use unprefixed version in addition.',
+        '-o-repeating-linear-gradient()': 'RepeatingLinear gradient. Remember to use unprefixed version in addition.',
+        'repeating-linear-gradient()': 'Same as linear-gradient, except the color-stops are repeated infinitely in both directions, with their positions shifted by multiples of the difference between the last specified color-stop’s position and the first specified color-stop’s position.',
+        '-webkit-radial-gradient()': 'Radial gradient. Remember to use unprefixed version in addition.',
+        '-moz-radial-gradient()': 'Radial gradient. Remember to use unprefixed version in addition.',
+        'radial-gradient()': 'Colors emerge from a single point and smoothly spread outward in a circular or elliptical shape.',
+        '-webkit-repeating-radial-gradient()': 'Repeating radial gradient. Remember to use unprefixed version in addition.',
+        '-moz-repeating-radial-gradient()': 'Repeating radial gradient. Remember to use unprefixed version in addition.',
+        'repeating-radial-gradient()': 'Same as radial-gradient, except the color-stops are repeated infinitely in both directions, with their positions shifted by multiples of the difference between the last specified color-stop’s position and the first specified color-stop’s position.'
+    };
+    exports.transitionTimingFunctions = {
+        'ease': 'Equivalent to cubic-bezier(0.25, 0.1, 0.25, 1.0).',
+        'ease-in': 'Equivalent to cubic-bezier(0.42, 0, 1.0, 1.0).',
+        'ease-in-out': 'Equivalent to cubic-bezier(0.42, 0, 0.58, 1.0).',
+        'ease-out': 'Equivalent to cubic-bezier(0, 0, 0.58, 1.0).',
+        'linear': 'Equivalent to cubic-bezier(0.0, 0.0, 1.0, 1.0).',
+        'step-end': 'Equivalent to steps(1, end).',
+        'step-start': 'Equivalent to steps(1, start).',
+        'steps()': 'The first parameter specifies the number of intervals in the function. The second parameter, which is optional, is either the value “start” or “end”.',
+        'cubic-bezier()': 'Specifies a cubic-bezier curve. The four values specify points P1 and P2  of the curve as (x1, y1, x2, y2).',
+        'cubic-bezier(0.6, -0.28, 0.735, 0.045)': 'Ease-in Back. Overshoots.',
+        'cubic-bezier(0.68, -0.55, 0.265, 1.55)': 'Ease-in-out Back. Overshoots.',
+        'cubic-bezier(0.175, 0.885, 0.32, 1.275)': 'Ease-out Back. Overshoots.',
+        'cubic-bezier(0.6, 0.04, 0.98, 0.335)': 'Ease-in Circular. Based on half circle.',
+        'cubic-bezier(0.785, 0.135, 0.15, 0.86)': 'Ease-in-out Circular. Based on half circle.',
+        'cubic-bezier(0.075, 0.82, 0.165, 1)': 'Ease-out Circular. Based on half circle.',
+        'cubic-bezier(0.55, 0.055, 0.675, 0.19)': 'Ease-in Cubic. Based on power of three.',
+        'cubic-bezier(0.645, 0.045, 0.355, 1)': 'Ease-in-out Cubic. Based on power of three.',
+        'cubic-bezier(0.215, 0.610, 0.355, 1)': 'Ease-out Cubic. Based on power of three.',
+        'cubic-bezier(0.95, 0.05, 0.795, 0.035)': 'Ease-in Exponential. Based on two to the power ten.',
+        'cubic-bezier(1, 0, 0, 1)': 'Ease-in-out Exponential. Based on two to the power ten.',
+        'cubic-bezier(0.19, 1, 0.22, 1)': 'Ease-out Exponential. Based on two to the power ten.',
+        'cubic-bezier(0.47, 0, 0.745, 0.715)': 'Ease-in Sine.',
+        'cubic-bezier(0.445, 0.05, 0.55, 0.95)': 'Ease-in-out Sine.',
+        'cubic-bezier(0.39, 0.575, 0.565, 1)': 'Ease-out Sine.',
+        'cubic-bezier(0.55, 0.085, 0.68, 0.53)': 'Ease-in Quadratic. Based on power of two.',
+        'cubic-bezier(0.455, 0.03, 0.515, 0.955)': 'Ease-in-out Quadratic. Based on power of two.',
+        'cubic-bezier(0.25, 0.46, 0.45, 0.94)': 'Ease-out Quadratic. Based on power of two.',
+        'cubic-bezier(0.895, 0.03, 0.685, 0.22)': 'Ease-in Quartic. Based on power of four.',
+        'cubic-bezier(0.77, 0, 0.175, 1)': 'Ease-in-out Quartic. Based on power of four.',
+        'cubic-bezier(0.165, 0.84, 0.44, 1)': 'Ease-out Quartic. Based on power of four.',
+        'cubic-bezier(0.755, 0.05, 0.855, 0.06)': 'Ease-in Quintic. Based on power of five.',
+        'cubic-bezier(0.86, 0, 0.07, 1)': 'Ease-in-out Quintic. Based on power of five.',
+        'cubic-bezier(0.23, 1, 0.320, 1)': 'Ease-out Quintic. Based on power of five.'
+    };
+    exports.basicShapeFunctions = {
+        'circle()': 'Defines a circle.',
+        'ellipse()': 'Defines an ellipse.',
+        'inset()': 'Defines an inset rectangle.',
+        'polygon()': 'Defines a polygon.'
+    };
+    exports.units = {
+        'length': ['em', 'rem', 'ex', 'px', 'cm', 'mm', 'in', 'pt', 'pc', 'ch', 'vw', 'vh', 'vmin', 'vmax'],
+        'angle': ['deg', 'rad', 'grad', 'turn'],
+        'time': ['ms', 's'],
+        'frequency': ['Hz', 'kHz'],
+        'resolution': ['dpi', 'dpcm', 'dppx'],
+        'percentage': ['%', 'fr']
+    };
+    exports.html5Tags = ['a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption',
+        'cite', 'code', 'col', 'colgroup', 'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'footer',
+        'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link',
+        'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'picture', 'pre', 'progress', 'q',
+        'rb', 'rp', 'rt', 'rtc', 'ruby', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td',
+        'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'u', 'ul', 'let', 'video', 'wbr'];
+    exports.svgElements = ['circle', 'clipPath', 'cursor', 'defs', 'desc', 'ellipse', 'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting',
+        'feDisplacementMap', 'feDistantLight', 'feDropShadow', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology',
+        'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence', 'filter', 'foreignObject', 'g', 'hatch', 'hatchpath', 'image', 'line', 'linearGradient',
+        'marker', 'mask', 'mesh', 'meshpatch', 'meshrow', 'metadata', 'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialGradient', 'rect', 'set', 'solidcolor', 'stop', 'svg', 'switch',
+        'symbol', 'text', 'textPath', 'tspan', 'use', 'view'];
+    /*export function isColorConstructor(node: nodes.Function): boolean {
+        let name = node.getName();
+        if (!name) {
+            return false;
+        }
+        return /^(rgb|rgba|hsl|hsla)$/gi.test(name);
+    }*/
+    /**
+     * Returns true if the node is a color value - either
+     * defined a hex number, as rgb or rgba function, or
+     * as color name.
+     */
+    /*
+    export function isColorValue(node: nodes.Node): boolean {
+        if (node.type === nodes.NodeType.HexColorValue) {
+            return true;
+        } else if (node.type === nodes.NodeType.Function) {
+            return isColorConstructor(<nodes.Function>node);
+        } else if (node.type === nodes.NodeType.Identifier) {
+            if (node.parent && node.parent.type !== nodes.NodeType.Term) {
+                return false;
+            }
+            let candidateColor = node.getText().toLowerCase();
+            if (candidateColor === 'none') {
+                return false;
+            }
+            if (colors[candidateColor]) {
+                return true;
+            }
+        }
+        return false;
+    }*/
+    var Digit0 = 48;
+    var Digit9 = 57;
+    var A = 65;
+    var F = 70;
+    var a = 97;
+    var f = 102;
+    function hexDigit(charCode) {
+        if (charCode < Digit0) {
+            return 0;
+        }
+        if (charCode <= Digit9) {
+            return charCode - Digit0;
+        }
+        if (charCode < a) {
+            charCode += (a - A);
+        }
+        if (charCode >= a && charCode <= f) {
+            return charCode - a + 10;
+        }
+        return 0;
+    }
+    exports.hexDigit = hexDigit;
+    function colorFromHex(text) {
+        if (text[0] !== '#') {
+            return null;
+        }
+        switch (text.length) {
+            case 4:
+                return {
+                    red: (hexDigit(text.charCodeAt(1)) * 0x11) / 255.0,
+                    green: (hexDigit(text.charCodeAt(2)) * 0x11) / 255.0,
+                    blue: (hexDigit(text.charCodeAt(3)) * 0x11) / 255.0,
+                    alpha: 1
+                };
+            case 5:
+                return {
+                    red: (hexDigit(text.charCodeAt(1)) * 0x11) / 255.0,
+                    green: (hexDigit(text.charCodeAt(2)) * 0x11) / 255.0,
+                    blue: (hexDigit(text.charCodeAt(3)) * 0x11) / 255.0,
+                    alpha: (hexDigit(text.charCodeAt(4)) * 0x11) / 255.0,
+                };
+            case 7:
+                return {
+                    red: (hexDigit(text.charCodeAt(1)) * 0x10 + hexDigit(text.charCodeAt(2))) / 255.0,
+                    green: (hexDigit(text.charCodeAt(3)) * 0x10 + hexDigit(text.charCodeAt(4))) / 255.0,
+                    blue: (hexDigit(text.charCodeAt(5)) * 0x10 + hexDigit(text.charCodeAt(6))) / 255.0,
+                    alpha: 1
+                };
+            case 9:
+                return {
+                    red: (hexDigit(text.charCodeAt(1)) * 0x10 + hexDigit(text.charCodeAt(2))) / 255.0,
+                    green: (hexDigit(text.charCodeAt(3)) * 0x10 + hexDigit(text.charCodeAt(4))) / 255.0,
+                    blue: (hexDigit(text.charCodeAt(5)) * 0x10 + hexDigit(text.charCodeAt(6))) / 255.0,
+                    alpha: (hexDigit(text.charCodeAt(7)) * 0x10 + hexDigit(text.charCodeAt(8))) / 255.0
+                };
+        }
+        return null;
+    }
+    exports.colorFromHex = colorFromHex;
+    function colorFrom256RGB(red, green, blue, alpha) {
+        if (alpha === void 0) { alpha = 1.0; }
+        return {
+            red: red / 255.0,
+            green: green / 255.0,
+            blue: blue / 255.0,
+            alpha: alpha
+        };
+    }
+    exports.colorFrom256RGB = colorFrom256RGB;
+    function colorFromHSL(hue, sat, light, alpha) {
+        if (alpha === void 0) { alpha = 1.0; }
+        hue = hue / 60.0;
+        if (sat === 0) {
+            return { red: light, green: light, blue: light, alpha: alpha };
+        }
+        else {
+            var hueToRgb = function (t1, t2, hue) {
+                while (hue < 0) {
+                    hue += 6;
+                }
+                while (hue >= 6) {
+                    hue -= 6;
+                }
+                if (hue < 1) {
+                    return (t2 - t1) * hue + t1;
+                }
+                if (hue < 3) {
+                    return t2;
+                }
+                if (hue < 4) {
+                    return (t2 - t1) * (4 - hue) + t1;
+                }
+                return t1;
+            };
+            var t2 = light <= 0.5 ? (light * (sat + 1)) : (light + sat - (light * sat));
+            var t1 = light * 2 - t2;
+            return { red: hueToRgb(t1, t2, hue + 2), green: hueToRgb(t1, t2, hue), blue: hueToRgb(t1, t2, hue - 2), alpha: alpha };
+        }
+    }
+    exports.colorFromHSL = colorFromHSL;
+    function hslFromColor(rgba) {
+        var r = rgba.red;
+        var g = rgba.green;
+        var b = rgba.blue;
+        var a = rgba.alpha;
+        var max = Math.max(r, g, b);
+        var min = Math.min(r, g, b);
+        var h = 0;
+        var s = 0;
+        var l = (min + max) / 2;
+        var chroma = max - min;
+        if (chroma > 0) {
+            s = Math.min((l <= 0.5 ? chroma / (2 * l) : chroma / (2 - (2 * l))), 1);
+            switch (max) {
+                case r:
+                    h = (g - b) / chroma + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    h = (b - r) / chroma + 2;
+                    break;
+                case b:
+                    h = (r - g) / chroma + 4;
+                    break;
+            }
+            h *= 60;
+            h = Math.round(h);
+        }
+        return { h: h, s: s, l: l, a: a };
+    }
+    exports.hslFromColor = hslFromColor;
+    /*
+    export function getColorValue(node: nodes.Node): Color {
+        if (node.type === nodes.NodeType.HexColorValue) {
+            let text = node.getText();
+            return colorFromHex(text);
+        } else if (node.type === nodes.NodeType.Function) {
+            let functionNode = <nodes.Function>node;
+            let name = functionNode.getName();
+            let colorValues = functionNode.getArguments().getChildren();
+            if (!name || colorValues.length < 3 || colorValues.length > 4) {
+                return null;
+            }
+            try {
+                let alpha = colorValues.length === 4 ? getNumericValue(colorValues[3], 1) : 1;
+                if (name === 'rgb' || name === 'rgba') {
+                    return {
+                        red: getNumericValue(colorValues[0], 255.0),
+                        green: getNumericValue(colorValues[1], 255.0),
+                        blue: getNumericValue(colorValues[2], 255.0),
+                        alpha
+                    };
+                } else if (name === 'hsl' || name === 'hsla') {
+                    let h = getAngle(colorValues[0]);
+                    let s = getNumericValue(colorValues[1], 100.0);
+                    let l = getNumericValue(colorValues[2], 100.0);
+                    return colorFromHSL(h, s, l, alpha);
+                }
+            } catch (e) {
+                // parse error on numeric value
+                return null;
+            }
+        } else if (node.type === nodes.NodeType.Identifier) {
+            if (node.parent && node.parent.type !== nodes.NodeType.Term) {
+                return null;
+            }
+            let term = node.parent;
+            if (term.parent && term.parent.type === nodes.NodeType.BinaryExpression) {
+                let expression = term.parent;
+                if (expression.parent && expression.parent.type === nodes.NodeType.ListEntry && (<nodes.ListEntry>expression.parent).key === expression) {
+                    return null;
+                }
+            }
+    
+            let candidateColor = node.getText().toLowerCase();
+            if (candidateColor === 'none') {
+                return null;
+            }
+            let colorHex = colors[candidateColor];
+            if (colorHex) {
+                return colorFromHex(colorHex);
+            }
+        }
+        return null;
+    }*/
+    function getNumericValue(node, factor) {
+        var val = node.getText();
+        var m = val.match(/^([-+]?[0-9]*\.?[0-9]+)(%?)$/);
+        if (m) {
+            if (m[2]) {
+                factor = 100.0;
+            }
+            var result = parseFloat(m[1]) / factor;
+            if (result >= 0 && result <= 1) {
+                return result;
+            }
+        }
+        throw new Error();
+    }
+    function getAngle(node) {
+        var val = node.getText();
+        var m = val.match(/^([-+]?[0-9]*\.?[0-9]+)(deg)?$/);
+        if (m) {
+            return parseFloat(val) % 360;
+        }
+        throw new Error();
+    }
+    function isCommonValue(entry) {
+        return entry.browsers.count > 1;
+    }
+    exports.isCommonValue = isCommonValue;
+    function getPageBoxDirectives() {
+        return [
+            '@bottom-center', '@bottom-left', '@bottom-left-corner', '@bottom-right', '@bottom-right-corner',
+            '@left-bottom', '@left-middle', '@left-top', '@right-bottom', '@right-middle', '@right-top',
+            '@top-center', '@top-left', '@top-left-corner', '@top-right', '@top-right-corner'
+        ];
+    }
+    exports.getPageBoxDirectives = getPageBoxDirectives;
+    function expandEntryStatus(status) {
+        switch (status) {
+            case 'e':
+                return 'experimental';
+            case 'n':
+                return 'nonstandard';
+            case 'o':
+                return 'obsolete';
+            default:
+                return 'standard';
+        }
+    }
+    exports.expandEntryStatus = expandEntryStatus;
+    function getEntryStatus(status) {
+        switch (status) {
+            case 'e':
+                return '⚠️ Property is experimental. Be cautious when using it.️\n\n';
+            case 'n':
+                return '🚨️ Property is nonstandard. Avoid using it.\n\n';
+            case 'o':
+                return '🚨️️️ Property is obsolete. Avoid using it.\n\n';
+            default:
+                return '';
+        }
+    }
+    var EntryImpl = /** @class */ (function () {
+        function EntryImpl(data) {
+            this.data = data;
+        }
+        Object.defineProperty(EntryImpl.prototype, "name", {
+            get: function () {
+                return this.data.name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(EntryImpl.prototype, "description", {
+            get: function () {
+                return this.data.desc;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(EntryImpl.prototype, "restrictions", {
+            get: function () {
+                if (this.data.restriction) {
+                    return this.data.restriction.split(',').map(function (s) { return s.trim(); });
+                }
+                else {
+                    return [];
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(EntryImpl.prototype, "status", {
+            get: function () {
+                return expandEntryStatus(this.data.status);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return EntryImpl;
+    }());
+    var commandsArray = commands.fullCommandList;
+    var fullCommandList;
+    function getCommands() {
+        if (!fullCommandList) {
+            fullCommandList = [];
+            for (var i = 0; i < commandsArray.length; i++) {
+                var rawEntry = {
+                    name: commandsArray[i],
+                    desc: [
+                        "**Command**: " + commandsArray[i],
+                    ]
+                };
+                if (typeof commands.standardCommands[commandsArray[i]] !== "undefined"
+                    && commands.standardCommands[commandsArray[i]].desc) {
+                    rawEntry.desc.push("```choicescript\n" + commands.standardCommands[commandsArray[i]].desc + "\n```");
+                }
+                else if (typeof commands.flowCommands[commandsArray[i]] !== "undefined"
+                    && commands.flowCommands[commandsArray[i]].desc) {
+                    rawEntry.desc.push("```choicescript\n" + commands.flowCommands[commandsArray[i]].desc + "\n```");
+                }
+                rawEntry.desc.push("Read more on the [wiki](https://choicescriptdev.wikia.com/wiki/" + commandsArray[i] + ")");
+                fullCommandList.push(new EntryImpl(rawEntry));
+            }
+        }
+        return fullCommandList;
+    }
+    exports.getCommands = getCommands;
+});
+//# sourceMappingURL=languageFacts.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/utils/strings',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function startsWith(haystack, needle) {
+        if (haystack.length < needle.length) {
+            return false;
+        }
+        for (var i = 0; i < needle.length; i++) {
+            if (haystack[i] !== needle[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    exports.startsWith = startsWith;
+    /**
+     * Determines if haystack ends with needle.
+     */
+    function endsWith(haystack, needle) {
+        var diff = haystack.length - needle.length;
+        if (diff > 0) {
+            return haystack.lastIndexOf(needle) === diff;
+        }
+        else if (diff === 0) {
+            return haystack === needle;
+        }
+        else {
+            return false;
+        }
+    }
+    exports.endsWith = endsWith;
+    /**
+     * Computes the difference score for two strings. More similar strings have a higher score.
+     * We use largest common subsequence dynamic programming approach but penalize in the end for length differences.
+     * Strings that have a large length difference will get a bad default score 0.
+     * Complexity - both time and space O(first.length * second.length)
+     * Dynamic programming LCS computation http://en.wikipedia.org/wiki/Longest_common_subsequence_problem
+     *
+     * @param first a string
+     * @param second a string
+     */
+    function difference(first, second, maxLenDelta) {
+        if (maxLenDelta === void 0) { maxLenDelta = 4; }
+        var lengthDifference = Math.abs(first.length - second.length);
+        // We only compute score if length of the currentWord and length of entry.name are similar.
+        if (lengthDifference > maxLenDelta) {
+            return 0;
+        }
+        // Initialize LCS (largest common subsequence) matrix.
+        var LCS = [];
+        var zeroArray = [];
+        var i, j;
+        for (i = 0; i < second.length + 1; ++i) {
+            zeroArray.push(0);
+        }
+        for (i = 0; i < first.length + 1; ++i) {
+            LCS.push(zeroArray);
+        }
+        for (i = 1; i < first.length + 1; ++i) {
+            for (j = 1; j < second.length + 1; ++j) {
+                if (first[i - 1] === second[j - 1]) {
+                    LCS[i][j] = LCS[i - 1][j - 1] + 1;
+                }
+                else {
+                    LCS[i][j] = Math.max(LCS[i - 1][j], LCS[i][j - 1]);
+                }
+            }
+        }
+        return LCS[first.length][second.length] - Math.sqrt(lengthDifference);
+    }
+    exports.difference = difference;
+    /**
+     * Limit of string length.
+     */
+    function getLimitedString(str, ellipsis) {
+        if (ellipsis === void 0) { ellipsis = true; }
+        if (!str) {
+            return '';
+        }
+        if (str.length < 140) {
+            return str;
+        }
+        return str.slice(0, 140) + (ellipsis ? '\u2026' : '');
+    }
+    exports.getLimitedString = getLimitedString;
+});
+//# sourceMappingURL=strings.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-languageserver-types/main',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    /* --------------------------------------------------------------------------------------------
+     * Copyright (c) Microsoft Corporation. All rights reserved.
+     * Licensed under the MIT License. See License.txt in the project root for license information.
+     * ------------------------------------------------------------------------------------------ */
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * The Position namespace provides helper functions to work with
+     * [Position](#Position) literals.
+     */
+    var Position;
+    (function (Position) {
+        /**
+         * Creates a new Position literal from the given line and character.
+         * @param line The position's line.
+         * @param character The position's character.
+         */
+        function create(line, character) {
+            return { line: line, character: character };
+        }
+        Position.create = create;
+        /**
+         * Checks whether the given liternal conforms to the [Position](#Position) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.objectLiteral(candidate) && Is.number(candidate.line) && Is.number(candidate.character);
+        }
+        Position.is = is;
+    })(Position = exports.Position || (exports.Position = {}));
+    /**
+     * The Range namespace provides helper functions to work with
+     * [Range](#Range) literals.
+     */
+    var Range;
+    (function (Range) {
+        function create(one, two, three, four) {
+            if (Is.number(one) && Is.number(two) && Is.number(three) && Is.number(four)) {
+                return { start: Position.create(one, two), end: Position.create(three, four) };
+            }
+            else if (Position.is(one) && Position.is(two)) {
+                return { start: one, end: two };
+            }
+            else {
+                throw new Error("Range#create called with invalid arguments[" + one + ", " + two + ", " + three + ", " + four + "]");
+            }
+        }
+        Range.create = create;
+        /**
+         * Checks whether the given literal conforms to the [Range](#Range) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.objectLiteral(candidate) && Position.is(candidate.start) && Position.is(candidate.end);
+        }
+        Range.is = is;
+    })(Range = exports.Range || (exports.Range = {}));
+    /**
+     * The Location namespace provides helper functions to work with
+     * [Location](#Location) literals.
+     */
+    var Location;
+    (function (Location) {
+        /**
+         * Creates a Location literal.
+         * @param uri The location's uri.
+         * @param range The location's range.
+         */
+        function create(uri, range) {
+            return { uri: uri, range: range };
+        }
+        Location.create = create;
+        /**
+         * Checks whether the given literal conforms to the [Location](#Location) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Range.is(candidate.range) && (Is.string(candidate.uri) || Is.undefined(candidate.uri));
+        }
+        Location.is = is;
+    })(Location = exports.Location || (exports.Location = {}));
+    /**
+     * The LocationLink namespace provides helper functions to work with
+     * [LocationLink](#LocationLink) literals.
+     */
+    var LocationLink;
+    (function (LocationLink) {
+        /**
+         * Creates a LocationLink literal.
+         * @param targetUri The definition's uri.
+         * @param targetRange The full range of the definition.
+         * @param targetSelectionRange The span of the symbol definition at the target.
+         * @param originSelectionRange The span of the symbol being defined in the originating source file.
+         */
+        function create(targetUri, targetRange, targetSelectionRange, originSelectionRange) {
+            return { targetUri: targetUri, targetRange: targetRange, targetSelectionRange: targetSelectionRange, originSelectionRange: originSelectionRange };
+        }
+        LocationLink.create = create;
+        /**
+         * Checks whether the given literal conforms to the [LocationLink](#LocationLink) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Range.is(candidate.targetRange) && Is.string(candidate.targetUri)
+                && (Range.is(candidate.targetSelectionRange) || Is.undefined(candidate.targetSelectionRange))
+                && (Range.is(candidate.originSelectionRange) || Is.undefined(candidate.originSelectionRange));
+        }
+        LocationLink.is = is;
+    })(LocationLink = exports.LocationLink || (exports.LocationLink = {}));
+    /**
+     * The Color namespace provides helper functions to work with
+     * [Color](#Color) literals.
+     */
+    var Color;
+    (function (Color) {
+        /**
+         * Creates a new Color literal.
+         */
+        function create(red, green, blue, alpha) {
+            return {
+                red: red,
+                green: green,
+                blue: blue,
+                alpha: alpha,
+            };
+        }
+        Color.create = create;
+        /**
+         * Checks whether the given literal conforms to the [Color](#Color) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.number(candidate.red)
+                && Is.number(candidate.green)
+                && Is.number(candidate.blue)
+                && Is.number(candidate.alpha);
+        }
+        Color.is = is;
+    })(Color = exports.Color || (exports.Color = {}));
+    /**
+     * The ColorInformation namespace provides helper functions to work with
+     * [ColorInformation](#ColorInformation) literals.
+     */
+    var ColorInformation;
+    (function (ColorInformation) {
+        /**
+         * Creates a new ColorInformation literal.
+         */
+        function create(range, color) {
+            return {
+                range: range,
+                color: color,
+            };
+        }
+        ColorInformation.create = create;
+        /**
+         * Checks whether the given literal conforms to the [ColorInformation](#ColorInformation) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Range.is(candidate.range) && Color.is(candidate.color);
+        }
+        ColorInformation.is = is;
+    })(ColorInformation = exports.ColorInformation || (exports.ColorInformation = {}));
+    /**
+     * The Color namespace provides helper functions to work with
+     * [ColorPresentation](#ColorPresentation) literals.
+     */
+    var ColorPresentation;
+    (function (ColorPresentation) {
+        /**
+         * Creates a new ColorInformation literal.
+         */
+        function create(label, textEdit, additionalTextEdits) {
+            return {
+                label: label,
+                textEdit: textEdit,
+                additionalTextEdits: additionalTextEdits,
+            };
+        }
+        ColorPresentation.create = create;
+        /**
+         * Checks whether the given literal conforms to the [ColorInformation](#ColorInformation) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.string(candidate.label)
+                && (Is.undefined(candidate.textEdit) || TextEdit.is(candidate))
+                && (Is.undefined(candidate.additionalTextEdits) || Is.typedArray(candidate.additionalTextEdits, TextEdit.is));
+        }
+        ColorPresentation.is = is;
+    })(ColorPresentation = exports.ColorPresentation || (exports.ColorPresentation = {}));
+    /**
+     * Enum of known range kinds
+     */
+    var FoldingRangeKind;
+    (function (FoldingRangeKind) {
+        /**
+         * Folding range for a comment
+         */
+        FoldingRangeKind["Comment"] = "comment";
+        /**
+         * Folding range for a imports or includes
+         */
+        FoldingRangeKind["Imports"] = "imports";
+        /**
+         * Folding range for a region (e.g. `#region`)
+         */
+        FoldingRangeKind["Region"] = "region";
+    })(FoldingRangeKind = exports.FoldingRangeKind || (exports.FoldingRangeKind = {}));
+    /**
+     * The folding range namespace provides helper functions to work with
+     * [FoldingRange](#FoldingRange) literals.
+     */
+    var FoldingRange;
+    (function (FoldingRange) {
+        /**
+         * Creates a new FoldingRange literal.
+         */
+        function create(startLine, endLine, startCharacter, endCharacter, kind) {
+            var result = {
+                startLine: startLine,
+                endLine: endLine
+            };
+            if (Is.defined(startCharacter)) {
+                result.startCharacter = startCharacter;
+            }
+            if (Is.defined(endCharacter)) {
+                result.endCharacter = endCharacter;
+            }
+            if (Is.defined(kind)) {
+                result.kind = kind;
+            }
+            return result;
+        }
+        FoldingRange.create = create;
+        /**
+         * Checks whether the given literal conforms to the [FoldingRange](#FoldingRange) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.number(candidate.startLine) && Is.number(candidate.startLine)
+                && (Is.undefined(candidate.startCharacter) || Is.number(candidate.startCharacter))
+                && (Is.undefined(candidate.endCharacter) || Is.number(candidate.endCharacter))
+                && (Is.undefined(candidate.kind) || Is.string(candidate.kind));
+        }
+        FoldingRange.is = is;
+    })(FoldingRange = exports.FoldingRange || (exports.FoldingRange = {}));
+    /**
+     * The DiagnosticRelatedInformation namespace provides helper functions to work with
+     * [DiagnosticRelatedInformation](#DiagnosticRelatedInformation) literals.
+     */
+    var DiagnosticRelatedInformation;
+    (function (DiagnosticRelatedInformation) {
+        /**
+         * Creates a new DiagnosticRelatedInformation literal.
+         */
+        function create(location, message) {
+            return {
+                location: location,
+                message: message
+            };
+        }
+        DiagnosticRelatedInformation.create = create;
+        /**
+         * Checks whether the given literal conforms to the [DiagnosticRelatedInformation](#DiagnosticRelatedInformation) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Location.is(candidate.location) && Is.string(candidate.message);
+        }
+        DiagnosticRelatedInformation.is = is;
+    })(DiagnosticRelatedInformation = exports.DiagnosticRelatedInformation || (exports.DiagnosticRelatedInformation = {}));
+    /**
+     * The diagnostic's severity.
+     */
+    var DiagnosticSeverity;
+    (function (DiagnosticSeverity) {
+        /**
+         * Reports an error.
+         */
+        DiagnosticSeverity.Error = 1;
+        /**
+         * Reports a warning.
+         */
+        DiagnosticSeverity.Warning = 2;
+        /**
+         * Reports an information.
+         */
+        DiagnosticSeverity.Information = 3;
+        /**
+         * Reports a hint.
+         */
+        DiagnosticSeverity.Hint = 4;
+    })(DiagnosticSeverity = exports.DiagnosticSeverity || (exports.DiagnosticSeverity = {}));
+    /**
+     * The diagnostic tags.
+     *
+     * @since 3.15.0
+     */
+    var DiagnosticTag;
+    (function (DiagnosticTag) {
+        /**
+         * Unused or unnecessary code.
+         *
+         * Clients are allowed to render diagnostics with this tag faded out instead of having
+         * an error squiggle.
+         */
+        DiagnosticTag.Unnecessary = 1;
+        /**
+         * Deprecated or obsolete code.
+         *
+         * Clients are allowed to rendered diagnostics with this tag strike through.
+         */
+        DiagnosticTag.Deprecated = 2;
+    })(DiagnosticTag = exports.DiagnosticTag || (exports.DiagnosticTag = {}));
+    /**
+     * The Diagnostic namespace provides helper functions to work with
+     * [Diagnostic](#Diagnostic) literals.
+     */
+    var Diagnostic;
+    (function (Diagnostic) {
+        /**
+         * Creates a new Diagnostic literal.
+         */
+        function create(range, message, severity, code, source, relatedInformation) {
+            var result = { range: range, message: message };
+            if (Is.defined(severity)) {
+                result.severity = severity;
+            }
+            if (Is.defined(code)) {
+                result.code = code;
+            }
+            if (Is.defined(source)) {
+                result.source = source;
+            }
+            if (Is.defined(relatedInformation)) {
+                result.relatedInformation = relatedInformation;
+            }
+            return result;
+        }
+        Diagnostic.create = create;
+        /**
+         * Checks whether the given literal conforms to the [Diagnostic](#Diagnostic) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate)
+                && Range.is(candidate.range)
+                && Is.string(candidate.message)
+                && (Is.number(candidate.severity) || Is.undefined(candidate.severity))
+                && (Is.number(candidate.code) || Is.string(candidate.code) || Is.undefined(candidate.code))
+                && (Is.string(candidate.source) || Is.undefined(candidate.source))
+                && (Is.undefined(candidate.relatedInformation) || Is.typedArray(candidate.relatedInformation, DiagnosticRelatedInformation.is));
+        }
+        Diagnostic.is = is;
+    })(Diagnostic = exports.Diagnostic || (exports.Diagnostic = {}));
+    /**
+     * The Command namespace provides helper functions to work with
+     * [Command](#Command) literals.
+     */
+    var Command;
+    (function (Command) {
+        /**
+         * Creates a new Command literal.
+         */
+        function create(title, command) {
+            var args = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                args[_i - 2] = arguments[_i];
+            }
+            var result = { title: title, command: command };
+            if (Is.defined(args) && args.length > 0) {
+                result.arguments = args;
+            }
+            return result;
+        }
+        Command.create = create;
+        /**
+         * Checks whether the given literal conforms to the [Command](#Command) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Is.string(candidate.title) && Is.string(candidate.command);
+        }
+        Command.is = is;
+    })(Command = exports.Command || (exports.Command = {}));
+    /**
+     * The TextEdit namespace provides helper function to create replace,
+     * insert and delete edits more easily.
+     */
+    var TextEdit;
+    (function (TextEdit) {
+        /**
+         * Creates a replace text edit.
+         * @param range The range of text to be replaced.
+         * @param newText The new text.
+         */
+        function replace(range, newText) {
+            return { range: range, newText: newText };
+        }
+        TextEdit.replace = replace;
+        /**
+         * Creates a insert text edit.
+         * @param position The position to insert the text at.
+         * @param newText The text to be inserted.
+         */
+        function insert(position, newText) {
+            return { range: { start: position, end: position }, newText: newText };
+        }
+        TextEdit.insert = insert;
+        /**
+         * Creates a delete text edit.
+         * @param range The range of text to be deleted.
+         */
+        function del(range) {
+            return { range: range, newText: '' };
+        }
+        TextEdit.del = del;
+        function is(value) {
+            var candidate = value;
+            return Is.objectLiteral(candidate)
+                && Is.string(candidate.newText)
+                && Range.is(candidate.range);
+        }
+        TextEdit.is = is;
+    })(TextEdit = exports.TextEdit || (exports.TextEdit = {}));
+    /**
+     * The TextDocumentEdit namespace provides helper function to create
+     * an edit that manipulates a text document.
+     */
+    var TextDocumentEdit;
+    (function (TextDocumentEdit) {
+        /**
+         * Creates a new `TextDocumentEdit`
+         */
+        function create(textDocument, edits) {
+            return { textDocument: textDocument, edits: edits };
+        }
+        TextDocumentEdit.create = create;
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate)
+                && VersionedTextDocumentIdentifier.is(candidate.textDocument)
+                && Array.isArray(candidate.edits);
+        }
+        TextDocumentEdit.is = is;
+    })(TextDocumentEdit = exports.TextDocumentEdit || (exports.TextDocumentEdit = {}));
+    var CreateFile;
+    (function (CreateFile) {
+        function create(uri, options) {
+            var result = {
+                kind: 'create',
+                uri: uri
+            };
+            if (options !== void 0 && (options.overwrite !== void 0 || options.ignoreIfExists !== void 0)) {
+                result.options = options;
+            }
+            return result;
+        }
+        CreateFile.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate && candidate.kind === 'create' && Is.string(candidate.uri) &&
+                (candidate.options === void 0 ||
+                    ((candidate.options.overwrite === void 0 || Is.boolean(candidate.options.overwrite)) && (candidate.options.ignoreIfExists === void 0 || Is.boolean(candidate.options.ignoreIfExists))));
+        }
+        CreateFile.is = is;
+    })(CreateFile = exports.CreateFile || (exports.CreateFile = {}));
+    var RenameFile;
+    (function (RenameFile) {
+        function create(oldUri, newUri, options) {
+            var result = {
+                kind: 'rename',
+                oldUri: oldUri,
+                newUri: newUri
+            };
+            if (options !== void 0 && (options.overwrite !== void 0 || options.ignoreIfExists !== void 0)) {
+                result.options = options;
+            }
+            return result;
+        }
+        RenameFile.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate && candidate.kind === 'rename' && Is.string(candidate.oldUri) && Is.string(candidate.newUri) &&
+                (candidate.options === void 0 ||
+                    ((candidate.options.overwrite === void 0 || Is.boolean(candidate.options.overwrite)) && (candidate.options.ignoreIfExists === void 0 || Is.boolean(candidate.options.ignoreIfExists))));
+        }
+        RenameFile.is = is;
+    })(RenameFile = exports.RenameFile || (exports.RenameFile = {}));
+    var DeleteFile;
+    (function (DeleteFile) {
+        function create(uri, options) {
+            var result = {
+                kind: 'delete',
+                uri: uri
+            };
+            if (options !== void 0 && (options.recursive !== void 0 || options.ignoreIfNotExists !== void 0)) {
+                result.options = options;
+            }
+            return result;
+        }
+        DeleteFile.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate && candidate.kind === 'delete' && Is.string(candidate.uri) &&
+                (candidate.options === void 0 ||
+                    ((candidate.options.recursive === void 0 || Is.boolean(candidate.options.recursive)) && (candidate.options.ignoreIfNotExists === void 0 || Is.boolean(candidate.options.ignoreIfNotExists))));
+        }
+        DeleteFile.is = is;
+    })(DeleteFile = exports.DeleteFile || (exports.DeleteFile = {}));
+    var WorkspaceEdit;
+    (function (WorkspaceEdit) {
+        function is(value) {
+            var candidate = value;
+            return candidate &&
+                (candidate.changes !== void 0 || candidate.documentChanges !== void 0) &&
+                (candidate.documentChanges === void 0 || candidate.documentChanges.every(function (change) {
+                    if (Is.string(change.kind)) {
+                        return CreateFile.is(change) || RenameFile.is(change) || DeleteFile.is(change);
+                    }
+                    else {
+                        return TextDocumentEdit.is(change);
+                    }
+                }));
+        }
+        WorkspaceEdit.is = is;
+    })(WorkspaceEdit = exports.WorkspaceEdit || (exports.WorkspaceEdit = {}));
+    var TextEditChangeImpl = /** @class */ (function () {
+        function TextEditChangeImpl(edits) {
+            this.edits = edits;
+        }
+        TextEditChangeImpl.prototype.insert = function (position, newText) {
+            this.edits.push(TextEdit.insert(position, newText));
+        };
+        TextEditChangeImpl.prototype.replace = function (range, newText) {
+            this.edits.push(TextEdit.replace(range, newText));
+        };
+        TextEditChangeImpl.prototype.delete = function (range) {
+            this.edits.push(TextEdit.del(range));
+        };
+        TextEditChangeImpl.prototype.add = function (edit) {
+            this.edits.push(edit);
+        };
+        TextEditChangeImpl.prototype.all = function () {
+            return this.edits;
+        };
+        TextEditChangeImpl.prototype.clear = function () {
+            this.edits.splice(0, this.edits.length);
+        };
+        return TextEditChangeImpl;
+    }());
+    /**
+     * A workspace change helps constructing changes to a workspace.
+     */
+    var WorkspaceChange = /** @class */ (function () {
+        function WorkspaceChange(workspaceEdit) {
+            var _this = this;
+            this._textEditChanges = Object.create(null);
+            if (workspaceEdit) {
+                this._workspaceEdit = workspaceEdit;
+                if (workspaceEdit.documentChanges) {
+                    workspaceEdit.documentChanges.forEach(function (change) {
+                        if (TextDocumentEdit.is(change)) {
+                            var textEditChange = new TextEditChangeImpl(change.edits);
+                            _this._textEditChanges[change.textDocument.uri] = textEditChange;
+                        }
+                    });
+                }
+                else if (workspaceEdit.changes) {
+                    Object.keys(workspaceEdit.changes).forEach(function (key) {
+                        var textEditChange = new TextEditChangeImpl(workspaceEdit.changes[key]);
+                        _this._textEditChanges[key] = textEditChange;
+                    });
+                }
+            }
+        }
+        Object.defineProperty(WorkspaceChange.prototype, "edit", {
+            /**
+             * Returns the underlying [WorkspaceEdit](#WorkspaceEdit) literal
+             * use to be returned from a workspace edit operation like rename.
+             */
+            get: function () {
+                return this._workspaceEdit;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        WorkspaceChange.prototype.getTextEditChange = function (key) {
+            if (VersionedTextDocumentIdentifier.is(key)) {
+                if (!this._workspaceEdit) {
+                    this._workspaceEdit = {
+                        documentChanges: []
+                    };
+                }
+                if (!this._workspaceEdit.documentChanges) {
+                    throw new Error('Workspace edit is not configured for document changes.');
+                }
+                var textDocument = key;
+                var result = this._textEditChanges[textDocument.uri];
+                if (!result) {
+                    var edits = [];
+                    var textDocumentEdit = {
+                        textDocument: textDocument,
+                        edits: edits
+                    };
+                    this._workspaceEdit.documentChanges.push(textDocumentEdit);
+                    result = new TextEditChangeImpl(edits);
+                    this._textEditChanges[textDocument.uri] = result;
+                }
+                return result;
+            }
+            else {
+                if (!this._workspaceEdit) {
+                    this._workspaceEdit = {
+                        changes: Object.create(null)
+                    };
+                }
+                if (!this._workspaceEdit.changes) {
+                    throw new Error('Workspace edit is not configured for normal text edit changes.');
+                }
+                var result = this._textEditChanges[key];
+                if (!result) {
+                    var edits = [];
+                    this._workspaceEdit.changes[key] = edits;
+                    result = new TextEditChangeImpl(edits);
+                    this._textEditChanges[key] = result;
+                }
+                return result;
+            }
+        };
+        WorkspaceChange.prototype.createFile = function (uri, options) {
+            this.checkDocumentChanges();
+            this._workspaceEdit.documentChanges.push(CreateFile.create(uri, options));
+        };
+        WorkspaceChange.prototype.renameFile = function (oldUri, newUri, options) {
+            this.checkDocumentChanges();
+            this._workspaceEdit.documentChanges.push(RenameFile.create(oldUri, newUri, options));
+        };
+        WorkspaceChange.prototype.deleteFile = function (uri, options) {
+            this.checkDocumentChanges();
+            this._workspaceEdit.documentChanges.push(DeleteFile.create(uri, options));
+        };
+        WorkspaceChange.prototype.checkDocumentChanges = function () {
+            if (!this._workspaceEdit || !this._workspaceEdit.documentChanges) {
+                throw new Error('Workspace edit is not configured for document changes.');
+            }
+        };
+        return WorkspaceChange;
+    }());
+    exports.WorkspaceChange = WorkspaceChange;
+    /**
+     * The TextDocumentIdentifier namespace provides helper functions to work with
+     * [TextDocumentIdentifier](#TextDocumentIdentifier) literals.
+     */
+    var TextDocumentIdentifier;
+    (function (TextDocumentIdentifier) {
+        /**
+         * Creates a new TextDocumentIdentifier literal.
+         * @param uri The document's uri.
+         */
+        function create(uri) {
+            return { uri: uri };
+        }
+        TextDocumentIdentifier.create = create;
+        /**
+         * Checks whether the given literal conforms to the [TextDocumentIdentifier](#TextDocumentIdentifier) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Is.string(candidate.uri);
+        }
+        TextDocumentIdentifier.is = is;
+    })(TextDocumentIdentifier = exports.TextDocumentIdentifier || (exports.TextDocumentIdentifier = {}));
+    /**
+     * The VersionedTextDocumentIdentifier namespace provides helper functions to work with
+     * [VersionedTextDocumentIdentifier](#VersionedTextDocumentIdentifier) literals.
+     */
+    var VersionedTextDocumentIdentifier;
+    (function (VersionedTextDocumentIdentifier) {
+        /**
+         * Creates a new VersionedTextDocumentIdentifier literal.
+         * @param uri The document's uri.
+         * @param uri The document's text.
+         */
+        function create(uri, version) {
+            return { uri: uri, version: version };
+        }
+        VersionedTextDocumentIdentifier.create = create;
+        /**
+         * Checks whether the given literal conforms to the [VersionedTextDocumentIdentifier](#VersionedTextDocumentIdentifier) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Is.string(candidate.uri) && (candidate.version === null || Is.number(candidate.version));
+        }
+        VersionedTextDocumentIdentifier.is = is;
+    })(VersionedTextDocumentIdentifier = exports.VersionedTextDocumentIdentifier || (exports.VersionedTextDocumentIdentifier = {}));
+    /**
+     * The TextDocumentItem namespace provides helper functions to work with
+     * [TextDocumentItem](#TextDocumentItem) literals.
+     */
+    var TextDocumentItem;
+    (function (TextDocumentItem) {
+        /**
+         * Creates a new TextDocumentItem literal.
+         * @param uri The document's uri.
+         * @param languageId The document's language identifier.
+         * @param version The document's version number.
+         * @param text The document's text.
+         */
+        function create(uri, languageId, version, text) {
+            return { uri: uri, languageId: languageId, version: version, text: text };
+        }
+        TextDocumentItem.create = create;
+        /**
+         * Checks whether the given literal conforms to the [TextDocumentItem](#TextDocumentItem) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Is.string(candidate.uri) && Is.string(candidate.languageId) && Is.number(candidate.version) && Is.string(candidate.text);
+        }
+        TextDocumentItem.is = is;
+    })(TextDocumentItem = exports.TextDocumentItem || (exports.TextDocumentItem = {}));
+    /**
+     * Describes the content type that a client supports in various
+     * result literals like `Hover`, `ParameterInfo` or `CompletionItem`.
+     *
+     * Please note that `MarkupKinds` must not start with a `$`. This kinds
+     * are reserved for internal usage.
+     */
+    var MarkupKind;
+    (function (MarkupKind) {
+        /**
+         * Plain text is supported as a content format
+         */
+        MarkupKind.PlainText = 'plaintext';
+        /**
+         * Markdown is supported as a content format
+         */
+        MarkupKind.Markdown = 'markdown';
+    })(MarkupKind = exports.MarkupKind || (exports.MarkupKind = {}));
+    (function (MarkupKind) {
+        /**
+         * Checks whether the given value is a value of the [MarkupKind](#MarkupKind) type.
+         */
+        function is(value) {
+            var candidate = value;
+            return candidate === MarkupKind.PlainText || candidate === MarkupKind.Markdown;
+        }
+        MarkupKind.is = is;
+    })(MarkupKind = exports.MarkupKind || (exports.MarkupKind = {}));
+    var MarkupContent;
+    (function (MarkupContent) {
+        /**
+         * Checks whether the given value conforms to the [MarkupContent](#MarkupContent) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.objectLiteral(value) && MarkupKind.is(candidate.kind) && Is.string(candidate.value);
+        }
+        MarkupContent.is = is;
+    })(MarkupContent = exports.MarkupContent || (exports.MarkupContent = {}));
+    /**
+     * The kind of a completion entry.
+     */
+    var CompletionItemKind;
+    (function (CompletionItemKind) {
+        CompletionItemKind.Text = 1;
+        CompletionItemKind.Method = 2;
+        CompletionItemKind.Function = 3;
+        CompletionItemKind.Constructor = 4;
+        CompletionItemKind.Field = 5;
+        CompletionItemKind.Variable = 6;
+        CompletionItemKind.Class = 7;
+        CompletionItemKind.Interface = 8;
+        CompletionItemKind.Module = 9;
+        CompletionItemKind.Property = 10;
+        CompletionItemKind.Unit = 11;
+        CompletionItemKind.Value = 12;
+        CompletionItemKind.Enum = 13;
+        CompletionItemKind.Keyword = 14;
+        CompletionItemKind.Snippet = 15;
+        CompletionItemKind.Color = 16;
+        CompletionItemKind.File = 17;
+        CompletionItemKind.Reference = 18;
+        CompletionItemKind.Folder = 19;
+        CompletionItemKind.EnumMember = 20;
+        CompletionItemKind.Constant = 21;
+        CompletionItemKind.Struct = 22;
+        CompletionItemKind.Event = 23;
+        CompletionItemKind.Operator = 24;
+        CompletionItemKind.TypeParameter = 25;
+    })(CompletionItemKind = exports.CompletionItemKind || (exports.CompletionItemKind = {}));
+    /**
+     * Defines whether the insert text in a completion item should be interpreted as
+     * plain text or a snippet.
+     */
+    var InsertTextFormat;
+    (function (InsertTextFormat) {
+        /**
+         * The primary text to be inserted is treated as a plain string.
+         */
+        InsertTextFormat.PlainText = 1;
+        /**
+         * The primary text to be inserted is treated as a snippet.
+         *
+         * A snippet can define tab stops and placeholders with `$1`, `$2`
+         * and `${3:foo}`. `$0` defines the final tab stop, it defaults to
+         * the end of the snippet. Placeholders with equal identifiers are linked,
+         * that is typing in one will update others too.
+         *
+         * See also: https://github.com/Microsoft/vscode/blob/master/src/vs/editor/contrib/snippet/common/snippet.md
+         */
+        InsertTextFormat.Snippet = 2;
+    })(InsertTextFormat = exports.InsertTextFormat || (exports.InsertTextFormat = {}));
+    /**
+     * Completion item tags are extra annotations that tweak the rendering of a completion
+     * item.
+     *
+     * @since 3.15.0
+     */
+    var CompletionItemTag;
+    (function (CompletionItemTag) {
+        /**
+         * Render a completion as obsolete, usually using a strike-out.
+         */
+        CompletionItemTag.Deprecated = 1;
+    })(CompletionItemTag = exports.CompletionItemTag || (exports.CompletionItemTag = {}));
+    /**
+     * The CompletionItem namespace provides functions to deal with
+     * completion items.
+     */
+    var CompletionItem;
+    (function (CompletionItem) {
+        /**
+         * Create a completion item and seed it with a label.
+         * @param label The completion item's label
+         */
+        function create(label) {
+            return { label: label };
+        }
+        CompletionItem.create = create;
+    })(CompletionItem = exports.CompletionItem || (exports.CompletionItem = {}));
+    /**
+     * The CompletionList namespace provides functions to deal with
+     * completion lists.
+     */
+    var CompletionList;
+    (function (CompletionList) {
+        /**
+         * Creates a new completion list.
+         *
+         * @param items The completion items.
+         * @param isIncomplete The list is not complete.
+         */
+        function create(items, isIncomplete) {
+            return { items: items ? items : [], isIncomplete: !!isIncomplete };
+        }
+        CompletionList.create = create;
+    })(CompletionList = exports.CompletionList || (exports.CompletionList = {}));
+    var MarkedString;
+    (function (MarkedString) {
+        /**
+         * Creates a marked string from plain text.
+         *
+         * @param plainText The plain text.
+         */
+        function fromPlainText(plainText) {
+            return plainText.replace(/[\\`*_{}[\]()#+\-.!]/g, '\\$&'); // escape markdown syntax tokens: http://daringfireball.net/projects/markdown/syntax#backslash
+        }
+        MarkedString.fromPlainText = fromPlainText;
+        /**
+         * Checks whether the given value conforms to the [MarkedString](#MarkedString) type.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.string(candidate) || (Is.objectLiteral(candidate) && Is.string(candidate.language) && Is.string(candidate.value));
+        }
+        MarkedString.is = is;
+    })(MarkedString = exports.MarkedString || (exports.MarkedString = {}));
+    var Hover;
+    (function (Hover) {
+        /**
+         * Checks whether the given value conforms to the [Hover](#Hover) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return !!candidate && Is.objectLiteral(candidate) && (MarkupContent.is(candidate.contents) ||
+                MarkedString.is(candidate.contents) ||
+                Is.typedArray(candidate.contents, MarkedString.is)) && (value.range === void 0 || Range.is(value.range));
+        }
+        Hover.is = is;
+    })(Hover = exports.Hover || (exports.Hover = {}));
+    /**
+     * The ParameterInformation namespace provides helper functions to work with
+     * [ParameterInformation](#ParameterInformation) literals.
+     */
+    var ParameterInformation;
+    (function (ParameterInformation) {
+        /**
+         * Creates a new parameter information literal.
+         *
+         * @param label A label string.
+         * @param documentation A doc string.
+         */
+        function create(label, documentation) {
+            return documentation ? { label: label, documentation: documentation } : { label: label };
+        }
+        ParameterInformation.create = create;
+    })(ParameterInformation = exports.ParameterInformation || (exports.ParameterInformation = {}));
+    /**
+     * The SignatureInformation namespace provides helper functions to work with
+     * [SignatureInformation](#SignatureInformation) literals.
+     */
+    var SignatureInformation;
+    (function (SignatureInformation) {
+        function create(label, documentation) {
+            var parameters = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                parameters[_i - 2] = arguments[_i];
+            }
+            var result = { label: label };
+            if (Is.defined(documentation)) {
+                result.documentation = documentation;
+            }
+            if (Is.defined(parameters)) {
+                result.parameters = parameters;
+            }
+            else {
+                result.parameters = [];
+            }
+            return result;
+        }
+        SignatureInformation.create = create;
+    })(SignatureInformation = exports.SignatureInformation || (exports.SignatureInformation = {}));
+    /**
+     * A document highlight kind.
+     */
+    var DocumentHighlightKind;
+    (function (DocumentHighlightKind) {
+        /**
+         * A textual occurrence.
+         */
+        DocumentHighlightKind.Text = 1;
+        /**
+         * Read-access of a symbol, like reading a variable.
+         */
+        DocumentHighlightKind.Read = 2;
+        /**
+         * Write-access of a symbol, like writing to a variable.
+         */
+        DocumentHighlightKind.Write = 3;
+    })(DocumentHighlightKind = exports.DocumentHighlightKind || (exports.DocumentHighlightKind = {}));
+    /**
+     * DocumentHighlight namespace to provide helper functions to work with
+     * [DocumentHighlight](#DocumentHighlight) literals.
+     */
+    var DocumentHighlight;
+    (function (DocumentHighlight) {
+        /**
+         * Create a DocumentHighlight object.
+         * @param range The range the highlight applies to.
+         */
+        function create(range, kind) {
+            var result = { range: range };
+            if (Is.number(kind)) {
+                result.kind = kind;
+            }
+            return result;
+        }
+        DocumentHighlight.create = create;
+    })(DocumentHighlight = exports.DocumentHighlight || (exports.DocumentHighlight = {}));
+    /**
+     * A symbol kind.
+     */
+    var SymbolKind;
+    (function (SymbolKind) {
+        SymbolKind.File = 1;
+        SymbolKind.Module = 2;
+        SymbolKind.Namespace = 3;
+        SymbolKind.Package = 4;
+        SymbolKind.Class = 5;
+        SymbolKind.Method = 6;
+        SymbolKind.Property = 7;
+        SymbolKind.Field = 8;
+        SymbolKind.Constructor = 9;
+        SymbolKind.Enum = 10;
+        SymbolKind.Interface = 11;
+        SymbolKind.Function = 12;
+        SymbolKind.Variable = 13;
+        SymbolKind.Constant = 14;
+        SymbolKind.String = 15;
+        SymbolKind.Number = 16;
+        SymbolKind.Boolean = 17;
+        SymbolKind.Array = 18;
+        SymbolKind.Object = 19;
+        SymbolKind.Key = 20;
+        SymbolKind.Null = 21;
+        SymbolKind.EnumMember = 22;
+        SymbolKind.Struct = 23;
+        SymbolKind.Event = 24;
+        SymbolKind.Operator = 25;
+        SymbolKind.TypeParameter = 26;
+    })(SymbolKind = exports.SymbolKind || (exports.SymbolKind = {}));
+    /**
+     * Symbol tags are extra annotations that tweak the rendering of a symbol.
+     * @since 3.15
+     */
+    var SymbolTag;
+    (function (SymbolTag) {
+        /**
+         * Render a symbol as obsolete, usually using a strike-out.
+         */
+        SymbolTag.Deprecated = 1;
+    })(SymbolTag = exports.SymbolTag || (exports.SymbolTag = {}));
+    var SymbolInformation;
+    (function (SymbolInformation) {
+        /**
+         * Creates a new symbol information literal.
+         *
+         * @param name The name of the symbol.
+         * @param kind The kind of the symbol.
+         * @param range The range of the location of the symbol.
+         * @param uri The resource of the location of symbol, defaults to the current document.
+         * @param containerName The name of the symbol containing the symbol.
+         */
+        function create(name, kind, range, uri, containerName) {
+            var result = {
+                name: name,
+                kind: kind,
+                location: { uri: uri, range: range }
+            };
+            if (containerName) {
+                result.containerName = containerName;
+            }
+            return result;
+        }
+        SymbolInformation.create = create;
+    })(SymbolInformation = exports.SymbolInformation || (exports.SymbolInformation = {}));
+    var DocumentSymbol;
+    (function (DocumentSymbol) {
+        /**
+         * Creates a new symbol information literal.
+         *
+         * @param name The name of the symbol.
+         * @param detail The detail of the symbol.
+         * @param kind The kind of the symbol.
+         * @param range The range of the symbol.
+         * @param selectionRange The selectionRange of the symbol.
+         * @param children Children of the symbol.
+         */
+        function create(name, detail, kind, range, selectionRange, children) {
+            var result = {
+                name: name,
+                detail: detail,
+                kind: kind,
+                range: range,
+                selectionRange: selectionRange
+            };
+            if (children !== void 0) {
+                result.children = children;
+            }
+            return result;
+        }
+        DocumentSymbol.create = create;
+        /**
+         * Checks whether the given literal conforms to the [DocumentSymbol](#DocumentSymbol) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return candidate &&
+                Is.string(candidate.name) && Is.number(candidate.kind) &&
+                Range.is(candidate.range) && Range.is(candidate.selectionRange) &&
+                (candidate.detail === void 0 || Is.string(candidate.detail)) &&
+                (candidate.deprecated === void 0 || Is.boolean(candidate.deprecated)) &&
+                (candidate.children === void 0 || Array.isArray(candidate.children));
+        }
+        DocumentSymbol.is = is;
+    })(DocumentSymbol = exports.DocumentSymbol || (exports.DocumentSymbol = {}));
+    /**
+     * A set of predefined code action kinds
+     */
+    var CodeActionKind;
+    (function (CodeActionKind) {
+        /**
+         * Empty kind.
+         */
+        CodeActionKind.Empty = '';
+        /**
+         * Base kind for quickfix actions: 'quickfix'
+         */
+        CodeActionKind.QuickFix = 'quickfix';
+        /**
+         * Base kind for refactoring actions: 'refactor'
+         */
+        CodeActionKind.Refactor = 'refactor';
+        /**
+         * Base kind for refactoring extraction actions: 'refactor.extract'
+         *
+         * Example extract actions:
+         *
+         * - Extract method
+         * - Extract function
+         * - Extract variable
+         * - Extract interface from class
+         * - ...
+         */
+        CodeActionKind.RefactorExtract = 'refactor.extract';
+        /**
+         * Base kind for refactoring inline actions: 'refactor.inline'
+         *
+         * Example inline actions:
+         *
+         * - Inline function
+         * - Inline variable
+         * - Inline constant
+         * - ...
+         */
+        CodeActionKind.RefactorInline = 'refactor.inline';
+        /**
+         * Base kind for refactoring rewrite actions: 'refactor.rewrite'
+         *
+         * Example rewrite actions:
+         *
+         * - Convert JavaScript function to class
+         * - Add or remove parameter
+         * - Encapsulate field
+         * - Make method static
+         * - Move method to base class
+         * - ...
+         */
+        CodeActionKind.RefactorRewrite = 'refactor.rewrite';
+        /**
+         * Base kind for source actions: `source`
+         *
+         * Source code actions apply to the entire file.
+         */
+        CodeActionKind.Source = 'source';
+        /**
+         * Base kind for an organize imports source action: `source.organizeImports`
+         */
+        CodeActionKind.SourceOrganizeImports = 'source.organizeImports';
+        /**
+         * Base kind for auto-fix source actions: `source.fixAll`.
+         *
+         * Fix all actions automatically fix errors that have a clear fix that do not require user input.
+         * They should not suppress errors or perform unsafe fixes such as generating new types or classes.
+         *
+         * @since 3.15.0
+         */
+        CodeActionKind.SourceFixAll = 'source.fixAll';
+    })(CodeActionKind = exports.CodeActionKind || (exports.CodeActionKind = {}));
+    /**
+     * The CodeActionContext namespace provides helper functions to work with
+     * [CodeActionContext](#CodeActionContext) literals.
+     */
+    var CodeActionContext;
+    (function (CodeActionContext) {
+        /**
+         * Creates a new CodeActionContext literal.
+         */
+        function create(diagnostics, only) {
+            var result = { diagnostics: diagnostics };
+            if (only !== void 0 && only !== null) {
+                result.only = only;
+            }
+            return result;
+        }
+        CodeActionContext.create = create;
+        /**
+         * Checks whether the given literal conforms to the [CodeActionContext](#CodeActionContext) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Is.typedArray(candidate.diagnostics, Diagnostic.is) && (candidate.only === void 0 || Is.typedArray(candidate.only, Is.string));
+        }
+        CodeActionContext.is = is;
+    })(CodeActionContext = exports.CodeActionContext || (exports.CodeActionContext = {}));
+    var CodeAction;
+    (function (CodeAction) {
+        function create(title, commandOrEdit, kind) {
+            var result = { title: title };
+            if (Command.is(commandOrEdit)) {
+                result.command = commandOrEdit;
+            }
+            else {
+                result.edit = commandOrEdit;
+            }
+            if (kind !== void 0) {
+                result.kind = kind;
+            }
+            return result;
+        }
+        CodeAction.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate && Is.string(candidate.title) &&
+                (candidate.diagnostics === void 0 || Is.typedArray(candidate.diagnostics, Diagnostic.is)) &&
+                (candidate.kind === void 0 || Is.string(candidate.kind)) &&
+                (candidate.edit !== void 0 || candidate.command !== void 0) &&
+                (candidate.command === void 0 || Command.is(candidate.command)) &&
+                (candidate.isPreferred === void 0 || Is.boolean(candidate.isPreferred)) &&
+                (candidate.edit === void 0 || WorkspaceEdit.is(candidate.edit));
+        }
+        CodeAction.is = is;
+    })(CodeAction = exports.CodeAction || (exports.CodeAction = {}));
+    /**
+     * The CodeLens namespace provides helper functions to work with
+     * [CodeLens](#CodeLens) literals.
+     */
+    var CodeLens;
+    (function (CodeLens) {
+        /**
+         * Creates a new CodeLens literal.
+         */
+        function create(range, data) {
+            var result = { range: range };
+            if (Is.defined(data)) {
+                result.data = data;
+            }
+            return result;
+        }
+        CodeLens.create = create;
+        /**
+         * Checks whether the given literal conforms to the [CodeLens](#CodeLens) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Range.is(candidate.range) && (Is.undefined(candidate.command) || Command.is(candidate.command));
+        }
+        CodeLens.is = is;
+    })(CodeLens = exports.CodeLens || (exports.CodeLens = {}));
+    /**
+     * The FormattingOptions namespace provides helper functions to work with
+     * [FormattingOptions](#FormattingOptions) literals.
+     */
+    var FormattingOptions;
+    (function (FormattingOptions) {
+        /**
+         * Creates a new FormattingOptions literal.
+         */
+        function create(tabSize, insertSpaces) {
+            return { tabSize: tabSize, insertSpaces: insertSpaces };
+        }
+        FormattingOptions.create = create;
+        /**
+         * Checks whether the given literal conforms to the [FormattingOptions](#FormattingOptions) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Is.number(candidate.tabSize) && Is.boolean(candidate.insertSpaces);
+        }
+        FormattingOptions.is = is;
+    })(FormattingOptions = exports.FormattingOptions || (exports.FormattingOptions = {}));
+    /**
+     * The DocumentLink namespace provides helper functions to work with
+     * [DocumentLink](#DocumentLink) literals.
+     */
+    var DocumentLink;
+    (function (DocumentLink) {
+        /**
+         * Creates a new DocumentLink literal.
+         */
+        function create(range, target, data) {
+            return { range: range, target: target, data: data };
+        }
+        DocumentLink.create = create;
+        /**
+         * Checks whether the given literal conforms to the [DocumentLink](#DocumentLink) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Range.is(candidate.range) && (Is.undefined(candidate.target) || Is.string(candidate.target));
+        }
+        DocumentLink.is = is;
+    })(DocumentLink = exports.DocumentLink || (exports.DocumentLink = {}));
+    /**
+     * The SelectionRange namespace provides helper function to work with
+     * SelectionRange literals.
+     */
+    var SelectionRange;
+    (function (SelectionRange) {
+        /**
+         * Creates a new SelectionRange
+         * @param range the range.
+         * @param parent an optional parent.
+         */
+        function create(range, parent) {
+            return { range: range, parent: parent };
+        }
+        SelectionRange.create = create;
+        function is(value) {
+            var candidate = value;
+            return candidate !== undefined && Range.is(candidate.range) && (candidate.parent === undefined || SelectionRange.is(candidate.parent));
+        }
+        SelectionRange.is = is;
+    })(SelectionRange = exports.SelectionRange || (exports.SelectionRange = {}));
+    exports.EOL = ['\n', '\r\n', '\r'];
+    /**
+     * @deprecated Use the text document from the new vscode-languageserver-textdocument package.
+     */
+    var TextDocument;
+    (function (TextDocument) {
+        /**
+         * Creates a new ITextDocument literal from the given uri and content.
+         * @param uri The document's uri.
+         * @param languageId  The document's language Id.
+         * @param content The document's content.
+         */
+        function create(uri, languageId, version, content) {
+            return new FullTextDocument(uri, languageId, version, content);
+        }
+        TextDocument.create = create;
+        /**
+         * Checks whether the given literal conforms to the [ITextDocument](#ITextDocument) interface.
+         */
+        function is(value) {
+            var candidate = value;
+            return Is.defined(candidate) && Is.string(candidate.uri) && (Is.undefined(candidate.languageId) || Is.string(candidate.languageId)) && Is.number(candidate.lineCount)
+                && Is.func(candidate.getText) && Is.func(candidate.positionAt) && Is.func(candidate.offsetAt) ? true : false;
+        }
+        TextDocument.is = is;
+        function applyEdits(document, edits) {
+            var text = document.getText();
+            var sortedEdits = mergeSort(edits, function (a, b) {
+                var diff = a.range.start.line - b.range.start.line;
+                if (diff === 0) {
+                    return a.range.start.character - b.range.start.character;
+                }
+                return diff;
+            });
+            var lastModifiedOffset = text.length;
+            for (var i = sortedEdits.length - 1; i >= 0; i--) {
+                var e = sortedEdits[i];
+                var startOffset = document.offsetAt(e.range.start);
+                var endOffset = document.offsetAt(e.range.end);
+                if (endOffset <= lastModifiedOffset) {
+                    text = text.substring(0, startOffset) + e.newText + text.substring(endOffset, text.length);
+                }
+                else {
+                    throw new Error('Overlapping edit');
+                }
+                lastModifiedOffset = startOffset;
+            }
+            return text;
+        }
+        TextDocument.applyEdits = applyEdits;
+        function mergeSort(data, compare) {
+            if (data.length <= 1) {
+                // sorted
+                return data;
+            }
+            var p = (data.length / 2) | 0;
+            var left = data.slice(0, p);
+            var right = data.slice(p);
+            mergeSort(left, compare);
+            mergeSort(right, compare);
+            var leftIdx = 0;
+            var rightIdx = 0;
+            var i = 0;
+            while (leftIdx < left.length && rightIdx < right.length) {
+                var ret = compare(left[leftIdx], right[rightIdx]);
+                if (ret <= 0) {
+                    // smaller_equal -> take left to preserve order
+                    data[i++] = left[leftIdx++];
+                }
+                else {
+                    // greater -> take right
+                    data[i++] = right[rightIdx++];
+                }
+            }
+            while (leftIdx < left.length) {
+                data[i++] = left[leftIdx++];
+            }
+            while (rightIdx < right.length) {
+                data[i++] = right[rightIdx++];
+            }
+            return data;
+        }
+    })(TextDocument = exports.TextDocument || (exports.TextDocument = {}));
+    var FullTextDocument = /** @class */ (function () {
+        function FullTextDocument(uri, languageId, version, content) {
+            this._uri = uri;
+            this._languageId = languageId;
+            this._version = version;
+            this._content = content;
+            this._lineOffsets = undefined;
+        }
+        Object.defineProperty(FullTextDocument.prototype, "uri", {
+            get: function () {
+                return this._uri;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(FullTextDocument.prototype, "languageId", {
+            get: function () {
+                return this._languageId;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(FullTextDocument.prototype, "version", {
+            get: function () {
+                return this._version;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        FullTextDocument.prototype.getText = function (range) {
+            if (range) {
+                var start = this.offsetAt(range.start);
+                var end = this.offsetAt(range.end);
+                return this._content.substring(start, end);
+            }
+            return this._content;
+        };
+        FullTextDocument.prototype.update = function (event, version) {
+            this._content = event.text;
+            this._version = version;
+            this._lineOffsets = undefined;
+        };
+        FullTextDocument.prototype.getLineOffsets = function () {
+            if (this._lineOffsets === undefined) {
+                var lineOffsets = [];
+                var text = this._content;
+                var isLineStart = true;
+                for (var i = 0; i < text.length; i++) {
+                    if (isLineStart) {
+                        lineOffsets.push(i);
+                        isLineStart = false;
+                    }
+                    var ch = text.charAt(i);
+                    isLineStart = (ch === '\r' || ch === '\n');
+                    if (ch === '\r' && i + 1 < text.length && text.charAt(i + 1) === '\n') {
+                        i++;
+                    }
+                }
+                if (isLineStart && text.length > 0) {
+                    lineOffsets.push(text.length);
+                }
+                this._lineOffsets = lineOffsets;
+            }
+            return this._lineOffsets;
+        };
+        FullTextDocument.prototype.positionAt = function (offset) {
+            offset = Math.max(Math.min(offset, this._content.length), 0);
+            var lineOffsets = this.getLineOffsets();
+            var low = 0, high = lineOffsets.length;
+            if (high === 0) {
+                return Position.create(0, offset);
+            }
+            while (low < high) {
+                var mid = Math.floor((low + high) / 2);
+                if (lineOffsets[mid] > offset) {
+                    high = mid;
+                }
+                else {
+                    low = mid + 1;
+                }
+            }
+            // low is the least x for which the line offset is larger than the current offset
+            // or array.length if no line offset is larger than the current offset
+            var line = low - 1;
+            return Position.create(line, offset - lineOffsets[line]);
+        };
+        FullTextDocument.prototype.offsetAt = function (position) {
+            var lineOffsets = this.getLineOffsets();
+            if (position.line >= lineOffsets.length) {
+                return this._content.length;
+            }
+            else if (position.line < 0) {
+                return 0;
+            }
+            var lineOffset = lineOffsets[position.line];
+            var nextLineOffset = (position.line + 1 < lineOffsets.length) ? lineOffsets[position.line + 1] : this._content.length;
+            return Math.max(Math.min(lineOffset + position.character, nextLineOffset), lineOffset);
+        };
+        Object.defineProperty(FullTextDocument.prototype, "lineCount", {
+            get: function () {
+                return this.getLineOffsets().length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return FullTextDocument;
+    }());
+    var Is;
+    (function (Is) {
+        var toString = Object.prototype.toString;
+        function defined(value) {
+            return typeof value !== 'undefined';
+        }
+        Is.defined = defined;
+        function undefined(value) {
+            return typeof value === 'undefined';
+        }
+        Is.undefined = undefined;
+        function boolean(value) {
+            return value === true || value === false;
+        }
+        Is.boolean = boolean;
+        function string(value) {
+            return toString.call(value) === '[object String]';
+        }
+        Is.string = string;
+        function number(value) {
+            return toString.call(value) === '[object Number]';
+        }
+        Is.number = number;
+        function func(value) {
+            return toString.call(value) === '[object Function]';
+        }
+        Is.func = func;
+        function objectLiteral(value) {
+            // Strictly speaking class instances pass this check as well. Since the LSP
+            // doesn't use classes we ignore this for now. If we do we need to add something
+            // like this: `Object.getPrototypeOf(Object.getPrototypeOf(x)) === null`
+            return value !== null && typeof value === 'object';
+        }
+        Is.objectLiteral = objectLiteral;
+        function typedArray(value, check) {
+            return Array.isArray(value) && value.every(check);
+        }
+        Is.typedArray = typedArray;
+    })(Is || (Is = {}));
+});
+
+define('vscode-languageserver-types', ['vscode-languageserver-types/main'], function (main) { return main; });
+
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/typo/typo',["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Element = /** @class */ (function () {
+        function Element(text, data) {
+            this.name = text;
+            this.node = data;
+        }
+        return Element;
+	}());
+		
+	/**
+	 * Typo is a JavaScript implementation of a spellchecker using hunspell-style 
+	 * dictionaries.
+	 */
+
+	/**
+	 * Typo constructor.
+	 *
+	 * @param {String} [dictionary] The locale code of the dictionary being used. e.g.,
+	 *                              "en_US". This is only used to auto-load dictionaries.
+	 * @param {String} [affData] The data from the dictionary's .aff file. If omitted
+	 *                           and the first argument is supplied, in "chrome" platform,
+	 *                           the .aff file will be loaded automatically from
+	 *                           lib/typo/dictionaries/[dictionary]/[dictionary].aff
+	 *                           In other platform, it will be loaded from
+	 *                           [setting.path]/dictionaries/[dictionary]/[dictionary].aff
+	 * @param {String} [wordsData] The data from the dictionary's .dic file. If omitted,
+	 *                           and the first argument is supplied, in "chrome" platform,
+	 *                           the .dic file will be loaded automatically from
+	 *                           lib/typo/dictionaries/[dictionary]/[dictionary].dic
+	 *                           In other platform, it will be loaded from
+	 *                           [setting.path]/dictionaries/[dictionary]/[dictionary].dic
+	 * @param {Object} [settings] Constructor settings. Available properties are:
+	 *                            {String} [platform]: "chrome" for Chrome Extension or other
+	 *                              value for the usual web.
+	 *                            {String} [path]: path to load dictionary from in non-chrome
+	 *                              environment.
+	 *                            {Object} [flags]: flag information.
+	 *
+	 *
+	 * @returns {Typo} A Typo object.
+	 */
+
+	var Typo = function (dictionary, affData, wordsData, settings) {
+		settings = settings || {};
+		
+		/** Determines the method used for auto-loading .aff and .dic files. **/
+		this.platform = settings.platform || "chrome"; 
+		
+		this.dictionary = null;
+		
+		this.rules = {};
+		this.dictionaryTable = {};
+		
+		this.compoundRules = [];
+		this.compoundRuleCodes = {};
+		
+		this.replacementTable = [];
+		
+		this.flags = settings.flags || {}; 
+		
+		if (dictionary) {
+			this.dictionary = dictionary;
+			
+			if (this.platform == "chrome") {
+				if (!affData) affData = this._readFile(chrome.extension.getURL("lib/typo/dictionaries/" + dictionary + "/" + dictionary + ".aff"));
+				if (!wordsData) wordsData = this._readFile(chrome.extension.getURL("lib/typo/dictionaries/" + dictionary + "/" + dictionary + ".dic"));
+			} else {
+				var path = settings.dictionaryPath || '';
+				
+				if (!affData) affData = this._readFile(path + "/" + dictionary + "/" + dictionary + ".aff");
+				if (!wordsData) wordsData = this._readFile(path + "/" + dictionary + "/" + dictionary + ".dic");
+			}
+			
+			this.rules = this._parseAFF(affData);
+			
+			// Save the rule codes that are used in compound rules.
+			this.compoundRuleCodes = {};
+			
+			for (var i = 0, _len = this.compoundRules.length; i < _len; i++) {
+				var rule = this.compoundRules[i];
+				
+				for (var j = 0, _jlen = rule.length; j < _jlen; j++) {
+					this.compoundRuleCodes[rule[j]] = [];
+				}
+			}
+			
+			// If we add this ONLYINCOMPOUND flag to this.compoundRuleCodes, then _parseDIC
+			// will do the work of saving the list of words that are compound-only.
+			if ("ONLYINCOMPOUND" in this.flags) {
+				this.compoundRuleCodes[this.flags.ONLYINCOMPOUND] = [];
+			}
+			
+			this.dictionaryTable = this._parseDIC(wordsData);
+			
+			// Get rid of any codes from the compound rule codes that are never used 
+			// (or that were special regex characters).  Not especially necessary... 
+			for (var i in this.compoundRuleCodes) {
+				if (this.compoundRuleCodes[i].length == 0) {
+					delete this.compoundRuleCodes[i];
+				}
+			}
+			
+			// Build the full regular expressions for each compound rule.
+			// I have a feeling (but no confirmation yet) that this method of 
+			// testing for compound words is probably slow.
+			for (var i = 0, _len = this.compoundRules.length; i < _len; i++) {
+				var ruleText = this.compoundRules[i];
+				
+				var expressionText = "";
+				
+				for (var j = 0, _jlen = ruleText.length; j < _jlen; j++) {
+					var character = ruleText[j];
+					
+					if (character in this.compoundRuleCodes) {
+						expressionText += "(" + this.compoundRuleCodes[character].join("|") + ")";
+					}
+					else {
+						expressionText += character;
+					}
+				}
+				
+				this.compoundRules[i] = new RegExp(expressionText, "i");
+			}
+		}
+		
+		return this;
+	};
+
+	Typo.prototype = {
+		/**
+		 * Loads a Typo instance from a hash of all of the Typo properties.
+		 *
+		 * @param object obj A hash of Typo properties, probably gotten from a JSON.parse(JSON.stringify(typo_instance)).
+		 */
+		
+		load : function (obj) {
+			for (var i in obj) {
+				this[i] = obj[i];
+			}
+			
+			return this;
+		},
+		
+		/**
+		 * Read the contents of a file.
+		 * 
+		 * @param {String} path The path (relative) to the file.
+		 * @param {String} [charset="ISO8859-1"] The expected charset of the file
+		 * @returns string The file data.
+		 */
+		
+		_readFile : function (path, charset) {
+			if (!charset) charset = "ISO8859-1";
+			
+			var req = new XMLHttpRequest();
+			req.open("GET", path, false);
+			
+			if (req.overrideMimeType)
+				req.overrideMimeType("text/plain; charset=" + charset);
+			
+			req.send(null);
+			return req.responseText;
+		},
+		
+		/**
+		 * Parse the rules out from a .aff file.
+		 *
+		 * @param {String} data The contents of the affix file.
+		 * @returns object The rules from the file.
+		 */
+		
+		_parseAFF : function (data) {
+			var rules = {};
+			
+			// Remove comment lines
+			data = this._removeAffixComments(data);
+			
+			var lines = data.split("\n");
+			
+			for (var i = 0, _len = lines.length; i < _len; i++) {
+				var line = lines[i];
+				
+				var definitionParts = line.split(/\s+/);
+				
+				var ruleType = definitionParts[0];
+				
+				if (ruleType == "PFX" || ruleType == "SFX") {
+					var ruleCode = definitionParts[1];
+					var combineable = definitionParts[2];
+					var numEntries = parseInt(definitionParts[3], 10);
+					
+					var entries = [];
+					
+					for (var j = i + 1, _jlen = i + 1 + numEntries; j < _jlen; j++) {
+						var line = lines[j];
+						
+						var lineParts = line.split(/\s+/);
+						var charactersToRemove = lineParts[2];
+						
+						var additionParts = lineParts[3].split("/");
+						
+						var charactersToAdd = additionParts[0];
+						if (charactersToAdd === "0") charactersToAdd = "";
+						
+						var continuationClasses = this.parseRuleCodes(additionParts[1]);
+						
+						var regexToMatch = lineParts[4];
+						
+						var entry = {};
+						entry.add = charactersToAdd;
+						
+						if (continuationClasses.length > 0) entry.continuationClasses = continuationClasses;
+						
+						if (regexToMatch !== ".") {
+							if (ruleType === "SFX") {
+								entry.match = new RegExp(regexToMatch + "$");
+							}
+							else {
+								entry.match = new RegExp("^" + regexToMatch);
+							}
+						}
+						
+						if (charactersToRemove != "0") {
+							if (ruleType === "SFX") {
+								entry.remove = new RegExp(charactersToRemove  + "$");
+							}
+							else {
+								entry.remove = charactersToRemove;
+							}
+						}
+						
+						entries.push(entry);
+					}
+					
+					rules[ruleCode] = { "type" : ruleType, "combineable" : (combineable == "Y"), "entries" : entries };
+					
+					i += numEntries;
+				}
+				else if (ruleType === "COMPOUNDRULE") {
+					var numEntries = parseInt(definitionParts[1], 10);
+					
+					for (var j = i + 1, _jlen = i + 1 + numEntries; j < _jlen; j++) {
+						var line = lines[j];
+						
+						var lineParts = line.split(/\s+/);
+						this.compoundRules.push(lineParts[1]);
+					}
+					
+					i += numEntries;
+				}
+				else if (ruleType === "REP") {
+					var lineParts = line.split(/\s+/);
+					
+					if (lineParts.length === 3) {
+						this.replacementTable.push([ lineParts[1], lineParts[2] ]);
+					}
+				}
+				else {
+					// ONLYINCOMPOUND
+					// COMPOUNDMIN
+					// FLAG
+					// KEEPCASE
+					// NEEDAFFIX
+					
+					this.flags[ruleType] = definitionParts[1];
+				}
+			}
+			
+			return rules;
+		},
+		
+		/**
+		 * Removes comment lines and then cleans up blank lines and trailing whitespace.
+		 *
+		 * @param {String} data The data from an affix file.
+		 * @return {String} The cleaned-up data.
+		 */
+		
+		_removeAffixComments : function (data) {
+			// Remove comments
+			data = data.replace(/#.*$/mg, "");
+			
+			// Trim each line
+			data = data.replace(/^\s\s*/m, '').replace(/\s\s*$/m, '');
+			
+			// Remove blank lines.
+			data = data.replace(/\n{2,}/g, "\n");
+			
+			// Trim the entire string
+			data = data.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+			
+			return data;
+		},
+		
+		/**
+		 * Parses the words out from the .dic file.
+		 *
+		 * @param {String} data The data from the dictionary file.
+		 * @returns object The lookup table containing all of the words and
+		 *                 word forms from the dictionary.
+		 */
+		
+		_parseDIC : function (data) {
+			data = this._removeDicComments(data);
+			
+			var lines = data.split("\n");
+			var dictionaryTable = {};
+			
+			function addWord(word, rules) {
+				// Some dictionaries will list the same word multiple times with different rule sets.
+				if (!(word in dictionaryTable) || typeof dictionaryTable[word] != 'object') {
+					dictionaryTable[word] = [];
+				}
+				
+				dictionaryTable[word].push(rules);
+			}
+			
+			// The first line is the number of words in the dictionary.
+			for (var i = 1, _len = lines.length; i < _len; i++) {
+				var line = lines[i];
+				
+				var parts = line.split("/", 2);
+				
+				var word = parts[0];
+
+				// Now for each affix rule, generate that form of the word.
+				if (parts.length > 1) {
+					var ruleCodesArray = this.parseRuleCodes(parts[1]);
+					
+					// Save the ruleCodes for compound word situations.
+					if (!("NEEDAFFIX" in this.flags) || ruleCodesArray.indexOf(this.flags.NEEDAFFIX) == -1) {
+						addWord(word, ruleCodesArray);
+					}
+					
+					for (var j = 0, _jlen = ruleCodesArray.length; j < _jlen; j++) {
+						var code = ruleCodesArray[j];
+						
+						var rule = this.rules[code];
+						
+						if (rule) {
+							var newWords = this._applyRule(word, rule);
+							
+							for (var ii = 0, _iilen = newWords.length; ii < _iilen; ii++) {
+								var newWord = newWords[ii];
+								
+								addWord(newWord, []);
+								
+								if (rule.combineable) {
+									for (var k = j + 1; k < _jlen; k++) {
+										var combineCode = ruleCodesArray[k];
+										
+										var combineRule = this.rules[combineCode];
+										
+										if (combineRule) {
+											if (combineRule.combineable && (rule.type != combineRule.type)) {
+												var otherNewWords = this._applyRule(newWord, combineRule);
+												
+												for (var iii = 0, _iiilen = otherNewWords.length; iii < _iiilen; iii++) {
+													var otherNewWord = otherNewWords[iii];
+													addWord(otherNewWord, []);
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						
+						if (code in this.compoundRuleCodes) {
+							this.compoundRuleCodes[code].push(word);
+						}
+					}
+				}
+				else {
+					addWord(word, []);
+				}
+			}
+			
+			return dictionaryTable;
+		},
+		
+		
+		/**
+		 * Removes comment lines and then cleans up blank lines and trailing whitespace.
+		 *
+		 * @param {String} data The data from a .dic file.
+		 * @return {String} The cleaned-up data.
+		 */
+		
+		_removeDicComments : function (data) {
+			// I can't find any official documentation on it, but at least the de_DE
+			// dictionary uses tab-indented lines as comments.
+			
+			// Remove comments
+			data = data.replace(/^\t.*$/mg, "");
+			
+			return data;
+			
+			// Trim each line
+			data = data.replace(/^\s\s*/m, '').replace(/\s\s*$/m, '');
+			
+			// Remove blank lines.
+			data = data.replace(/\n{2,}/g, "\n");
+			
+			// Trim the entire string
+			data = data.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+			
+			return data;
+		},
+		
+		parseRuleCodes : function (textCodes) {
+			if (!textCodes) {
+				return [];
+			}
+			else if (!("FLAG" in this.flags)) {
+				return textCodes.split("");
+			}
+			else if (this.flags.FLAG === "long") {
+				var flags = [];
+				
+				for (var i = 0, _len = textCodes.length; i < _len; i += 2) {
+					flags.push(textCodes.substr(i, 2));
+				}
+				
+				return flags;
+			}
+			else if (this.flags.FLAG === "num") {
+				return textCode.split(",");
+			}
+		},
+		
+		/**
+		 * Applies an affix rule to a word.
+		 *
+		 * @param {String} word The base word.
+		 * @param {Object} rule The affix rule.
+		 * @returns {String[]} The new words generated by the rule.
+		 */
+		
+		_applyRule : function (word, rule) {
+			var entries = rule.entries;
+			var newWords = [];
+			
+			for (var i = 0, _len = entries.length; i < _len; i++) {
+				var entry = entries[i];
+				
+				if (!entry.match || word.match(entry.match)) {
+					var newWord = word;
+					
+					if (entry.remove) {
+						newWord = newWord.replace(entry.remove, "");
+					}
+					
+					if (rule.type === "SFX") {
+						newWord = newWord + entry.add;
+					}
+					else {
+						newWord = entry.add + newWord;
+					}
+					
+					newWords.push(newWord);
+					
+					if ("continuationClasses" in entry) {
+						for (var j = 0, _jlen = entry.continuationClasses.length; j < _jlen; j++) {
+							var continuationRule = this.rules[entry.continuationClasses[j]];
+							
+							if (continuationRule) {
+								newWords = newWords.concat(this._applyRule(newWord, continuationRule));
+							}
+							/*
+							else {
+								// This shouldn't happen, but it does, at least in the de_DE dictionary.
+								// I think the author mistakenly supplied lower-case rule codes instead 
+								// of upper-case.
+							}
+							*/
+						}
+					}
+				}
+			}
+			
+			return newWords;
+		},
+		
+		/**
+		 * Checks whether a word or a capitalization variant exists in the current dictionary.
+		 * The word is trimmed and several variations of capitalizations are checked.
+		 * If you want to check a word without any changes made to it, call checkExact()
+		 *
+		 * @see http://blog.stevenlevithan.com/archives/faster-trim-javascript re:trimming function
+		 *
+		 * @param {String} aWord The word to check.
+		 * @returns {Boolean}
+		 */
+		
+		check : function (aWord) {
+			// Remove leading and trailing whitespace
+			var trimmedWord = aWord.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+			
+			if (this.checkExact(trimmedWord)) {
+				return true;
+			}
+			
+			// The exact word is not in the dictionary.
+			if (trimmedWord.toUpperCase() === trimmedWord) {
+				// The word was supplied in all uppercase.
+				// Check for a capitalized form of the word.
+				var capitalizedWord = trimmedWord[0] + trimmedWord.substring(1).toLowerCase();
+				
+				if (this.hasFlag(capitalizedWord, "KEEPCASE")) {
+					// Capitalization variants are not allowed for this word.
+					return false;
+				}
+				
+				if (this.checkExact(capitalizedWord)) {
+					return true;
+				}
+			}
+			
+			var lowercaseWord = trimmedWord.toLowerCase();
+			
+			if (lowercaseWord !== trimmedWord) {
+				if (this.hasFlag(lowercaseWord, "KEEPCASE")) {
+					// Capitalization variants are not allowed for this word.
+					return false;
+				}
+				
+				// Check for a lowercase form
+				if (this.checkExact(lowercaseWord)) {
+					return true;
+				}
+			}
+			
+			return false;
+		},
+		
+		/**
+		 * Checks whether a word exists in the current dictionary.
+		 *
+		 * @param {String} word The word to check.
+		 * @returns {Boolean}
+		 */
+		
+		checkExact : function (word) {
+			var ruleCodes = this.dictionaryTable[word];
+			
+			if (typeof ruleCodes === 'undefined') {
+				// Check if this might be a compound word.
+				if ("COMPOUNDMIN" in this.flags && word.length >= this.flags.COMPOUNDMIN) {
+					for (var i = 0, _len = this.compoundRules.length; i < _len; i++) {
+						if (word.match(this.compoundRules[i])) {
+							return true;
+						}
+					}
+				}
+				
+				return false;
+			}
+			else {
+				for (var i = 0, _len = ruleCodes.length; i < _len; i++) {
+					if (!this.hasFlag(word, "ONLYINCOMPOUND", ruleCodes[i])) {
+						return true;
+					}
+				}
+				
+				return false;
+			}
+		},
+		
+		/**
+		 * Looks up whether a given word is flagged with a given flag.
+		 *
+		 * @param {String} word The word in question.
+		 * @param {String} flag The flag in question.
+		 * @return {Boolean}
+		 */
+		
+		hasFlag : function (word, flag, wordFlags) {
+			if (flag in this.flags) {
+				if (typeof wordFlags === 'undefined') {
+					var wordFlags = Array.prototype.concat.apply([], this.dictionaryTable[word]);
+				}
+				
+				if (wordFlags && wordFlags.indexOf(this.flags[flag]) !== -1) {
+					return true;
+				}
+			}
+			
+			return false;
+		},
+		
+		/**
+		 * Returns a list of suggestions for a misspelled word.
+		 *
+		 * @see http://www.norvig.com/spell-correct.html for the basis of this suggestor.
+		 * This suggestor is primitive, but it works.
+		 *
+		 * @param {String} word The misspelling.
+		 * @param {Number} [limit=5] The maximum number of suggestions to return.
+		 * @returns {String[]} The array of suggestions.
+		 */
+		
+		alphabet : "",
+		
+		suggest : function (word, limit, callback) {
+			if (!limit) limit = 5;
+			
+			if (this.check(word)) {
+				callback([]);
+				return;
+			}
+			
+			// Check the replacement table.
+			for (var i = 0, _len = this.replacementTable.length; i < _len; i++) {
+				var replacementEntry = this.replacementTable[i];
+				
+				if (word.indexOf(replacementEntry[0]) !== -1) {
+					var correctedWord = word.replace(replacementEntry[0], replacementEntry[1]);
+					
+					if (this.check(correctedWord)) {
+						callback( [ correctedWord ] );
+						return;
+					}
+				}
+			}
+			
+			var self = this;
+			self.alphabet = "abcdefghijklmnopqrstuvwxyz";
+			
+			/*
+			if (!self.alphabet) {
+				// Use the alphabet as implicitly defined by the words in the dictionary.
+				var alphaHash = {};
+				
+				for (var i in self.dictionaryTable) {
+					for (var j = 0, _len = i.length; j < _len; j++) {
+						alphaHash[i[j]] = true;
+					}
+				}
+				
+				for (var i in alphaHash) {
+					self.alphabet += i;
+				}
+				
+				var alphaArray = self.alphabet.split("");
+				alphaArray.sort();
+				self.alphabet = alphaArray.join("");
+			}
+			*/
+			
+			function edits1(words, callback) {
+				var numWorkers = 4;
+				
+				var rv = [];
+				
+				var workers = [];
+				var workersCompleted = [];
+				
+				var processNext = function() {
+					for (var i = 0; i < numWorkers; ++i) {
+						if (!workersCompleted[i]) {
+							return;
+						}			  	  			  
+					}
+					callback(rv);
+				}
+				
+				for (var i = 0; i < numWorkers; ++i) {
+					var worker = new Worker("wordprocessor.js");
+					worker.addEventListener('message', function(index) {
+						return function(e) {
+						rv = rv.concat(e.data);
+						workersCompleted[index] = true;
+						this.terminate(); //CJW stop the worker (else the buildup makes the app crash)?
+						processNext();
+						};
+					}(i));
+					
+					workers.push(worker); 	
+					workersCompleted.push(false);
+				}
+				
+				var sliceSize = words.length / numWorkers;
+				for (var i = 0; i < numWorkers; ++i) {
+					if (i != numWorkers - 1) {
+						workers[i].postMessage(words.slice(sliceSize * i, sliceSize * (i+1)));
+					} else {
+						workers[i].postMessage(words.slice(sliceSize * i));
+					}
+				}					
+			}
+			
+			function known(words) {
+				var rv = [];
+				
+				for (var i = 0; i < words.length; i++) {
+					if (self.check(words[i])) {
+						rv.push(words[i]);
+					}
+				}
+				
+				return rv;
+			}
+			
+			function correct(word, callback) {
+				// Get the edit-distance-1 and edit-distance-2 forms of this word.
+				edits1([word], function(ed1) {
+					edits1(ed1,function(ed2) {
+				
+						var corrections = known(ed1).concat(known(ed2));
+						
+						// Sort the edits based on how many different ways they were created.
+						var weighted_corrections = {};
+						
+						//not this
+						for (var i = 0, _len = corrections.length; i < _len; i++) {
+							if (!(corrections[i] in weighted_corrections)) {
+								weighted_corrections[corrections[i]] = 1;
+							}
+							else {
+								weighted_corrections[corrections[i]] += 1;
+							}
+						}
+						
+						var sorted_corrections = [];
+						
+						//not this
+						for (var i in weighted_corrections) {
+							sorted_corrections.push([ i, weighted_corrections[i] ]);
+						}
+						
+						//not this
+						function sorter(a, b) {
+							if (a[1] < b[1]) {
+								return -1;
+							}
+							
+							return 1;
+						}
+						
+						sorted_corrections.sort(sorter).reverse();
+						
+						var rv = [];
+						
+						//not this
+						for (var i = 0, _len = Math.min(limit, sorted_corrections.length); i < _len; i++) {
+							if (!self.hasFlag(sorted_corrections[i][0], "NOSUGGEST")) {
+								rv.push(sorted_corrections[i][0]);
+							}
+						}
+						
+						callback(rv);		
+					});
+				});
+				
+			}
+			
+			correct(word, function(rv) {
+				callback(rv);
+			});
+		}
+	};
+	exports.Typo = Typo;
+});
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/cssCompletion',["require", "exports", "../parser/cssNodes", "../parser/cssErrors", "../parser/choicescriptSymbolScope", "./languageFacts", "../utils/strings", "vscode-languageserver-types", "./typo/typo", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var cssErrors_1 = require("../parser/cssErrors");
+    var choicescriptSymbolScope_1 = require("../parser/choicescriptSymbolScope");
+    var languageFacts = require("./languageFacts");
+    var strings = require("../utils/strings");
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var typo_1 = require("./typo/typo");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var SnippetFormat = vscode_languageserver_types_1.InsertTextFormat.Snippet;
+    var CSSCompletion = /** @class */ (function () {
+        function CSSCompletion(variablePrefix) {
+            if (variablePrefix === void 0) { variablePrefix = null; }
+            this.completionParticipants = [];
+            this.valueTypes = [
+                nodes.NodeType.Identifier, nodes.NodeType.Value, nodes.NodeType.StringLiteral, nodes.NodeType.NumericValue,
+                nodes.NodeType.HexColorValue, nodes.NodeType.PrintVariable,
+            ];
+            var baseUrl = "https://raw.githubusercontent.com/ChoicescriptIDE/main/latest/source/lib/typo/dictionaries/";
+            var dict = "en_US";
+            this.typo = new typo_1.Typo("", "", "", {
+                platform: 'any'
+            });
+            this.typo = new typo_1.Typo(dict, this.typo._readFile(baseUrl + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + dict + "/" + dict + ".dic"), {
+                platform: 'any'
+            });
+            this.variablePrefix = variablePrefix;
+        }
+        CSSCompletion.prototype.getSymbolContext = function () {
+            if (!this.symbolContext) {
+                this.symbolContext = new choicescriptSymbolScope_1.Symbols(this.scene);
+            }
+            return this.symbolContext;
+        };
+        CSSCompletion.prototype.setCompletionParticipants = function (registeredCompletionParticipants) {
+            this.completionParticipants = registeredCompletionParticipants || [];
+        };
+        CSSCompletion.prototype.doComplete = function (document, position, scene) {
+            var _this = this;
+            this.offset = document.offsetAt(position);
+            this.position = position;
+            this.currentWord = getCurrentWord(document, this.offset);
+            this.defaultReplaceRange = vscode_languageserver_types_1.Range.create(vscode_languageserver_types_1.Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);
+            this.textDocument = document;
+            this.scene = scene;
+            try {
+                var result_1 = { isIncomplete: false, items: [] };
+                this.nodePath = nodes.getNodePath(this.scene, this.offset);
+                for (var i = this.nodePath.length - 1; i >= 0; i--) {
+                    var node = this.nodePath[i];
+                    var parentRef = node.findParent(nodes.NodeType.VariableDeclaration);
+                    if (parentRef) {
+                        this.getCompletionsForVariableDeclaration(parentRef, result_1);
+                        return new Promise(function (resolve, reject) {
+                            resolve(_this.finalize(result_1));
+                        });
+                    }
+                    else if (node.hasIssue(cssErrors_1.ParseError.UnknownCommand)) {
+                        this.getCompletionsForCommands(result_1);
+                        return new Promise(function (resolve, reject) {
+                            resolve(_this.finalize(result_1));
+                        });
+                        // this.getCompletionForTopLevel(result);
+                        // } else if (node instanceof nodes.Variable) {
+                        // this.getCompletionsForVariableDeclaration()O
+                    }
+                    else if (node.type === nodes.NodeType.RealWord
+                        && node.getText().length > 2
+                        && !this.typo.check(node.getText())) {
+                        return this.getSuggestionsForSpellings(result_1).then(function (list) {
+                            return _this.finalize(list);
+                        }).catch(function () {
+                            return _this.finalize(result_1);
+                        });
+                    }
+                    else {
+                        return new Promise(function (resolve, reject) {
+                            resolve(_this.finalize(result_1));
+                        });
+                    }
+                }
+            }
+            finally {
+                // don't hold on any state, clear symbolContext
+                this.position = null;
+                this.currentWord = null;
+                this.textDocument = null;
+                this.scene = null;
+                //this.symbolContext = null;
+                this.defaultReplaceRange = null;
+                this.nodePath = null;
+            }
+        };
+        CSSCompletion.prototype.finalize = function (result) {
+            var needsSortText = result.items.some(function (i) { return !!i.sortText; });
+            if (needsSortText) {
+                for (var _b = 0, _c = result.items; _b < _c.length; _b++) {
+                    var i = _c[_b];
+                    if (!i.sortText) {
+                        i.sortText = 'd';
+                    }
+                }
+            }
+            return result;
+        };
+        CSSCompletion.prototype.findInNodePath = function () {
+            var types = [];
+            for (var _b = 0; _b < arguments.length; _b++) {
+                types[_b] = arguments[_b];
+            }
+            for (var i = this.nodePath.length - 1; i >= 0; i--) {
+                var node = this.nodePath[i];
+                if (types.indexOf(node.type) !== -1) {
+                    return node;
+                }
+            }
+            return null;
+        };
+        CSSCompletion.prototype.getCompletionsForCommands = function (result) {
+            var _this = this;
+            var commands = languageFacts.getCommands().filter(function (cmd) {
+                return _this.currentWord.slice(0, 1) === cmd.name.slice(0, 1);
+            });
+            for (var _i = 0, _a = commands; _i < _a.length; _i++) {
+                result.items.push({
+                    label: _a[_i].name,
+                    detail: "(command)",
+                    documentation: "TBD",
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(null), _a[_i].name),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Keyword
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getSuggestionsForSpellings = function (result) {
+            var _this = this;
+            var self = this;
+            var word = this.currentWord;
+            return new Promise(function (resolve, reject) {
+                if (_this.typo.working) {
+                    reject(result);
+                }
+                else {
+                    _this.typo.working = true;
+                    _this.typo.suggest(word, 5, function (suggestions) {
+                        var result = { items: [], isIncomplete: false };
+                        if (suggestions.length < 1) {
+                            result.items.push({
+                                label: "No spelling suggestions for " + word,
+                                documentation: "",
+                                textEdit: null,
+                                insertText: { value: word },
+                                kind: vscode_languageserver_types_1.CompletionItemKind.Keyword
+                            });
+                        }
+                        else {
+                            //defaults
+                            result.items.push({
+                                label: "Ignore '" + word + "' this session.",
+                                documentation: "",
+                                textEdit: null,
+                                filterText: word,
+                                sortText: 'b',
+                                insertText: { value: word },
+                                kind: vscode_languageserver_types_1.CompletionItemKind.Property
+                            });
+                            result.items.push({
+                                label: "Add '" + word + "' to user dictionary.",
+                                documentation: "",
+                                textEdit: null,
+                                filterText: word,
+                                sortText: 'c',
+                                insertText: { value: word },
+                                kind: vscode_languageserver_types_1.CompletionItemKind.Property,
+                                command: 'close-selected-scene'
+                            });
+                            result.items = result.items.concat(suggestions.map(function (suggestion) {
+                                return {
+                                    label: suggestion,
+                                    detail: "spelling suggestion",
+                                    textEdit: null,
+                                    filterText: word,
+                                    sortText: 'a',
+                                    insertText: { value: suggestion },
+                                    kind: vscode_languageserver_types_1.CompletionItemKind.Text
+                                };
+                            }));
+                        }
+                        self.typo.working = false;
+                        resolve(result);
+                    });
+                }
+            });
+        };
+        CSSCompletion.prototype.getCSSWideKeywordProposals = function (entry, existingNode, result) {
+            for (var keywords in languageFacts.cssWideKeywords) {
+                result.items.push({
+                    label: keywords,
+                    documentation: languageFacts.cssWideKeywords[keywords],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), keywords),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Keyword
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getVariableProposals = function (existingNode, result) {
+            var symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
+            console.log("debug var sug", symbols);
+            for (var _b = 0, symbols_1 = symbols; _b < symbols_1.length; _b++) {
+                var symbol = symbols_1[_b];
+                var insertText = strings.startsWith(symbol.name, '--') ? "var(" + symbol.name + ")" : symbol.name;
+                var suggest = {
+                    label: symbol.name,
+                    documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Variable,
+                    sortText: 'z'
+                };
+                /*if (symbol.node.type === nodes.NodeType.FunctionParameter) {
+                    const mixinNode = <nodes.MixinDeclaration>(symbol.node.getParent());
+                    if (mixinNode.type === nodes.NodeType.MixinDeclaration) {
+                        suggest.detail = localize('completion.argument', 'argument from \'{0}\'', mixinNode.getName());
+                    }
+                }*/
+                result.items.push(suggest);
+            }
+            return result;
+        };
+        /*public getVariableProposalsForCSSVarFunction(result: CompletionList): CompletionList {
+            let symbols = this.getSymbolContext().findSymbolsAtOffset(this.offset, nodes.ReferenceType.Variable);
+            symbols = symbols.filter((symbol): boolean => {
+                return strings.startsWith(symbol.name, '--');
+            });
+            for (let symbol of symbols) {
+                result.items.push({
+                    label: symbol.name,
+                    documentation: symbol.value ? strings.getLimitedString(symbol.value) : symbol.value,
+                    textEdit: TextEdit.replace(this.getCompletionRange(null), symbol.name),
+                    kind: CompletionItemKind.Variable
+                });
+            }
+            return result;
+        }*/
+        CSSCompletion.prototype.getUnitProposals = function (entry, existingNode, result) {
+            var currentWord = '0';
+            if (this.currentWord.length > 0) {
+                var numMatch = this.currentWord.match(/^-?\d[\.\d+]*/);
+                if (numMatch) {
+                    currentWord = numMatch[0];
+                    result.isIncomplete = currentWord.length === this.currentWord.length;
+                }
+            }
+            else if (this.currentWord.length === 0) {
+                result.isIncomplete = true;
+            }
+            if (existingNode && existingNode.parent && existingNode.parent.type === nodes.NodeType.Term) {
+                existingNode = existingNode.getParent(); // include the unary operator
+            }
+            for (var _b = 0, _c = entry.restrictions; _b < _c.length; _b++) {
+                var restriction = _c[_b];
+                var units = languageFacts.units[restriction];
+                if (units) {
+                    for (var _d = 0, units_1 = units; _d < units_1.length; _d++) {
+                        var unit = units_1[_d];
+                        var insertText = currentWord + unit;
+                        result.items.push({
+                            label: insertText,
+                            textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                            kind: vscode_languageserver_types_1.CompletionItemKind.Unit
+                        });
+                    }
+                }
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getCompletionRange = function (existingNode) {
+            if (existingNode && existingNode.offset <= this.offset) {
+                var end = existingNode.end !== -1 ? this.textDocument.positionAt(existingNode.end) : this.position;
+                return vscode_languageserver_types_1.Range.create(this.textDocument.positionAt(existingNode.offset), end);
+            }
+            return this.defaultReplaceRange;
+        };
+        /*protected getColorProposals(entry: languageFacts.IEntry, existingNode: nodes.Node, result: CompletionList): CompletionList {
+            for (let color in languageFacts.colors) {
+                result.items.push({
+                    label: color,
+                    documentation: languageFacts.colors[color],
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
+                    kind: CompletionItemKind.Color
+                });
+            }
+            for (let color in languageFacts.colorKeywords) {
+                result.items.push({
+                    label: color,
+                    documentation: languageFacts.colorKeywords[color],
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
+                    kind: CompletionItemKind.Value
+                });
+            }
+            let colorValues = new Set();
+            this.scene.acceptVisitor(new ColorValueCollector(colorValues, this.offset));
+            for (let color of colorValues.getEntries()) {
+                result.items.push({
+                    label: color,
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), color),
+                    kind: CompletionItemKind.Color
+                });
+            }
+            for (let p of languageFacts.colorFunctions) {
+                let tabStop = 1;
+                let replaceFunction = (match, p1) => '${' + tabStop++ + ':' + p1 + '}';
+                let insertText = p.func.replace(/\[?\$(\w+)\]?/g, replaceFunction);
+                result.items.push({
+                    label: p.func.substr(0, p.func.indexOf('(')),
+                    detail: p.func,
+                    documentation: p.desc,
+                    textEdit: TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    insertTextFormat: SnippetFormat,
+                    kind: CompletionItemKind.Function
+                });
+            }
+            return result;
+        }*/
+        CSSCompletion.prototype.getPositionProposals = function (entry, existingNode, result) {
+            for (var position in languageFacts.positionKeywords) {
+                result.items.push({
+                    label: position,
+                    documentation: languageFacts.positionKeywords[position],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), position),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getRepeatStyleProposals = function (entry, existingNode, result) {
+            for (var repeat in languageFacts.repeatStyleKeywords) {
+                result.items.push({
+                    label: repeat,
+                    documentation: languageFacts.repeatStyleKeywords[repeat],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), repeat),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getLineStyleProposals = function (entry, existingNode, result) {
+            for (var lineStyle in languageFacts.lineStyleKeywords) {
+                result.items.push({
+                    label: lineStyle,
+                    documentation: languageFacts.lineStyleKeywords[lineStyle],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), lineStyle),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getLineWidthProposals = function (entry, existingNode, result) {
+            for (var _b = 0, _c = languageFacts.lineWidthKeywords; _b < _c.length; _b++) {
+                var lineWidth = _c[_b];
+                result.items.push({
+                    label: lineWidth,
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), lineWidth),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getGeometryBoxProposals = function (entry, existingNode, result) {
+            for (var box in languageFacts.geometryBoxKeywords) {
+                result.items.push({
+                    label: box,
+                    documentation: languageFacts.geometryBoxKeywords[box],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), box),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getBoxProposals = function (entry, existingNode, result) {
+            for (var box in languageFacts.boxKeywords) {
+                result.items.push({
+                    label: box,
+                    documentation: languageFacts.boxKeywords[box],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), box),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Value
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getImageProposals = function (entry, existingNode, result) {
+            for (var image in languageFacts.imageFunctions) {
+                var insertText = moveCursorInsideParenthesis(image);
+                result.items.push({
+                    label: image,
+                    documentation: languageFacts.imageFunctions[image],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
+                    insertTextFormat: image !== insertText ? SnippetFormat : void 0
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getTimingFunctionProposals = function (entry, existingNode, result) {
+            for (var timing in languageFacts.transitionTimingFunctions) {
+                var insertText = moveCursorInsideParenthesis(timing);
+                result.items.push({
+                    label: timing,
+                    documentation: languageFacts.transitionTimingFunctions[timing],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
+                    insertTextFormat: timing !== insertText ? SnippetFormat : void 0
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getBasicShapeProposals = function (entry, existingNode, result) {
+            for (var shape in languageFacts.basicShapeFunctions) {
+                var insertText = moveCursorInsideParenthesis(shape);
+                result.items.push({
+                    label: shape,
+                    documentation: languageFacts.basicShapeFunctions[shape],
+                    textEdit: vscode_languageserver_types_1.TextEdit.replace(this.getCompletionRange(existingNode), insertText),
+                    kind: vscode_languageserver_types_1.CompletionItemKind.Function,
+                    insertTextFormat: shape !== insertText ? SnippetFormat : void 0
+                });
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getCompletionsForVariableDeclaration = function (declaration, result) {
+            if (declaration.hasIssue(cssErrors_1.ParseError.VariableNameExpected)) {
+                this.getVariableProposals(declaration.getValue(), result);
+            }
+            return result;
+        };
+        CSSCompletion.prototype.getCompletionForUriLiteralValue = function (uriLiteralNode, result) {
+            var uriValue;
+            var position;
+            var range;
+            // No children, empty value
+            if (uriLiteralNode.getChildren().length === 0) {
+                uriValue = '';
+                position = this.position;
+                var emptyURIValuePosition = this.textDocument.positionAt(uriLiteralNode.offset + 'url('.length);
+                range = vscode_languageserver_types_1.Range.create(emptyURIValuePosition, emptyURIValuePosition);
+            }
+            else {
+                var uriValueNode = uriLiteralNode.getChild(0);
+                uriValue = uriValueNode.getText();
+                position = this.position;
+                range = this.getCompletionRange(uriValueNode);
+            }
+            this.completionParticipants.forEach(function (participant) {
+                if (participant.onCssURILiteralValue) {
+                    participant.onCssURILiteralValue({
+                        uriValue: uriValue,
+                        position: position,
+                        range: range
+                    });
+                }
+            });
+            return result;
+        };
+        CSSCompletion.prototype.getCompletionForImportPath = function (importPathNode, result) {
+            var _this = this;
+            this.completionParticipants.forEach(function (participant) {
+                if (participant.onCssImportPath) {
+                    participant.onCssImportPath({
+                        pathValue: importPathNode.getText(),
+                        position: _this.position,
+                        range: _this.getCompletionRange(importPathNode)
+                    });
+                }
+            });
+            return result;
+        };
+        return CSSCompletion;
+    }());
+    exports.CSSCompletion = CSSCompletion;
+    var Set = /** @class */ (function () {
+        function Set() {
+            this.entries = {};
+        }
+        Set.prototype.add = function (entry) {
+            this.entries[entry] = true;
+        };
+        Set.prototype.getEntries = function () {
+            return Object.keys(this.entries);
+        };
+        return Set;
+    }());
+    function moveCursorInsideParenthesis(text) {
+        return text.replace(/\(\)$/, "($1)");
+    }
+    /*class ColorValueCollector implements nodes.IVisitor {
+    
+        constructor(public entries: Set, private currentOffset: number) {
+            // nothing to do
+        }
+    
+        public visitNode(node: nodes.Node): boolean {
+            if (node instanceof nodes.HexColorValue || (node instanceof nodes.Function && languageFacts.isColorConstructor(<nodes.Function>node))) {
+                if (this.currentOffset < node.offset || node.end < this.currentOffset) {
+                    this.entries.add(node.getText());
+                }
+            }
+            return true;
+        }
+    }*/
+    function isDefined(obj) {
+        return typeof obj !== 'undefined';
+    }
+    function getCurrentWord(document, offset) {
+        var i = offset - 1;
+        var text = document.getText();
+        while (i >= 0 && ' \t\n\r":{[()]},*>+'.indexOf(text.charAt(i)) === -1) {
+            i--;
+        }
+        return text.substring(i + 1, offset);
+    }
+});
+//# sourceMappingURL=cssCompletion.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/cssHover',["require", "exports", "../parser/cssNodes", "./languageFacts", "vscode-languageserver-types"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var languageFacts = require("./languageFacts");
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var CSSHover = /** @class */ (function () {
+        function CSSHover() {
+        }
+        CSSHover.prototype.doHover = function (document, position, stylesheet) {
+            function getRange(node) {
+                return vscode_languageserver_types_1.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
+            }
+            var offset = document.offsetAt(position);
+            var nodepath = nodes.getNodePath(stylesheet, offset);
+            for (var i = 0; i < nodepath.length; i++) {
+                var node = nodepath[i];
+                if (node instanceof nodes.Command) {
+                    var propertyName = node.getText().slice(1, node.getText().length);
+                    var cmds = languageFacts.getCommands();
+                    var index = cmds.map(function (cmd) { return cmd.name; }).indexOf(propertyName);
+                    if (index !== -1) {
+                        return {
+                            contents: cmds[index].description,
+                            range: getRange(node)
+                        };
+                    }
+                }
+                // Expression is not correct. Just used to shut up compile errors. Needs fixing.
+                if (node instanceof nodes.Expression) {
+                    return {
+                        contents: "selectorToMarkedString",
+                        range: getRange(node)
+                    };
+                }
+                if (node instanceof nodes.Expression) {
+                    return {
+                        contents: "simpleSelector",
+                        range: getRange(node)
+                    };
+                }
+            }
+            return null;
+        };
+        return CSSHover;
+    }());
+    exports.CSSHover = CSSHover;
+});
+//# sourceMappingURL=cssHover.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/choicescriptNavigation',["require", "exports", "vscode-languageserver-types", "vscode-nls", "../parser/cssNodes", "../parser/choicescriptSymbolScope"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var nls = require("vscode-nls");
+    var nodes = require("../parser/cssNodes");
+    var choicescriptSymbolScope_1 = require("../parser/choicescriptSymbolScope");
+    var localize = nls.loadMessageBundle();
+    var ChoiceScriptNavigation = /** @class */ (function () {
+        function ChoiceScriptNavigation() {
+        }
+        ChoiceScriptNavigation.prototype.findDefinition = function (document, position, scene) {
+            var symbols = new choicescriptSymbolScope_1.Symbols(scene);
+            var offset = document.offsetAt(position);
+            var node = nodes.getNodeAtOffset(scene, offset);
+            if (!node) {
+                return null;
+            }
+            var symbol = symbols.findSymbolFromNode(node);
+            if (!symbol) {
+                return null;
+            }
+            return {
+                uri: document.uri,
+                range: getRange(symbol.node, document)
+            };
+        };
+        /*
+            public findReferences(document: TextDocument, position: Position, scene: nodes.Scene): Location[] {
+                let highlights = this.findDocumentHighlights(document, position, scene);
+                return highlights.map(h => {
+                    return {
+                        uri: document.uri,
+                        range: h.range
+                    };
+                });
+            }
+        */
+        /*
+        public findDocumentHighlights(document: TextDocument, position: Position, scene: nodes.Scene): DocumentHighlight[] {
+            let result: DocumentHighlight[] = [];
+    
+            let offset = document.offsetAt(position);
+            let node = nodes.getNodeAtOffset(scene, offset);
+            if (!node || node.type === nodes.NodeType.Scene || node.type === nodes.NodeType.VariableDeclaration) {
+                return result;
+            }
+            if (node.type === nodes.NodeType.Identifier && node.parent && node.parent.type === nodes.NodeType.ClassSelector) {
+                node = node.parent;
+            }
+    
+            let symbols = new Symbols(scene);
+            let symbol = symbols.findSymbolFromNode(node);
+            let name = node.getText();
+    
+            scene.accept(candidate => {
+                if (symbol) {
+                    if (symbols.matchesSymbol(candidate, symbol)) {
+                        result.push({
+                            kind: getHighlightKind(candidate),
+                            range: getRange(candidate, document)
+                        });
+                        return false;
+                    }
+                } else if (node.type === candidate.type && node.length === candidate.length && name === candidate.getText()) {
+                    // Same node type and data
+                    result.push({
+                        kind: getHighlightKind(candidate),
+                        range: getRange(candidate, document)
+                    });
+                }
+                return true;
+            });
+    
+            return result;
+        }*/
+        ChoiceScriptNavigation.prototype.findDocumentSymbols = function (document, scene) {
+            var result = [];
+            scene.accept(function (node) {
+                var entry = {
+                    name: null,
+                    kind: vscode_languageserver_types_1.SymbolKind.Class,
+                    location: null
+                };
+                var locationNode = node;
+                if (node instanceof nodes.VariableDeclaration) {
+                    entry.name = node.getName();
+                    entry.kind = vscode_languageserver_types_1.SymbolKind.Variable;
+                }
+                else if (node instanceof nodes.LabelDeclaration) {
+                    entry.name = node.getLabel().getName();
+                    entry.kind = vscode_languageserver_types_1.SymbolKind.Function;
+                }
+                if (entry.name) {
+                    entry.location = vscode_languageserver_types_1.Location.create(document.uri, getRange(locationNode, document));
+                    result.push(entry);
+                }
+                return true;
+            });
+            return result;
+        };
+        return ChoiceScriptNavigation;
+    }());
+    exports.ChoiceScriptNavigation = ChoiceScriptNavigation;
+    function getRange(node, document) {
+        return vscode_languageserver_types_1.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
+    }
+    /*
+    function getHighlightKind(node: nodes.Node): DocumentHighlightKind {
+    
+        if (node.type === nodes.NodeType.Selector) {
+            return DocumentHighlightKind.Write;
+        }
+    
+        if (node instanceof nodes.Identifier) {
+            if (node.parent && node.parent instanceof nodes.Property) {
+                if (node.isCustomProperty) {
+                    return DocumentHighlightKind.Write;
+                }
+            }
+        }
+    
+        if (node.parent) {
+            switch (node.parent.type) {
+                case nodes.NodeType.FunctionDeclaration:
+                case nodes.NodeType.Keyframe:
+                case nodes.NodeType.VariableDeclaration:
+                case nodes.NodeType.FunctionParameter:
+                    return DocumentHighlightKind.Write;
+            }
+        }
+    
+        return DocumentHighlightKind.Read;
+    }*/
+    function toTwoDigitHex(n) {
+        var r = n.toString(16);
+        return r.length !== 2 ? '0' + r : r;
+    }
+});
+//# sourceMappingURL=choicescriptNavigation.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/textRules',["require", "exports", "../parser/cssNodes", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var Warning = nodes.Level.Warning;
+    var Error = nodes.Level.Error;
+    var Ignore = nodes.Level.Ignore;
+    var Rule = /** @class */ (function () {
+        function Rule(id, message, defaultValue) {
+            this.id = id;
+            this.message = message;
+            this.defaultValue = defaultValue;
+            // nothing to do
+        }
+        return Rule;
+    }());
+    exports.Rule = Rule;
+    exports.Rules = {
+        BadSpelling: new Rule('badSpelling', localize('rule.badSpelling', "Bad spelling."), Warning),
+    };
+    var LintConfigurationSettings = /** @class */ (function () {
+        function LintConfigurationSettings(conf) {
+            if (conf === void 0) { conf = {}; }
+            this.conf = conf;
+        }
+        LintConfigurationSettings.prototype.get = function (rule) {
+            if (this.conf.hasOwnProperty(rule.id)) {
+                var level = toLevel(this.conf[rule.id]);
+                if (level) {
+                    return level;
+                }
+            }
+            return rule.defaultValue;
+        };
+        return LintConfigurationSettings;
+    }());
+    exports.LintConfigurationSettings = LintConfigurationSettings;
+    function toLevel(level) {
+        switch (level) {
+            case 'ignore': return nodes.Level.Ignore;
+            case 'warning': return nodes.Level.Warning;
+            case 'error': return nodes.Level.Error;
+        }
+        return null;
+    }
+});
+//# sourceMappingURL=textRules.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/spellcheck',["require", "exports", "./textRules", "../parser/cssNodes", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var textRules_1 = require("./textRules");
+    var nodes = require("../parser/cssNodes");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var NodesByRootMap = /** @class */ (function () {
+        function NodesByRootMap() {
+            this.data = {};
+        }
+        NodesByRootMap.prototype.add = function (root, name, node) {
+            var entry = this.data[root];
+            if (!entry) {
+                entry = { nodes: [], names: [] };
+                this.data[root] = entry;
+            }
+            entry.names.push(name);
+            if (node) {
+                entry.nodes.push(node);
+            }
+        };
+        return NodesByRootMap;
+    }());
+    var SpellCheckVisitor = /** @class */ (function () {
+        function SpellCheckVisitor(document, settings, typo, dicts) {
+            this.warnings = [];
+            this.visitScene = function (node) {
+                return true;
+            };
+            this.visitWord = function (node) {
+                var word = node.getText();
+                // dicts are handled AWFULLY - FIXME!
+                if (!this.typo.check(word) &&
+                    !this.dicts.session[word] &&
+                    !this.dicts.persistent[word]) {
+                    this.addEntry(node, textRules_1.Rules.BadSpelling, "Bad spelling: " + node.getText());
+                }
+                return true;
+            };
+            this.settings = settings;
+            this.documentText = document.getText();
+            this.keyframes = new NodesByRootMap();
+            this.typo = typo;
+            this.dicts = dicts;
+        }
+        SpellCheckVisitor.entries = function (node, document, settings, entryFilter, typo, userDictionaries) {
+            var visitor = new SpellCheckVisitor(document, settings, typo, userDictionaries);
+            node.acceptVisitor(visitor);
+            return visitor.getEntries(entryFilter);
+        };
+        SpellCheckVisitor.prototype.findValueInExpression = function (expression, v) {
+            var found = false;
+            expression.accept(function (node) {
+                if (node.type === nodes.NodeType.Identifier && node.getText() === v) {
+                    found = true;
+                }
+                return !found;
+            });
+            return found;
+        };
+        SpellCheckVisitor.prototype.getEntries = function (filter) {
+            if (filter === void 0) { filter = (nodes.Level.Warning | nodes.Level.Error); }
+            return this.warnings.filter(function (entry) {
+                return (entry.getLevel() & filter) !== 0;
+            });
+        };
+        SpellCheckVisitor.prototype.addEntry = function (node, rule, details) {
+            var entry = new nodes.Marker(node, rule, nodes.Level.Warning, details, node.offset, node.length);
+            this.warnings.push(entry);
+        };
+        SpellCheckVisitor.prototype.getMissingNames = function (expected, actual) {
+            expected = expected.slice(0); // clone
+            for (var i = 0; i < actual.length; i++) {
+                var k = expected.indexOf(actual[i]);
+                if (k !== -1) {
+                    expected[k] = null;
+                }
+            }
+            var result = null;
+            for (var i = 0; i < expected.length; i++) {
+                var curr = expected[i];
+                if (curr) {
+                    if (result === null) {
+                        result = localize('namelist.single', "'{0}'", curr);
+                    }
+                    else {
+                        result = localize('namelist.concatenated', "{0}, '{1}'", result, curr);
+                    }
+                }
+            }
+            return result;
+        };
+        SpellCheckVisitor.prototype.visitNode = function (node) {
+            switch (node.type) {
+                case nodes.NodeType.Scene:
+                    return this.visitScene(node);
+                case nodes.NodeType.TextLine:
+                    return true;
+                case nodes.NodeType.RealWord:
+                    return this.visitWord(node);
+                default:
+                    return true;
+            }
+        };
+        SpellCheckVisitor.prefixes = [
+            '-ms-', '-moz-', '-o-', '-webkit-',
+        ];
+        return SpellCheckVisitor;
+    }());
+    exports.SpellCheckVisitor = SpellCheckVisitor;
+});
+//# sourceMappingURL=spellcheck.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/ChoiceScriptValidation',["require", "exports", "../parser/cssNodes", "vscode-languageserver-types", "./textRules", "./spellcheck", "./typo/typo"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var textRules_1 = require("./textRules");
+    var spellcheck_1 = require("./spellcheck");
+    var typo_1 = require("./typo/typo");
+    var ChoiceScriptValidation = /** @class */ (function () {
+        function ChoiceScriptValidation() {
+            this.typo = new typo_1.Typo("", "", "", {
+                platform: 'any'
+            });
+        }
+        ChoiceScriptValidation.prototype.configure = function (settings) {
+            this.settings = settings;
+            // Reload typo here rather than every time we call a visitor.
+            // Don't bother reloading a dictionary if spellcheck is disabled.
+            console.log(settings);
+            if (this.settings.spellCheckSettings.enabled) {
+                this.loadTypo(settings);
+            }
+        };
+        ChoiceScriptValidation.prototype.loadTypo = function (settings) {
+            var baseUrl = settings.spellCheckSettings.rootPath;
+            var dict = settings.spellCheckSettings.dictionary;
+            this.typo = new typo_1.Typo(dict, this.typo._readFile(baseUrl + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + dict + "/" + dict + ".dic"), {
+                platform: 'any'
+            });
+        };
+        ChoiceScriptValidation.prototype.doValidation = function (document, scene, settings) {
+            if (settings === void 0) { settings = this.settings; }
+            if (settings && settings.validate === false) {
+                return [];
+            }
+            var entries = [];
+            entries.push.apply(entries, nodes.ParseErrorCollector.entries(scene));
+            if (settings && settings.spellCheckSettings.enabled === true) {
+                entries.push.apply(entries, spellcheck_1.SpellCheckVisitor.entries(scene, document, null, (nodes.Level.Warning | nodes.Level.Error), this.typo, settings.spellCheckSettings.userDictionaries));
+            }
+            var ruleIds = [];
+            for (var r in textRules_1.Rules) {
+                ruleIds.push(textRules_1.Rules[r].id);
+            }
+            function toDiagnostic(marker) {
+                var range = vscode_languageserver_types_1.Range.create(document.positionAt(marker.getOffset()), document.positionAt(marker.getOffset() + marker.getLength()));
+                var source = ruleIds.indexOf(marker.getRule().id) !== -1
+                    ? document.languageId + ".lint." + marker.getRule().id
+                    : document.languageId;
+                return {
+                    code: marker.getRule().id,
+                    source: source,
+                    message: marker.getMessage(),
+                    severity: marker.getLevel() === nodes.Level.Warning ? vscode_languageserver_types_1.DiagnosticSeverity.Warning : vscode_languageserver_types_1.DiagnosticSeverity.Error,
+                    range: range
+                };
+            }
+            return entries.filter(function (entry) { return entry.getLevel() !== nodes.Level.Ignore; }).map(toDiagnostic);
+        };
+        return ChoiceScriptValidation;
+    }());
+    exports.ChoiceScriptValidation = ChoiceScriptValidation;
+});
+//# sourceMappingURL=ChoiceScriptValidation.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/lintRules',["require", "exports", "../parser/cssNodes", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var Warning = nodes.Level.Warning;
+    var Error = nodes.Level.Error;
+    var Ignore = nodes.Level.Ignore;
+    var Rule = /** @class */ (function () {
+        function Rule(id, message, defaultValue) {
+            this.id = id;
+            this.message = message;
+            this.defaultValue = defaultValue;
+            // nothing to do
+        }
+        return Rule;
+    }());
+    exports.Rule = Rule;
+    exports.Rules = {
+        AllVendorPrefixes: new Rule('compatibleVendorPrefixes', localize('rule.vendorprefixes.all', "When using a vendor-specific prefix make sure to also include all other vendor-specific properties"), Ignore),
+        IncludeStandardPropertyWhenUsingVendorPrefix: new Rule('vendorPrefix', localize('rule.standardvendorprefix.all', "When using a vendor-specific prefix also include the standard property"), Warning),
+        DuplicateDeclarations: new Rule('duplicateProperties', localize('rule.duplicateDeclarations', "Do not use duplicate style definitions"), Ignore),
+        EmptyRuleSet: new Rule('emptyRules', localize('rule.emptyRuleSets', "Do not use empty rulesets"), Warning),
+        ImportStatemement: new Rule('importStatement', localize('rule.importDirective', "Import statements do not load in parallel"), Ignore),
+        BewareOfBoxModelSize: new Rule('boxModel', localize('rule.bewareOfBoxModelSize', "Do not use width or height when using padding or border"), Ignore),
+        UniversalSelector: new Rule('universalSelector', localize('rule.universalSelector', "The universal selector (*) is known to be slow"), Ignore),
+        ZeroWithUnit: new Rule('zeroUnits', localize('rule.zeroWidthUnit', "No unit for zero needed"), Ignore),
+        RequiredPropertiesForFontFace: new Rule('fontFaceProperties', localize('rule.fontFaceProperties', "@font-face rule must define 'src' and 'font-family' properties"), Warning),
+        HexColorLength: new Rule('hexColorLength', localize('rule.hexColor', "Hex colors must consist of three, four, six or eight hex numbers"), Error),
+        ArgsInColorFunction: new Rule('argumentsInColorFunction', localize('rule.colorFunction', "Invalid number of parameters"), Error),
+        UnknownProperty: new Rule('unknownProperties', localize('rule.unknownProperty', "Unknown property."), Warning),
+        UnknownAtRules: new Rule('unknownAtRules', localize('rule.unknownAtRules', "Unknown at-rule."), Warning),
+        IEStarHack: new Rule('ieHack', localize('rule.ieHack', "IE hacks are only necessary when supporting IE7 and older"), Ignore),
+        UnknownVendorSpecificProperty: new Rule('unknownVendorSpecificProperties', localize('rule.unknownVendorSpecificProperty', "Unknown vendor specific property."), Ignore),
+        PropertyIgnoredDueToDisplay: new Rule('propertyIgnoredDueToDisplay', localize('rule.propertyIgnoredDueToDisplay', "Property is ignored due to the display."), Warning),
+        AvoidImportant: new Rule('important', localize('rule.avoidImportant', "Avoid using !important. It is an indication that the specificity of the entire CSS has gotten out of control and needs to be refactored."), Ignore),
+        AvoidFloat: new Rule('float', localize('rule.avoidFloat', "Avoid using 'float'. Floats lead to fragile CSS that is easy to break if one aspect of the layout changes."), Ignore),
+        AvoidIdSelector: new Rule('idSelector', localize('rule.avoidIdSelector', "Selectors should not contain IDs because these rules are too tightly coupled with the HTML."), Ignore),
+    };
+    var LintConfigurationSettings = /** @class */ (function () {
+        function LintConfigurationSettings(conf) {
+            if (conf === void 0) { conf = {}; }
+            this.conf = conf;
+        }
+        LintConfigurationSettings.prototype.get = function (rule) {
+            if (this.conf.hasOwnProperty(rule.id)) {
+                var level = toLevel(this.conf[rule.id]);
+                if (level) {
+                    return level;
+                }
+            }
+            return rule.defaultValue;
+        };
+        return LintConfigurationSettings;
+    }());
+    exports.LintConfigurationSettings = LintConfigurationSettings;
+    function toLevel(level) {
+        switch (level) {
+            case 'ignore': return nodes.Level.Ignore;
+            case 'warning': return nodes.Level.Warning;
+            case 'error': return nodes.Level.Error;
+        }
+        return null;
+    }
+});
+//# sourceMappingURL=lintRules.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/services/ChoiceScriptCodeActions',["require", "exports", "../parser/cssNodes", "../services/lintRules", "vscode-languageserver-types", "vscode-nls"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var nodes = require("../parser/cssNodes");
+    var lintRules_1 = require("../services/lintRules");
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    var nls = require("vscode-nls");
+    var localize = nls.loadMessageBundle();
+    var ChoiceScriptCodeActions = /** @class */ (function () {
+        function ChoiceScriptCodeActions() {
+        }
+        ChoiceScriptCodeActions.prototype.doCodeActions = function (document, range, context, scene) {
+            return this.doCodeActions2(document, range, context, scene).map(function (ca) {
+                return vscode_languageserver_types_1.Command.create(ca.title, '_choicescript.applyCodeAction', document.uri, document.version, ca.edit.documentChanges[0].edits);
+            });
+        };
+        ChoiceScriptCodeActions.prototype.doCodeActions2 = function (document, range, context, scene) {
+            var result = [];
+            if (context.diagnostics) {
+                for (var _i = 0, _a = context.diagnostics; _i < _a.length; _i++) {
+                    var diagnostic = _a[_i];
+                    this.appendSpellingSuggestions(document, scene, diagnostic, result);
+                }
+            }
+            return result;
+        };
+        ChoiceScriptCodeActions.prototype.getSpellingSuggestions = function (document, word, marker, result) {
+            // let text = word.getText();
+            var suggestions = ["Suggestion One", "Suggestion Two", "Suggestion Three", "Suggestion Four", "Suggestion Five"];
+            var maxActions = 3;
+            for (var _i = 0, suggestions_1 = suggestions; _i < suggestions_1.length; _i++) {
+                var suggestion = suggestions_1[_i];
+                var title = localize('choicescript.codeaction.correctspelling', "Correct to '{0}'", suggestion);
+                var edit = vscode_languageserver_types_1.TextEdit.replace(marker.range, suggestion);
+                var documentIdentifier = vscode_languageserver_types_1.VersionedTextDocumentIdentifier.create(document.uri, document.version);
+                var workspaceEdit = { documentChanges: [vscode_languageserver_types_1.TextDocumentEdit.create(documentIdentifier, [edit])] };
+                var codeAction = vscode_languageserver_types_1.CodeAction.create(title, workspaceEdit, vscode_languageserver_types_1.CodeActionKind.QuickFix);
+                codeAction.diagnostics = [marker];
+                result.push(codeAction);
+                if (--maxActions <= 0) {
+                    return;
+                }
+            }
+        };
+        ChoiceScriptCodeActions.prototype.appendSpellingSuggestions = function (document, stylesheet, marker, result) {
+            if (marker.code !== lintRules_1.Rules.UnknownProperty.id) {
+                return;
+            }
+            var offset = document.offsetAt(marker.range.start);
+            var end = document.offsetAt(marker.range.end);
+            var nodepath = nodes.getNodePath(stylesheet, offset);
+            for (var i = nodepath.length - 1; i >= 0; i--) {
+                var word = nodepath[i];
+                if (word instanceof nodes.RealWord) {
+                    if (word && word.offset === offset && word.end === end) {
+                        this.getSpellingSuggestions(document, word, marker, result);
+                        return;
+                    }
+                }
+            }
+        };
+        return ChoiceScriptCodeActions;
+    }());
+    exports.ChoiceScriptCodeActions = ChoiceScriptCodeActions;
+});
+//# sourceMappingURL=ChoiceScriptCodeActions.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/cssLanguageTypes',["require", "exports", "vscode-languageserver-types"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var vscode_languageserver_types_1 = require("vscode-languageserver-types");
+    exports.Range = vscode_languageserver_types_1.Range;
+    exports.TextEdit = vscode_languageserver_types_1.TextEdit;
+    exports.Position = vscode_languageserver_types_1.Position;
+    var SpellCheckDictionary;
+    (function (SpellCheckDictionary) {
+        SpellCheckDictionary["EN_US"] = "en_US";
+        SpellCheckDictionary["EN_GB"] = "en_GB";
+    })(SpellCheckDictionary = exports.SpellCheckDictionary || (exports.SpellCheckDictionary = {}));
+});
+//# sourceMappingURL=cssLanguageTypes.js.map;
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define('vscode-css-languageservice/cssLanguageService',["require", "exports", "./parser/cssParser", "./services/cssCompletion", "./services/cssHover", "./services/choicescriptNavigation", "./services/ChoiceScriptValidation", "./services/ChoiceScriptCodeActions", "./cssLanguageTypes", "vscode-languageserver-types"], factory);
+    }
+})(function (require, exports) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    function __export(m) {
+        for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+    }
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var cssParser_1 = require("./parser/cssParser");
+    var cssCompletion_1 = require("./services/cssCompletion");
+    var cssHover_1 = require("./services/cssHover");
+    var choicescriptNavigation_1 = require("./services/choicescriptNavigation");
+    var ChoiceScriptValidation_1 = require("./services/ChoiceScriptValidation");
+    var ChoiceScriptCodeActions_1 = require("./services/ChoiceScriptCodeActions");
+    __export(require("./cssLanguageTypes"));
+    __export(require("vscode-languageserver-types"));
+    function createFacade(parser, completion, navigation, hover, validation, codeActions) {
+        return {
+            configure: validation.configure.bind(validation),
+            doValidation: validation.doValidation.bind(validation),
+            parseScene: parser.parseScene.bind(parser),
+            doComplete: completion.doComplete.bind(completion),
+            findDocumentSymbols: navigation.findDocumentSymbols.bind(navigation),
+            setCompletionParticipants: completion.setCompletionParticipants.bind(completion),
+            doHover: hover.doHover.bind(hover),
+            findDefinition: navigation.findDefinition.bind(navigation),
+            doCodeActions: codeActions.doCodeActions.bind(codeActions),
+            doCodeActions2: codeActions.doCodeActions2.bind(codeActions),
+        };
+    }
+    function getCSSLanguageService() {
+        return createFacade(new cssParser_1.Parser(), new cssCompletion_1.CSSCompletion(), new choicescriptNavigation_1.ChoiceScriptNavigation(), new cssHover_1.CSSHover(), new ChoiceScriptValidation_1.ChoiceScriptValidation(), new ChoiceScriptCodeActions_1.ChoiceScriptCodeActions());
+    }
+    exports.getCSSLanguageService = getCSSLanguageService;
+});
+//# sourceMappingURL=cssLanguageService.js.map;
+define('vscode-css-languageservice', ['vscode-css-languageservice/cssLanguageService'], function (main) { return main; });
+
+define('vs/language/choicescript/choicescriptWorker',["require", "exports", "vscode-css-languageservice"], function (require, exports, choicescriptService) {
+    /*---------------------------------------------------------------------------------------------
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
+    'use strict';
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var ChoiceScriptWorker = /** @class */ (function () {
+        function ChoiceScriptWorker(ctx, createData) {
+            this._ctx = ctx;
+            this._languageSettings = createData.languageSettings;
+            this._languageId = createData.languageId;
+            switch (this._languageId) {
+                case 'choicescript':
+                    this._languageService = choicescriptService.getCSSLanguageService();
+                    break;
+                default:
+                    throw new Error('Invalid language id: ' + this._languageId);
+            }
+            this._languageService.configure(this._languageSettings);
+        }
+        // --- language service host ---------------
+        ChoiceScriptWorker.prototype.doValidation = function (uri) {
+            var document = this._getTextDocument(uri);
+            if (document) {
+                var scene = this._languageService.parseScene(document);
+                var check = this._languageService.doValidation(document, scene, this._languageSettings);
+                return Promise.resolve(check);
+            }
+            return Promise.resolve([]);
+        };
+        ChoiceScriptWorker.prototype.doComplete = function (uri, position) {
+            var document = this._getTextDocument(uri);
+            var scene = this._languageService.parseScene(document);
+            var completions = this._languageService.doComplete(document, position, scene);
+            return Promise.resolve(completions);
+        };
+        ChoiceScriptWorker.prototype.doHover = function (uri, position) {
+            var document = this._getTextDocument(uri);
+            var scene = this._languageService.parseScene(document);
+            var hover = this._languageService.doHover(document, position, scene);
+            return Promise.resolve(hover);
+        };
+        ChoiceScriptWorker.prototype.findDefinition = function (uri, position) {
+            var document = this._getTextDocument(uri);
+            var scene = this._languageService.parseScene(document);
+            var definition = this._languageService.findDefinition(document, position, scene);
+            return Promise.resolve(definition);
+        };
+        /*findReferences(uri: string, position: choicescriptService.Position): Thenable<choicescriptService.Location[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let references = this._languageService.findReferences(document, position, stylesheet);
+            return Promise.resolve(references);
+        }
+        findDocumentHighlights(uri: string, position: choicescriptService.Position): Thenable<choicescriptService.DocumentHighlight[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let highlights = this._languageService.findDocumentHighlights(document, position, stylesheet);
+            return Promise.resolve(highlights);
+        }*/
+        ChoiceScriptWorker.prototype.findDocumentSymbols = function (uri) {
+            var document = this._getTextDocument(uri);
+            var scene = this._languageService.parseScene(document);
+            var symbols = this._languageService.findDocumentSymbols(document, scene);
+            return Promise.resolve(symbols);
+        };
+        ChoiceScriptWorker.prototype.doCodeActions = function (uri, range, context) {
+            var document = this._getTextDocument(uri);
+            var stylesheet = this._languageService.parseScene(document);
+            var actions = this._languageService.doCodeActions(document, range, context, stylesheet);
+            return Promise.resolve(actions);
+        };
+        /*findDocumentColors(uri: string): Thenable<choicescriptService.ColorInformation[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let colorSymbols = this._languageService.findDocumentColors(document, stylesheet);
+            return Promise.resolve(colorSymbols);
+        }
+        getColorPresentations(uri: string, color: choicescriptService.Color, range: choicescriptService.Range): Thenable<choicescriptService.ColorPresentation[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let colorPresentations = this._languageService.getColorPresentations(document, stylesheet, color, range);
+            return Promise.resolve(colorPresentations);
+        }
+        getFoldingRanges(uri: string, context?: { rangeLimit?: number; }): Thenable<choicescriptService.FoldingRange[]> {
+            let document = this._getTextDocument(uri);
+            let ranges = this._languageService.getFoldingRanges(document, context);
+            return Promise.resolve(ranges);
+        }
+        getSelectionRanges(uri: string, positions: choicescriptService.Position[]): Thenable<choicescriptService.SelectionRange[]> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let ranges = this._languageService.getSelectionRanges(document, positions, stylesheet);
+            return Promise.resolve(ranges);
+        }
+        doRename(uri: string, position: choicescriptService.Position, newName: string): Thenable<choicescriptService.WorkspaceEdit> {
+            let document = this._getTextDocument(uri);
+            let stylesheet = this._languageService.parseScene(document);
+            let renames = this._languageService.doRename(document, position, newName, stylesheet);
+            return Promise.resolve(renames);
+        }*/
+        ChoiceScriptWorker.prototype._getTextDocument = function (uri) {
+            console.log(uri);
+            var models = this._ctx.getMirrorModels();
+            for (var _i = 0, models_1 = models; _i < models_1.length; _i++) {
+                var model = models_1[_i];
+                if (model.uri.toString() === uri) {
+                    return choicescriptService.TextDocument.create(uri, this._languageId, model.version, model.getValue());
+                }
+            }
+            return null;
+        };
+        ChoiceScriptWorker.prototype._getStartupTextDocument = function (uri) {
+            return this._getTextDocument("startup");
+        };
+        return ChoiceScriptWorker;
+    }());
+    exports.ChoiceScriptWorker = ChoiceScriptWorker;
+    function create(ctx, createData) {
+        return new ChoiceScriptWorker(ctx, createData);
+    }
+    exports.create = create;
+});
+

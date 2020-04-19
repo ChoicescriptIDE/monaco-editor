@@ -25,13 +25,17 @@ var NodesByRootMap = /** @class */ (function () {
     return NodesByRootMap;
 }());
 var SpellCheckVisitor = /** @class */ (function () {
-    function SpellCheckVisitor(document, settings, typo) {
+    function SpellCheckVisitor(document, settings, typo, dicts) {
         this.warnings = [];
         this.visitScene = function (node) {
             return true;
         };
         this.visitWord = function (node) {
-            if (!this.typo.check(node.getText())) {
+            var word = node.getText();
+            // dicts are handled AWFULLY - FIXME!
+            if (!this.typo.check(word) &&
+                !this.dicts.session[word] &&
+                !this.dicts.persistent[word]) {
                 this.addEntry(node, Rules.BadSpelling, "Bad spelling: " + node.getText());
             }
             return true;
@@ -40,9 +44,10 @@ var SpellCheckVisitor = /** @class */ (function () {
         this.documentText = document.getText();
         this.keyframes = new NodesByRootMap();
         this.typo = typo;
+        this.dicts = dicts;
     }
-    SpellCheckVisitor.entries = function (node, document, settings, entryFilter, typo) {
-        var visitor = new SpellCheckVisitor(document, settings, typo);
+    SpellCheckVisitor.entries = function (node, document, settings, entryFilter, typo, userDictionaries) {
+        var visitor = new SpellCheckVisitor(document, settings, typo, userDictionaries);
         node.acceptVisitor(visitor);
         return visitor.getEntries(entryFilter);
     };

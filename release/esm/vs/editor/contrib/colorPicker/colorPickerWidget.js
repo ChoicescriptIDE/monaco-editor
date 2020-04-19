@@ -3,9 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -13,13 +16,13 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import './colorPicker.css';
-import { Emitter } from '../../../base/common/event.js';
-import { Widget } from '../../../base/browser/ui/widget.js';
-import * as dom from '../../../base/browser/dom.js';
 import { onDidChangeZoomLevel } from '../../../base/browser/browser.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
+import * as dom from '../../../base/browser/dom.js';
 import { GlobalMouseMoveMonitor, standardMouseMoveMerger } from '../../../base/browser/globalMouseMoveMonitor.js';
-import { Color, RGBA, HSVA } from '../../../base/common/color.js';
+import { Widget } from '../../../base/browser/ui/widget.js';
+import { Color, HSVA, RGBA } from '../../../base/common/color.js';
+import { Emitter } from '../../../base/common/event.js';
+import { Disposable } from '../../../base/common/lifecycle.js';
 import { editorHoverBackground } from '../../../platform/theme/common/colorRegistry.js';
 import { registerThemingParticipant } from '../../../platform/theme/common/themeService.js';
 var $ = dom.$;
@@ -32,7 +35,7 @@ var ColorPickerHeader = /** @class */ (function (_super) {
         dom.append(container, _this.domNode);
         _this.pickedColorNode = dom.append(_this.domNode, $('.picked-color'));
         var colorBox = dom.append(_this.domNode, $('.original-color'));
-        colorBox.style.backgroundColor = Color.Format.CSS.format(_this.model.originalColor);
+        colorBox.style.backgroundColor = Color.Format.CSS.format(_this.model.originalColor) || '';
         _this.backgroundColor = themeService.getTheme().getColor(editorHoverBackground) || Color.white;
         _this._register(registerThemingParticipant(function (theme, collector) {
             _this.backgroundColor = theme.getColor(editorHoverBackground) || Color.white;
@@ -44,12 +47,12 @@ var ColorPickerHeader = /** @class */ (function (_super) {
         }));
         _this._register(model.onDidChangeColor(_this.onDidChangeColor, _this));
         _this._register(model.onDidChangePresentation(_this.onDidChangePresentation, _this));
-        _this.pickedColorNode.style.backgroundColor = Color.Format.CSS.format(model.color);
+        _this.pickedColorNode.style.backgroundColor = Color.Format.CSS.format(model.color) || '';
         dom.toggleClass(_this.pickedColorNode, 'light', model.color.rgba.a < 0.5 ? _this.backgroundColor.isLighter() : model.color.isLighter());
         return _this;
     }
     ColorPickerHeader.prototype.onDidChangeColor = function (color) {
-        this.pickedColorNode.style.backgroundColor = Color.Format.CSS.format(color);
+        this.pickedColorNode.style.backgroundColor = Color.Format.CSS.format(color) || '';
         dom.toggleClass(this.pickedColorNode, 'light', color.rgba.a < 0.5 ? this.backgroundColor.isLighter() : color.isLighter());
         this.onDidChangePresentation();
     };
@@ -126,7 +129,7 @@ var SaturationBox = /** @class */ (function (_super) {
         _this.selection = $('.saturation-selection');
         dom.append(_this.domNode, _this.selection);
         _this.layout();
-        _this._register(dom.addDisposableListener(_this.domNode, dom.EventType.MOUSE_DOWN, function (e) { return _this.onMouseDown(e); }));
+        _this._register(dom.addDisposableGenericMouseDownListner(_this.domNode, function (e) { return _this.onMouseDown(e); }));
         _this._register(_this.model.onDidChangeColor(_this.onDidChangeColor, _this));
         _this.monitor = null;
         return _this;
@@ -138,12 +141,14 @@ var SaturationBox = /** @class */ (function (_super) {
         if (e.target !== this.selection) {
             this.onDidChangePosition(e.offsetX, e.offsetY);
         }
-        this.monitor.startMonitoring(standardMouseMoveMerger, function (event) { return _this.onDidChangePosition(event.posx - origin.left, event.posy - origin.top); }, function () { return null; });
-        var mouseUpListener = dom.addDisposableListener(document, dom.EventType.MOUSE_UP, function () {
+        this.monitor.startMonitoring(e.target, e.buttons, standardMouseMoveMerger, function (event) { return _this.onDidChangePosition(event.posx - origin.left, event.posy - origin.top); }, function () { return null; });
+        var mouseUpListener = dom.addDisposableGenericMouseUpListner(document, function () {
             _this._onColorFlushed.fire();
             mouseUpListener.dispose();
-            _this.monitor.stopMonitoring(true);
-            _this.monitor = null;
+            if (_this.monitor) {
+                _this.monitor.stopMonitoring(true);
+                _this.monitor = null;
+            }
         }, true);
     };
     SaturationBox.prototype.onDidChangePosition = function (left, top) {
@@ -205,7 +210,7 @@ var Strip = /** @class */ (function (_super) {
         _this.overlay = dom.append(_this.domNode, $('.overlay'));
         _this.slider = dom.append(_this.domNode, $('.slider'));
         _this.slider.style.top = "0px";
-        _this._register(dom.addDisposableListener(_this.domNode, dom.EventType.MOUSE_DOWN, function (e) { return _this.onMouseDown(e); }));
+        _this._register(dom.addDisposableGenericMouseDownListner(_this.domNode, function (e) { return _this.onMouseDown(e); }));
         _this.layout();
         return _this;
     }
@@ -222,8 +227,8 @@ var Strip = /** @class */ (function (_super) {
         if (e.target !== this.slider) {
             this.onDidChangeTop(e.offsetY);
         }
-        monitor.startMonitoring(standardMouseMoveMerger, function (event) { return _this.onDidChangeTop(event.posy - origin.top); }, function () { return null; });
-        var mouseUpListener = dom.addDisposableListener(document, dom.EventType.MOUSE_UP, function () {
+        monitor.startMonitoring(e.target, e.buttons, standardMouseMoveMerger, function (event) { return _this.onDidChangeTop(event.posy - origin.top); }, function () { return null; });
+        var mouseUpListener = dom.addDisposableGenericMouseUpListner(document, function () {
             _this._onColorFlushed.fire();
             mouseUpListener.dispose();
             monitor.stopMonitoring(true);

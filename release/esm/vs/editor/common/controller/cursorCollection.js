@@ -2,10 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+import { CursorState } from './cursorCommon.js';
 import { OneCursor } from './oneCursor.js';
 import { Selection } from '../core/selection.js';
-import { CursorState } from './cursorCommon.js';
 var CursorCollection = /** @class */ (function () {
     function CursorCollection(context) {
         this.context = context;
@@ -208,9 +207,10 @@ var CursorCollection = /** @class */ (function () {
                     var resultingState = CursorState.fromModelSelection(resultingSelection);
                     cursors[winnerIndex].setState(this.context, resultingState.modelState, resultingState.viewState);
                 }
-                for (var j = 0; j < sortedCursors.length; j++) {
-                    if (sortedCursors[j].index > looserIndex) {
-                        sortedCursors[j].index--;
+                for (var _i = 0, sortedCursors_1 = sortedCursors; _i < sortedCursors_1.length; _i++) {
+                    var sortedCursor = sortedCursors_1[_i];
+                    if (sortedCursor.index > looserIndex) {
+                        sortedCursor.index--;
                     }
                 }
                 cursors.splice(looserIndex, 1);

@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -23,17 +25,18 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import * as objects from '../../../base/common/objects.js';
-import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
-import { ICommandService } from '../../../platform/commands/common/commands.js';
-import { IContextKeyService } from '../../../platform/contextkey/common/contextkey.js';
 import { ICodeEditorService } from '../services/codeEditorService.js';
 import { CodeEditorWidget } from './codeEditorWidget.js';
-import { IThemeService } from '../../../platform/theme/common/themeService.js';
+import { ICommandService } from '../../../platform/commands/common/commands.js';
+import { IContextKeyService } from '../../../platform/contextkey/common/contextkey.js';
+import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../platform/notification/common/notification.js';
+import { IThemeService } from '../../../platform/theme/common/themeService.js';
+import { IAccessibilityService } from '../../../platform/accessibility/common/accessibility.js';
 var EmbeddedCodeEditorWidget = /** @class */ (function (_super) {
     __extends(EmbeddedCodeEditorWidget, _super);
-    function EmbeddedCodeEditorWidget(domElement, options, parentEditor, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService) {
-        var _this = _super.call(this, domElement, parentEditor.getRawConfiguration(), {}, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService) || this;
+    function EmbeddedCodeEditorWidget(domElement, options, parentEditor, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService, accessibilityService) {
+        var _this = _super.call(this, domElement, parentEditor.getRawOptions(), {}, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService, accessibilityService) || this;
         _this._parentEditor = parentEditor;
         _this._overwriteOptions = options;
         // Overwrite parent's options
@@ -45,7 +48,7 @@ var EmbeddedCodeEditorWidget = /** @class */ (function (_super) {
         return this._parentEditor;
     };
     EmbeddedCodeEditorWidget.prototype._onParentConfigurationChanged = function (e) {
-        _super.prototype.updateOptions.call(this, this._parentEditor.getRawConfiguration());
+        _super.prototype.updateOptions.call(this, this._parentEditor.getRawOptions());
         _super.prototype.updateOptions.call(this, this._overwriteOptions);
     };
     EmbeddedCodeEditorWidget.prototype.updateOptions = function (newOptions) {
@@ -58,7 +61,8 @@ var EmbeddedCodeEditorWidget = /** @class */ (function (_super) {
         __param(5, ICommandService),
         __param(6, IContextKeyService),
         __param(7, IThemeService),
-        __param(8, INotificationService)
+        __param(8, INotificationService),
+        __param(9, IAccessibilityService)
     ], EmbeddedCodeEditorWidget);
     return EmbeddedCodeEditorWidget;
 }(CodeEditorWidget));

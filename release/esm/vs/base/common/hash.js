@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 /**
  * Return a hash value for an object.
  */
@@ -24,9 +23,9 @@ export function hash(obj, hashVal) {
         case 'number':
             return numberHash(obj, hashVal);
         case 'undefined':
-            return numberHash(obj, 937);
+            return numberHash(0, 937);
         default:
-            return numberHash(obj, 617);
+            return numberHash(0, 617);
     }
 }
 function numberHash(val, initialHashVal) {
@@ -35,7 +34,7 @@ function numberHash(val, initialHashVal) {
 function booleanHash(b, initialHashVal) {
     return numberHash(b ? 433 : 863, initialHashVal);
 }
-function stringHash(s, hashVal) {
+export function stringHash(s, hashVal) {
     hashVal = numberHash(149417, hashVal);
     for (var i = 0, length_1 = s.length; i < length_1; i++) {
         hashVal = numberHash(s.charCodeAt(i), hashVal);

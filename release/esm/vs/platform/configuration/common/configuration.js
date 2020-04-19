@@ -2,14 +2,6 @@ import { Registry } from '../../registry/common/platform.js';
 import { createDecorator } from '../../instantiation/common/instantiation.js';
 import { Extensions } from './configurationRegistry.js';
 export var IConfigurationService = createDecorator('configurationService');
-export var ConfigurationTarget;
-(function (ConfigurationTarget) {
-    ConfigurationTarget[ConfigurationTarget["USER"] = 1] = "USER";
-    ConfigurationTarget[ConfigurationTarget["WORKSPACE"] = 2] = "WORKSPACE";
-    ConfigurationTarget[ConfigurationTarget["WORKSPACE_FOLDER"] = 3] = "WORKSPACE_FOLDER";
-    ConfigurationTarget[ConfigurationTarget["DEFAULT"] = 4] = "DEFAULT";
-    ConfigurationTarget[ConfigurationTarget["MEMORY"] = 5] = "MEMORY";
-})(ConfigurationTarget || (ConfigurationTarget = {}));
 export function toValuesTree(properties, conflictReporter) {
     var root = Object.create(null);
     for (var key in properties) {
@@ -70,11 +62,12 @@ function doRemoveFromValueTree(valueTree, segments) {
 export function getConfigurationValue(config, settingPath, defaultValue) {
     function accessSetting(config, path) {
         var current = config;
-        for (var i = 0; i < path.length; i++) {
+        for (var _i = 0, path_1 = path; _i < path_1.length; _i++) {
+            var component = path_1[_i];
             if (typeof current !== 'object' || current === null) {
                 return undefined;
             }
-            current = current[path[i]];
+            current = current[component];
         }
         return current;
     }
@@ -97,4 +90,17 @@ export function getDefaultValues() {
 }
 export function overrideIdentifierFromKey(key) {
     return key.substring(1, key.length - 1);
+}
+export function getMigratedSettingValue(configurationService, currentSettingName, legacySettingName) {
+    var setting = configurationService.inspect(currentSettingName);
+    var legacySetting = configurationService.inspect(legacySettingName);
+    if (typeof setting.userValue !== 'undefined' || typeof setting.workspaceValue !== 'undefined' || typeof setting.workspaceFolderValue !== 'undefined') {
+        return setting.value;
+    }
+    else if (typeof legacySetting.userValue !== 'undefined' || typeof legacySetting.workspaceValue !== 'undefined' || typeof legacySetting.workspaceFolderValue !== 'undefined') {
+        return legacySetting.value;
+    }
+    else {
+        return setting.defaultValue;
+    }
 }
