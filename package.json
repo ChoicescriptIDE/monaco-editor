@@ -47,6 +47,7 @@
     "vinyl": "^2.2.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
-    "yaserver": "^0.3.0"
+    "yaserver": "^0.3.0",
+    "monaco-choicescript": "ChoicescriptIDE/monaco-choicescript#lib"
   }
 }

@@ -69,6 +69,17 @@
 					'npm/min': 'node_modules/monaco-languages/release/min',
 					esm: 'node_modules/monaco-languages/release/esm',
 				}
+			},
+			{
+				name: 'monaco-choicescript',
+				contrib: 'vs/language/choicescript/monaco.contribution',
+				modulePrefix: 'vs/language/choicescript',
+				paths: {
+					src: '/monaco-choicescript/release/dev',
+					'npm/dev': 'node_modules/monaco-choicescript/release/dev',
+					'npm/min': 'node_modules/monaco-choicescript/release/min',
+					esm: 'node_modules/monaco-choicescript/release/esm',
+				}
 			}
 		]
 	}
