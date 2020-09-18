@@ -67,6 +67,9 @@ function taskSeries(...tasks) {
 
 const cleanReleaseTask = function(cb) { rimraf('release', { maxBusyTries: 1 }, cb); };
 gulp.task('release', taskSeries(cleanReleaseTask, function() {
+	metadata.METADATA.PLUGINS = metadata.METADATA.PLUGINS.filter( // ignore all plugins that aren't helpful to CSIDE
+		(plugin) => ["monaco-choicescript", "monaco-css", "monaco-json", "monaco-languages"].includes(plugin.name)
+	);
 	return es.merge(
 
 		// dev folder
