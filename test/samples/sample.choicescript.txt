@@ -1,0 +1,6 @@
+*create myglobalvar ""
+*tem
+*set mythinge 5 % 3
+*print mythinge
+*choice
+*goto_scene choicescript_stats mylabel
