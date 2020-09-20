@@ -1,0 +1,13 @@
+/.github/
+/.vscode/
+/ci/
+/dist/
+/docs/
+/build/
+/test/
+/website/
+/gulpfile.js
+/CONTRIBUTING.md
+/azure-pipelines.yml
+/metadata.js
+/package.json
