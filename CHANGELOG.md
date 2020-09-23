@@ -6,7 +6,8 @@
 * Added `Paste` in the context menu in browsers which support the clipboard API.
 * Many improvements in `monaco-typescript`: support for "deprecated" tags, API to participate in the web worker, improved lib.d.ts resolving.
 * New tokenization support for: Julia, Scala, Lexon, Terraform HCL, Dart, Systemverilog.
-* New semantic tokens provider sample on the playground.
+* New semantic tokens provider [sample on the playground](https://microsoft.github.io/monaco-editor/playground.html#extending-language-services-semantic-tokens-provider-example).
+* New [shadow dom sample](https://github.com/microsoft/monaco-editor-samples/tree/master/browser-amd-shadow-dom)
 * New `overflowWidgetsDomNode` constructor option to pass in a parent for overflowing widgets.
 * New `minimap.size` option: `proportional`, `fill`, `fit`.
 * New `OnTypeRename` provider and option `renameOnType`.
@@ -44,6 +45,10 @@ Contributions to `monaco-typescript`:
   * Adopt "deprecated" API [PR #67](https://github.com/microsoft/monaco-typescript/pull/67)
   * Format signature and parameter documentation as Markdown [PR #66](https://github.com/microsoft/monaco-typescript/pull/66)
 * [Spencer (@SpencerSharkey)](https://github.com/SpencerSharkey): Use typescript language for hover tooltip header [PR #70](https://github.com/microsoft/monaco-typescript/pull/70)
+
+Contributions to `monaco-json`:
+
+* [@pankajk07](https://github.com/pankajk07): Fixes microsoft/monaco-editor#1999 [PR #12](https://github.com/microsoft/monaco-json/pull/12)
 
 Contributions to `monaco-languages`:
 
