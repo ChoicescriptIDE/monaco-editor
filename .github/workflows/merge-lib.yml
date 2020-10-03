@@ -1,0 +1,25 @@
+name: merge-lib
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Merge
+        env:
+          token: ${{ secrets.TRIGGER_WORKFLOW }}
+        run: |
+          git config --global user.name 'CSIDE-Shell'
+          git config --global user.email '32689095+CSIDE-Shell@users.noreply.github.com'
+
+          git checkout lib --
+          git merge master
+          git push https://CSIDE-Shell:$token@github.com/${{ github.repository }}.git lib
