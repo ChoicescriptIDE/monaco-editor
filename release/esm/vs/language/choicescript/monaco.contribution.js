@@ -189,5 +189,13 @@ function getCSMode() {
 }
 languages.onLanguage('choicescript', function () {
     //getModeCS('choicescript').then(csmode => csmode.setupMode(choicescriptDefaults));
-    getCSMode().then(function (mode) { return mode.setupMode(choicescriptDefaults); });
+    getCSMode().then(function (mode) {
+        languages.choicescriptDispose = mode.setupMode(choicescriptDefaults);
+        // handle reset on setModeConfiguration
+        choicescriptDefaults.onDidChange(function () {
+            var _a;
+            (_a = languages.choicescriptDispose) === null || _a === void 0 ? void 0 : _a.dispose();
+            languages.choicescriptDispose = mode.setupMode(choicescriptDefaults);
+        });
+    });
 });

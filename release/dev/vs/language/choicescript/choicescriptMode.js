@@ -43753,16 +43753,17 @@ define('vs/language/choicescript/languageFeaturesChoiceScript',["require", "expo
                 onModelRemoved(event.model);
                 onModelAdd(event.model);
             }));
-            defaults.onDidChange(function (_) {
+            this._disposables.push(defaults.onDidChange(function (_) {
                 monaco_editor_core_1.editor.getModels().forEach(function (model) {
                     if (model.getModeId() === _this._languageId) {
                         onModelRemoved(model);
                         onModelAdd(model);
                     }
                 });
-            });
+            }));
             this._disposables.push({
                 dispose: function () {
+                    monaco_editor_core_1.editor.getModels().forEach(onModelRemoved);
                     for (var key in _this._listener) {
                         _this._listener[key].dispose();
                     }

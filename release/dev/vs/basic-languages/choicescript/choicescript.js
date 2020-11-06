@@ -32,6 +32,13 @@ define('vs/basic-languages/choicescript/choicescript',["require", "exports", "..
                     ').*\\s*$'),
                 action: { indentAction: monaco_editor_core_1.languages.IndentAction.Outdent }
             }
+        ],
+        autoClosingPairs: [
+            { open: '{', close: '}' },
+            { open: '[', close: ']' },
+            { open: '(', close: ')' },
+            { open: '"', close: '"' },
+            { open: "'", close: "'" }
         ]
     };
     exports.language = {

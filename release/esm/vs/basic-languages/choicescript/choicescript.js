@@ -29,6 +29,13 @@ export var conf = {
                 ').*\\s*$'),
             action: { indentAction: languages.IndentAction.Outdent }
         }
+    ],
+    autoClosingPairs: [
+        { open: '{', close: '}' },
+        { open: '[', close: ']' },
+        { open: '(', close: ')' },
+        { open: '"', close: '"' },
+        { open: "'", close: "'" }
     ]
 };
 export var language = {

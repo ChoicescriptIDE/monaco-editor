@@ -39,16 +39,17 @@ var DiagnosticsAdapter = /** @class */ (function () {
             onModelRemoved(event.model);
             onModelAdd(event.model);
         }));
-        defaults.onDidChange(function (_) {
+        this._disposables.push(defaults.onDidChange(function (_) {
             editor.getModels().forEach(function (model) {
                 if (model.getModeId() === _this._languageId) {
                     onModelRemoved(model);
                     onModelAdd(model);
                 }
             });
-        });
+        }));
         this._disposables.push({
             dispose: function () {
+                editor.getModels().forEach(onModelRemoved);
                 for (var key in _this._listener) {
                     _this._listener[key].dispose();
                 }
