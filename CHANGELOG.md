@@ -1,5 +1,23 @@
 # Monaco Editor Changelog
 
+## [0.23.0] (05.03.2021)
+
+* improves input on Android (using Gboard)
+* automatically switches to high contrast when the OS is using high contrast (doesn't work in Firefox). Can be turned off via `autoDetectHighContrast`.
+* the editor no longer supports classical Edge, which has reached End of Support on March 9th, 2021. See https://docs.microsoft.com/en-us/lifecycle/faq/internet-explorer-microsoft-edge#what-is-the-lifecycle-policy-for-microsoft-edge
+
+### Thank you
+
+Contributions to `monaco-languages`:
+
+* [@Contentmaudlin (Mert Ussakli)](https://github.com/Contentmaudlin): Property is not a keyword in C# [PR #124](https://github.com/microsoft/monaco-languages/pull/124)
+* [@mattgodbolt (Matt Godbolt)](https://github.com/mattgodbolt): Support better C++ annotation highlighting [PR #125](https://github.com/microsoft/monaco-languages/pull/125)
+* [@mwellman17 (Michael Wellman)](https://github.com/mwellman17): Add text/x-yaml MIME type. [PR #126](https://github.com/microsoft/monaco-languages/pull/126)
+
+Contributions to `monaco-typescript`:
+
+* [@spahnke (Sebastian Pahnke)](https://github.com/spahnke): Keep fileName property of diagnostic objects and related information [PR #74](https://github.com/microsoft/monaco-typescript/pull/74)
+
 ## [0.22.3] (01.02.2021)
 
 Fixes a regression where symbol icons used in suggestions or quick outline were missing colors (see https://github.com/microsoft/monaco-editor/issues/2329).

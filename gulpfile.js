@@ -647,7 +647,7 @@ const buildWebsiteTask = taskSeries(cleanWebsiteTask, function() {
 });
 gulp.task('build-website', buildWebsiteTask);
 
-gulp.task('website', taskSeries(buildWebsiteTask, function() {
+gulp.task('prepare-website-branch', async function() {
 	cp.execSync('git init', {
 		cwd: path.join(__dirname, '../monaco-editor-website')
 	});
@@ -676,7 +676,7 @@ gulp.task('website', taskSeries(buildWebsiteTask, function() {
 		cwd: path.join(__dirname, '../monaco-editor-website')
 	});
 	console.log('RUN monaco-editor-website>git push origin gh-pages --force');
-}));
+});
 
 const generateTestSamplesTask = function() {
 	var sampleNames = fs.readdirSync(path.join(__dirname, 'test/samples'));
