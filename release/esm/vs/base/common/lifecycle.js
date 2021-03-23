@@ -7,35 +7,46 @@ import { Iterable } from './iterator.js';
  * extend Disposable or use a DisposableStore. This means there are a lot of false positives.
  */
 const TRACK_DISPOSABLES = false;
-const __is_disposable_tracked__ = '__is_disposable_tracked__';
+let disposableTracker = null;
+if (TRACK_DISPOSABLES) {
+    const __is_disposable_tracked__ = '__is_disposable_tracked__';
+    disposableTracker = new class {
+        trackDisposable(x) {
+            const stack = new Error('Potentially leaked disposable').stack;
+            setTimeout(() => {
+                if (!x[__is_disposable_tracked__]) {
+                    console.log(stack);
+                }
+            }, 3000);
+        }
+        markTracked(x) {
+            if (x && x !== Disposable.None) {
+                try {
+                    x[__is_disposable_tracked__] = true;
+                }
+                catch (_a) {
+                    // noop
+                }
+            }
+        }
+    };
+}
 function markTracked(x) {
-    if (!TRACK_DISPOSABLES) {
+    if (!disposableTracker) {
         return;
     }
-    if (x && x !== Disposable.None) {
-        try {
-            x[__is_disposable_tracked__] = true;
-        }
-        catch (_a) {
-            // noop
-        }
-    }
+    disposableTracker.markTracked(x);
 }
-function trackDisposable(x) {
-    if (!TRACK_DISPOSABLES) {
+export function trackDisposable(x) {
+    if (!disposableTracker) {
         return x;
     }
-    const stack = new Error('Potentially leaked disposable').stack;
-    setTimeout(() => {
-        if (!x[__is_disposable_tracked__]) {
-            console.log(stack);
-        }
-    }, 3000);
+    disposableTracker.trackDisposable(x);
     return x;
 }
 export class MultiDisposeError extends Error {
     constructor(errors) {
-        super(`Encounter errors while disposing of store. Errors: [${errors.join(', ')}]`);
+        super(`Encountered errors while disposing of store. Errors: [${errors.join(', ')}]`);
         this.errors = errors;
     }
 }
@@ -72,7 +83,7 @@ export function dispose(arg) {
 }
 export function combinedDisposable(...disposables) {
     disposables.forEach(markTracked);
-    return trackDisposable({ dispose: () => dispose(disposables) });
+    return toDisposable(() => dispose(disposables));
 }
 export function toDisposable(fn) {
     const self = trackDisposable({
@@ -164,12 +175,11 @@ export class MutableDisposable {
         return this._isDisposed ? undefined : this._value;
     }
     set value(value) {
+        var _a;
         if (this._isDisposed || value === this._value) {
             return;
         }
-        if (this._value) {
-            this._value.dispose();
-        }
+        (_a = this._value) === null || _a === void 0 ? void 0 : _a.dispose();
         if (value) {
             markTracked(value);
         }
@@ -179,11 +189,10 @@ export class MutableDisposable {
         this.value = undefined;
     }
     dispose() {
+        var _a;
         this._isDisposed = true;
         markTracked(this);
-        if (this._value) {
-            this._value.dispose();
-        }
+        (_a = this._value) === null || _a === void 0 ? void 0 : _a.dispose();
         this._value = undefined;
     }
 }

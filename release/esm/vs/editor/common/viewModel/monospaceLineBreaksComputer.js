@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import * as strings from '../../../base/common/strings.js';
 import { CharacterClassifier } from '../core/characterClassifier.js';
-import { LineBreakData } from './splitLinesCollection.js';
+import { LineBreakData } from './viewModel.js';
 class WrappingCharacterClassifier extends CharacterClassifier {
     constructor(BREAK_BEFORE, BREAK_AFTER) {
         super(0 /* NONE */);
@@ -40,7 +40,7 @@ export class MonospaceLineBreaksComputerFactory {
         this.classifier = new WrappingCharacterClassifier(breakBeforeChars, breakAfterChars);
     }
     static create(options) {
-        return new MonospaceLineBreaksComputerFactory(options.get(108 /* wordWrapBreakBeforeCharacters */), options.get(107 /* wordWrapBreakAfterCharacters */));
+        return new MonospaceLineBreaksComputerFactory(options.get(113 /* wordWrapBreakBeforeCharacters */), options.get(112 /* wordWrapBreakAfterCharacters */));
     }
     createLineBreaksComputer(fontInfo, tabSize, wrappingColumn, wrappingIndent) {
         tabSize = tabSize | 0; //@perf
@@ -247,6 +247,19 @@ function createLineBreaksFromPreviousLineBreaks(classifier, previousBreakingData
             breakOffset = forcedBreakOffset;
             breakOffsetVisibleColumn = forcedBreakOffsetVisibleColumn;
         }
+        if (breakOffset <= lastBreakingOffset) {
+            // Make sure that we are advancing (at least one character)
+            const charCode = lineText.charCodeAt(lastBreakingOffset);
+            if (strings.isHighSurrogate(charCode)) {
+                // A surrogate pair must always be considered as a single unit, so it is never to be broken
+                breakOffset = lastBreakingOffset + 2;
+                breakOffsetVisibleColumn = lastBreakingOffsetVisibleColumn + 2;
+            }
+            else {
+                breakOffset = lastBreakingOffset + 1;
+                breakOffsetVisibleColumn = lastBreakingOffsetVisibleColumn + computeCharWidth(charCode, lastBreakingOffsetVisibleColumn, tabSize, columnsForFullWidthChar);
+            }
+        }
         lastBreakingOffset = breakOffset;
         breakingOffsets[breakingOffsetsCount] = breakOffset;
         lastBreakingOffsetVisibleColumn = breakOffsetVisibleColumn;
@@ -356,6 +369,10 @@ function computeCharWidth(charCode, visibleColumn, tabSize, columnsForFullWidthC
         return (tabSize - (visibleColumn % tabSize));
     }
     if (strings.isFullWidthCharacter(charCode)) {
+        return columnsForFullWidthChar;
+    }
+    if (charCode < 32) {
+        // when using `editor.renderControlCharacters`, the substitutions are often wide
         return columnsForFullWidthChar;
     }
     return 1;

@@ -539,39 +539,6 @@ var AbstractDeclaration = /** @class */ (function (_super) {
     return AbstractDeclaration;
 }(Node));
 export { AbstractDeclaration };
-var CustomPropertyDeclaration = /** @class */ (function (_super) {
-    __extends(CustomPropertyDeclaration, _super);
-    function CustomPropertyDeclaration(offset, length) {
-        return _super.call(this, offset, length) || this;
-    }
-    Object.defineProperty(CustomPropertyDeclaration.prototype, "type", {
-        get: function () {
-            return NodeType.CustomPropertyDeclaration;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    CustomPropertyDeclaration.prototype.setProperty = function (node) {
-        return this.setNode('property', node);
-    };
-    CustomPropertyDeclaration.prototype.getProperty = function () {
-        return this.property;
-    };
-    CustomPropertyDeclaration.prototype.setValue = function (value) {
-        return this.setNode('value', value);
-    };
-    CustomPropertyDeclaration.prototype.getValue = function () {
-        return this.value;
-    };
-    CustomPropertyDeclaration.prototype.setPropertySet = function (value) {
-        return this.setNode('propertySet', value);
-    };
-    CustomPropertyDeclaration.prototype.getPropertySet = function () {
-        return this.propertySet;
-    };
-    return CustomPropertyDeclaration;
-}(AbstractDeclaration));
-export { CustomPropertyDeclaration };
 var CustomPropertySet = /** @class */ (function (_super) {
     __extends(CustomPropertySet, _super);
     function CustomPropertySet(offset, length) {
@@ -642,6 +609,27 @@ var Declaration = /** @class */ (function (_super) {
     return Declaration;
 }(AbstractDeclaration));
 export { Declaration };
+var CustomPropertyDeclaration = /** @class */ (function (_super) {
+    __extends(CustomPropertyDeclaration, _super);
+    function CustomPropertyDeclaration(offset, length) {
+        return _super.call(this, offset, length) || this;
+    }
+    Object.defineProperty(CustomPropertyDeclaration.prototype, "type", {
+        get: function () {
+            return NodeType.CustomPropertyDeclaration;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    CustomPropertyDeclaration.prototype.setPropertySet = function (value) {
+        return this.setNode('propertySet', value);
+    };
+    CustomPropertyDeclaration.prototype.getPropertySet = function () {
+        return this.propertySet;
+    };
+    return CustomPropertyDeclaration;
+}(Declaration));
+export { CustomPropertyDeclaration };
 var Property = /** @class */ (function (_super) {
     __extends(Property, _super);
     function Property(offset, length) {
@@ -1080,6 +1068,18 @@ var Forward = /** @class */ (function (_super) {
     };
     Forward.prototype.getIdentifier = function () {
         return this.identifier;
+    };
+    Forward.prototype.getMembers = function () {
+        if (!this.members) {
+            this.members = new Nodelist(this);
+        }
+        return this.members;
+    };
+    Forward.prototype.getParameters = function () {
+        if (!this.parameters) {
+            this.parameters = new Nodelist(this);
+        }
+        return this.parameters;
     };
     return Forward;
 }(Node));

@@ -16,7 +16,8 @@ export class AbstractGotoLineQuickAccessProvider extends AbstractEditorNavigatio
         picker.ariaLabel = label;
         return Disposable.None;
     }
-    provideWithTextEditor(editor, picker, token) {
+    provideWithTextEditor(context, picker, token) {
+        const editor = context.editor;
         const disposables = new DisposableStore();
         // Goto line once picked
         disposables.add(picker.onDidAccept(event => {
@@ -25,7 +26,7 @@ export class AbstractGotoLineQuickAccessProvider extends AbstractEditorNavigatio
                 if (!this.isValidLineNumber(editor, item.lineNumber)) {
                     return;
                 }
-                this.gotoLocation(editor, { range: this.toRange(item.lineNumber, item.column), keyMods: picker.keyMods, preserveFocus: event.inBackground });
+                this.gotoLocation(context, { range: this.toRange(item.lineNumber, item.column), keyMods: picker.keyMods, preserveFocus: event.inBackground });
                 if (!event.inBackground) {
                     picker.hide();
                 }
@@ -60,7 +61,7 @@ export class AbstractGotoLineQuickAccessProvider extends AbstractEditorNavigatio
         const codeEditor = getCodeEditor(editor);
         if (codeEditor) {
             const options = codeEditor.getOptions();
-            const lineNumbers = options.get(52 /* lineNumbers */);
+            const lineNumbers = options.get(54 /* lineNumbers */);
             if (lineNumbers.renderType === 2 /* Relative */) {
                 codeEditor.updateOptions({ lineNumbers: 'on' });
                 disposables.add(toDisposable(() => codeEditor.updateOptions({ lineNumbers: 'relative' })));

@@ -5,7 +5,7 @@
 import './dropdown.css';
 import { Gesture, EventType as GestureEventType } from '../../touch.js';
 import { ActionRunner } from '../../../common/actions.js';
-import { EventHelper, EventType, removeClass, addClass, append, $, addDisposableListener } from '../../dom.js';
+import { EventHelper, EventType, append, $, addDisposableListener } from '../../dom.js';
 import { StandardKeyboardEvent } from '../../keyboardEvent.js';
 import { Emitter } from '../../../common/event.js';
 export class BaseDropdown extends ActionRunner {
@@ -28,7 +28,7 @@ export class BaseDropdown extends ActionRunner {
         for (const event of [EventType.MOUSE_DOWN, GestureEventType.Tap]) {
             this._register(addDisposableListener(this._label, event, e => {
                 if (e instanceof MouseEvent && e.detail > 1) {
-                    return; // prevent multiple clicks to open multiple context menus (https://github.com/Microsoft/vscode/issues/41363)
+                    return; // prevent multiple clicks to open multiple context menus (https://github.com/microsoft/vscode/issues/41363)
                 }
                 if (this.visible) {
                     this.hide();
@@ -41,7 +41,7 @@ export class BaseDropdown extends ActionRunner {
         this._register(addDisposableListener(this._label, EventType.KEY_UP, e => {
             const event = new StandardKeyboardEvent(e);
             if (event.equals(3 /* Enter */) || event.equals(10 /* Space */)) {
-                EventHelper.stop(e, true); // https://github.com/Microsoft/vscode/issues/57997
+                EventHelper.stop(e, true); // https://github.com/microsoft/vscode/issues/57997
                 if (this.visible) {
                     this.hide();
                 }
@@ -115,7 +115,7 @@ export class DropdownMenu extends BaseDropdown {
     }
     show() {
         super.show();
-        addClass(this.element, 'active');
+        this.element.classList.add('active');
         this._contextMenuProvider.showContextMenu({
             getAnchor: () => this.element,
             getActions: () => this.actions,
@@ -134,6 +134,6 @@ export class DropdownMenu extends BaseDropdown {
     }
     onHide() {
         this.hide();
-        removeClass(this.element, 'active');
+        this.element.classList.remove('active');
     }
 }

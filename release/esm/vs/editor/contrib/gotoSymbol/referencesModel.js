@@ -14,7 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { localize } from '../../../nls.js';
 import { Emitter } from '../../../base/common/event.js';
 import { basename, extUri } from '../../../base/common/resources.js';
-import { dispose, DisposableStore } from '../../../base/common/lifecycle.js';
+import { dispose } from '../../../base/common/lifecycle.js';
 import * as strings from '../../../base/common/strings.js';
 import { defaultGenerator } from '../../../base/common/idGenerator.js';
 import { Range } from '../../common/core/range.js';
@@ -37,7 +37,14 @@ export class OneReference {
         this._rangeCallback(this);
     }
     get ariaMessage() {
-        return localize('aria.oneReference', "symbol in {0} on line {1} at column {2}", basename(this.uri), this.range.startLineNumber, this.range.startColumn);
+        var _a;
+        const preview = (_a = this.parent.getPreview(this)) === null || _a === void 0 ? void 0 : _a.preview(this.range);
+        if (!preview) {
+            return localize('aria.oneReference', "symbol in {0} on line {1} at column {2}", basename(this.uri), this.range.startLineNumber, this.range.startColumn);
+        }
+        else {
+            return localize({ key: 'aria.oneReference.preview', comment: ['Placeholders are: 0: filename, 1:line number, 2: column number, 3: preview snippet of source code'] }, "symbol in {0} on line {1} at column {2}, {3}", basename(this.uri), this.range.startLineNumber, this.range.startColumn, preview.value);
+        }
     }
 }
 export class FilePreview {
@@ -111,7 +118,6 @@ export class FileReferences {
 }
 export class ReferencesModel {
     constructor(links, title) {
-        this._disposables = new DisposableStore();
         this.groups = [];
         this.references = [];
         this._onDidChangeReferenceRange = new Emitter();
@@ -138,7 +144,6 @@ export class ReferencesModel {
     }
     dispose() {
         dispose(this.groups);
-        this._disposables.dispose();
         this._onDidChangeReferenceRange.dispose();
         this.groups.length = 0;
     }

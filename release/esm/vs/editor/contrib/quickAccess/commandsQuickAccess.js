@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import { AbstractCommandsQuickAccessProvider } from '../../../platform/quickinput/browser/commandsQuickAccess.js';
-import { stripCodicons } from '../../../base/common/codicons.js';
+import { stripIcons } from '../../../base/common/iconLabels.js';
 export class AbstractEditorCommandsQuickAccessProvider extends AbstractCommandsQuickAccessProvider {
     constructor(options, instantiationService, keybindingService, commandService, telemetryService, notificationService) {
         super(options, instantiationService, keybindingService, commandService, telemetryService, notificationService);
@@ -18,7 +18,7 @@ export class AbstractEditorCommandsQuickAccessProvider extends AbstractCommandsQ
             editorCommandPicks.push({
                 commandId: editorAction.id,
                 commandAlias: editorAction.alias,
-                label: stripCodicons(editorAction.label) || editorAction.id,
+                label: stripIcons(editorAction.label) || editorAction.id,
             });
         }
         return editorCommandPicks;

@@ -304,8 +304,8 @@ export class Cursor extends Disposable {
     getSelections() {
         return this._cursors.getSelections();
     }
-    setSelections(eventsCollector, source, selections) {
-        this.setStates(eventsCollector, source, 0 /* NotSet */, CursorState.fromModelSelections(selections));
+    setSelections(eventsCollector, source, selections, reason) {
+        this.setStates(eventsCollector, source, reason, CursorState.fromModelSelections(selections));
     }
     getPrevEditOperationType() {
         return this._prevEditOperationType;
@@ -413,7 +413,7 @@ export class Cursor extends Disposable {
                 return null;
             }
             const closeChar = m[1];
-            const autoClosingPairsCandidates = this.context.cursorConfig.autoClosingPairsClose2.get(closeChar);
+            const autoClosingPairsCandidates = this.context.cursorConfig.autoClosingPairs.autoClosingPairsCloseSingleChar.get(closeChar);
             if (!autoClosingPairsCandidates || autoClosingPairsCandidates.length !== 1) {
                 return null;
             }
@@ -459,7 +459,7 @@ export class Cursor extends Disposable {
         });
         if (selections) {
             this._isHandling = false;
-            this.setSelections(eventsCollector, source, selections);
+            this.setSelections(eventsCollector, source, selections, 0 /* NotSet */);
         }
         if (autoClosedCharactersRanges.length > 0) {
             this._pushAutoClosedAction(autoClosedCharactersRanges, autoClosedEnclosingRanges);
@@ -523,9 +523,21 @@ export class Cursor extends Disposable {
             }
         }, eventsCollector, source);
     }
-    replacePreviousChar(eventsCollector, text, replaceCharCnt, source) {
+    compositionType(eventsCollector, text, replacePrevCharCnt, replaceNextCharCnt, positionDelta, source) {
+        if (text.length === 0 && replacePrevCharCnt === 0 && replaceNextCharCnt === 0) {
+            // this edit is a no-op
+            if (positionDelta !== 0) {
+                // but it still wants to move the cursor
+                const newSelections = this.getSelections().map(selection => {
+                    const position = selection.getPosition();
+                    return new Selection(position.lineNumber, position.column + positionDelta, position.lineNumber, position.column + positionDelta);
+                });
+                this.setSelections(eventsCollector, source, newSelections, 0 /* NotSet */);
+            }
+            return;
+        }
         this._executeEdit(() => {
-            this._executeEditOperation(TypeOperations.replacePreviousChar(this._prevEditOperationType, this.context.cursorConfig, this._model, this.getSelections(), text, replaceCharCnt));
+            this._executeEditOperation(TypeOperations.compositionType(this._prevEditOperationType, this.context.cursorConfig, this._model, this.getSelections(), text, replacePrevCharCnt, replaceNextCharCnt, positionDelta));
         }, eventsCollector, source);
     }
     paste(eventsCollector, text, pasteOnNewLine, multicursorText, source) {

@@ -105,7 +105,9 @@ export class SimpleEditorProgressService {
         return SimpleEditorProgressService.NULL_PROGRESS_RUNNER;
     }
     showWhile(promise, delay) {
-        return Promise.resolve(undefined);
+        return __awaiter(this, void 0, void 0, function* () {
+            yield promise;
+        });
     }
 }
 SimpleEditorProgressService.NULL_PROGRESS_RUNNER = {
@@ -189,12 +191,21 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
         super(contextKeyService, commandService, telemetryService, notificationService, logService);
         this._cachedResolver = null;
         this._dynamicKeybindings = [];
+        // for standard keybindings
         this._register(dom.addDisposableListener(domNode, dom.EventType.KEY_DOWN, (e) => {
-            let keyEvent = new StandardKeyboardEvent(e);
-            let shouldPreventDefault = this._dispatch(keyEvent, keyEvent.target);
+            const keyEvent = new StandardKeyboardEvent(e);
+            const shouldPreventDefault = this._dispatch(keyEvent, keyEvent.target);
             if (shouldPreventDefault) {
                 keyEvent.preventDefault();
                 keyEvent.stopPropagation();
+            }
+        }));
+        // for single modifier chord keybindings (e.g. shift shift)
+        this._register(dom.addDisposableListener(window, dom.EventType.KEY_UP, (e) => {
+            const keyEvent = new StandardKeyboardEvent(e);
+            const shouldPreventDefault = this._singleModifierDispatch(keyEvent, keyEvent.target);
+            if (shouldPreventDefault) {
+                keyEvent.preventDefault();
             }
         }));
     }
@@ -208,7 +219,8 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
                 when: when,
                 weight1: 1000,
                 weight2: 0,
-                extensionId: null
+                extensionId: null,
+                isBuiltinExtension: false
             });
             toDispose.add(toDisposable(() => {
                 for (let i = 0; i < this._dynamicKeybindings.length; i++) {
@@ -247,12 +259,12 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
             const keybinding = item.keybinding;
             if (!keybinding) {
                 // This might be a removal keybinding item in user settings => accept it
-                result[resultLen++] = new ResolvedKeybindingItem(undefined, item.command, item.commandArgs, when, isDefault, null);
+                result[resultLen++] = new ResolvedKeybindingItem(undefined, item.command, item.commandArgs, when, isDefault, null, false);
             }
             else {
                 const resolvedKeybindings = this.resolveKeybinding(keybinding);
                 for (const resolvedKeybinding of resolvedKeybindings) {
-                    result[resultLen++] = new ResolvedKeybindingItem(resolvedKeybinding, item.command, item.commandArgs, when, isDefault, null);
+                    result[resultLen++] = new ResolvedKeybindingItem(resolvedKeybinding, item.command, item.commandArgs, when, isDefault, null, false);
                 }
             }
         }
@@ -352,12 +364,9 @@ export class SimpleWorkspaceContextService {
     getWorkspace() {
         return this.workspace;
     }
-    getWorkspaceFolder(resource) {
-        return resource && resource.scheme === SimpleWorkspaceContextService.SCHEME ? this.workspace.folders[0] : null;
-    }
 }
 SimpleWorkspaceContextService.SCHEME = 'inmemory';
-export function applyConfigurationValues(configurationService, source, isDiffEditor) {
+export function updateConfigurationService(configurationService, source, isDiffEditor) {
     if (!source) {
         return;
     }
@@ -433,7 +442,7 @@ export class SimpleLayoutService {
     constructor(_codeEditorService, _container) {
         this._codeEditorService = _codeEditorService;
         this._container = _container;
-        this.onLayout = Event.None;
+        this.onDidLayout = Event.None;
     }
     get dimension() {
         if (!this._dimension) {

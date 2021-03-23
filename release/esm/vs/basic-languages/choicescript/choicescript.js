@@ -19,13 +19,7 @@ export var conf = {
         },
         {
             beforeText: new RegExp('^\\s*\\*(?:' +
-                [
-                    'ending',
-                    'finish',
-                    'goto',
-                    'goto_scene',
-                    'redirect_scene'
-                ].join('|') +
+                ['ending', 'finish', 'goto', 'goto_scene', 'redirect_scene'].join('|') +
                 ').*\\s*$'),
             action: { indentAction: languages.IndentAction.Outdent }
         }
@@ -39,10 +33,7 @@ export var conf = {
     ]
 };
 export var language = {
-    defaultToken: '',
     tokenPostfix: '.choicescript',
-    ws: '[ \t\n\r\f]*',
-    identifier: '-?-?([a-zA-Z]|(\\\\(([0-9a-fA-F]{1,6}\\s?)|[^[0-9a-fA-F])))([\\w\\-]|(\\\\(([0-9a-fA-F]{1,6}\\s?)|[^[0-9a-fA-F])))*',
     commands: [
         'abort',
         'achieve',
@@ -89,6 +80,7 @@ export var language = {
         'params',
         'print',
         'purchase',
+        'purchase_discount',
         'rand',
         'redirect_scene',
         'reset',
@@ -121,13 +113,7 @@ export var language = {
         'scene_list',
         'stat_chart'
     ],
-    dedentCommands: [
-        'ending',
-        'finish',
-        'goto',
-        'goto_scene',
-        'redirect_scene'
-    ],
+    dedentCommands: ['ending', 'finish', 'goto', 'goto_scene', 'redirect_scene'],
     optionCommands: ['allow_reuse', 'disable_reuse', 'hide_reuse'],
     flowCommands: [
         'gosub',
@@ -151,46 +137,166 @@ export var language = {
         'cside_theme_set',
         'cside_theme_apply'
     ],
-    builtins: /(?:^\*)(\w+)(?:\s?)/,
-    choiceOptionModifiers: new RegExp('\\s+\\*(' +
-        ['allow_reuse', 'disable_reuse', 'hide_reuse'].join('|') +
-        '){0,1}'),
-    choiceOptionConditionals: new RegExp('(:?\\s+\\*(if|selectable_if) .+ ?){0,1}#.+/'),
-    brackets: [
-        { open: '{', close: '}', token: 'delimiter.bracket' },
-        { open: '[', close: ']', token: 'delimiter.bracket' },
-        { open: '(', close: ')', token: 'delimiter.parenthesis' },
-        { open: '<', close: '>', token: 'delimiter.angle' }
+    symbols: /[=><&+\-*\/\^%!#]+/,
+    operators: [
+        '#',
+        '&',
+        '%-',
+        '%+',
+        '-',
+        '+',
+        '/',
+        '*',
+        '<',
+        '>',
+        '<=',
+        '>=',
+        '=',
+        '!=',
+        'and',
+        'or',
+        'modulo'
     ],
+    brackets: [
+        { open: '{', close: '}', token: 'bracket' },
+        { open: '[', close: ']', token: 'bracket' },
+        { open: '(', close: ')', token: 'bracket' }
+    ],
+    escapes: /[\\"]/,
     tokenizer: {
-        root: [
-            [/^(:?\s*)\*comment\s+.*$/, 'comment'],
-            [
-                /@builtins/,
-                {
+        command_line: [
+            [/[{}\[\]()]/, '@brackets'],
+            {
+                // SWITCH to parsing a text line
+                regex: /^\s*[^\*\s]+.*$/,
+                action: { token: '@rematch', switchTo: '@text_line' }
+            },
+            {
+                // command
+                regex: /^\s*\*\w+/,
+                action: { token: '@rematch', next: '@command' }
+            },
+            { include: '@expression' },
+            {
+                // SWITCH to parsing a text line if we hit a CHOICE OPTION
+                regex: /\s+#/,
+                action: { token: '@rematch', switchTo: '@text_line' }
+            },
+            {
+                // whitespace
+                regex: /\s+/,
+                action: { token: 'whitespace' }
+            }
+        ],
+        text_line: [
+            {
+                // SWITCH to parsing a command line
+                regex: /^\s*\*.*$/,
+                action: { token: '@rematch', switchTo: '@command_line' }
+            },
+            {
+                regex: /#/,
+                action: { token: 'choice-marker' }
+            },
+            // The following are useful for debugging; but don't really benefit end-usage?
+            //[/\s+/, 'whitespace'],
+            /*{
+                regex: /\w+/,
+                action: { token: 'annotation' }
+            },
+            {
+                regex: /\s+/,
+                action: { token: 'whitespace' }
+            },*/
+            //
+            [/[\$@]\{.*\}/, { token: '@rematch', next: '@variable' }]
+        ],
+        command: [
+            {
+                // indentation
+                regex: /^\s+/,
+                action: { token: 'whitespace' }
+            },
+            {
+                // comments
+                regex: '\\*comment.*$',
+                action: { token: 'comment', next: '@pop' }
+            },
+            {
+                // command name
+                regex: /(?:\*)(\w+)/,
+                action: {
                     cases: {
-                        '$1@flowCommands': { token: 'flow-command' },
-                        '$1@indentCommands': { token: 'keyword' },
-                        '$1@dedentCommands': { token: 'keyword' },
-                        '$1@csPlusCommands': { token: 'extra-keywords' },
-                        '$1@commands': 'keyword',
-                        '@default': 'invalid'
+                        '$1@optionCommands': { token: 'command', switchTo: '@reuse_option' },
+                        '$1@flowCommands': { token: 'flow-command', next: '@pop' },
+                        '$1@csPlusCommands': { token: 'extra-keywords', next: '@pop' },
+                        '$1@commands': { token: 'command', next: '@pop' },
+                        // visually distinguish any unrecognized commands
+                        '@default': { token: 'invalid' }
                     }
                 }
-            ],
+            }
+        ],
+        string: [
+            // highlight variable replacements inside strings:
+            [/[\$@]\{.*\}/, { token: '@rematch', next: '@variable' }],
+            [/[^\\@\$"]+(?!\$\{)/, { token: 'string.string' }],
+            [/\\"/, 'string.escape'],
+            [/\\./, 'string.escape.invalid'],
+            [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }]
+        ],
+        variable: [
+            // parse variable replacements and multireplace
+            { regex: /\${|@{/, action: { token: 'variable', bracket: '@open' } },
+            { include: '@expression' },
+            { regex: /\{/, action: { token: 'variable', bracket: '@open', next: '@push' } },
+            { regex: /\}/, action: { token: 'variable', bracket: '@close', next: '@pop' } }
+        ],
+        expression: [
+            {
+                // identifiers, keywords and textual operators
+                regex: /\b[A-Za-z_]+\w*/,
+                action: {
+                    cases: {
+                        '(true|false)': { token: 'keyword' },
+                        '(not|length|round|timestamp|log|auto)': { token: 'function' },
+                        '(and|or|modulo)': { token: 'operator' },
+                        '@default': { token: 'identifier' }
+                    }
+                }
+            },
+            {
+                // strings
+                regex: '"',
+                action: { token: 'string.quote', bracket: '@open', next: '@string' }
+            },
+            {
+                // numbers
+                regex: /\b[0-9]+\b/,
+                action: { token: 'number' }
+            },
+            // symbol operators
             [
-                /^\s+(\*hide_reuse |\*allow_reuse |\*disable_reuse ){0,1}(\*if .+ ?|\*selectable_if .+ ?){0,1}#.+/,
-                'choice-option'
-            ],
-            [
-                /\$!{0,2}\{[\w\{\}\+\-&\*/\s0-9#]+(\[[\w0-9\[\]]+\])*\}/,
-                'variable'
-            ],
-            [/\@\{.*}/, 'variable'],
-            [/\[error.*/, 'custom-error'],
-            [/\[notice.*/, 'custom-notice'],
-            [/\[info.*/, 'custom-info'],
-            [/\[[a-zA-Z 0-9:]+\]/, 'custom-date']
+                '@symbols',
+                {
+                    cases: {
+                        '@operators': { token: 'operator' }
+                    }
+                }
+            ]
+        ],
+        // <?>_reuse commands are difficult because they can occur in three different patterns,
+        // so we use a special intermediate state to determine the correct ongoing action.
+        reuse_option: [
+            // E.g.: <?>_reuse # Alone in front of a choice option
+            //	Jump straight to parsing the choice option as a text line.
+            [/\s*#/, { token: '@rematch', switchTo: '@text_line' }],
+            // E.g.: <?>_reuse *selectable_if (true) # In conjunction with an if command
+            // 	We need to parse the if command first, so we head back to command parsing.
+            [/\s*\*(selectable_if|if)/, { token: '@rematch', switchTo: '@command' }],
+            // E.g.: <?>_reuse (at the top of a file)
+            //  No more parsing necessary, just confirm we've hit the next line and return naturally.
+            [/^\s*/, { token: 'rematch', next: '@pop' }]
         ]
     }
 };

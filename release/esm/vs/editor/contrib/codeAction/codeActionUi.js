@@ -20,6 +20,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _disposed;
 import { onUnexpectedError } from '../../../base/common/errors.js';
 import { Lazy } from '../../../base/common/lazy.js';
 import { Disposable, MutableDisposable } from '../../../base/common/lifecycle.js';
@@ -33,6 +47,7 @@ let CodeActionUi = class CodeActionUi extends Disposable {
         this._editor = _editor;
         this.delegate = delegate;
         this._activeCodeActions = this._register(new MutableDisposable());
+        _disposed.set(this, false);
         this._codeActionWidget = new Lazy(() => {
             return this._register(instantiationService.createInstance(CodeActionMenu, this._editor, {
                 onSelectCodeAction: (action) => __awaiter(this, void 0, void 0, function* () {
@@ -45,6 +60,10 @@ let CodeActionUi = class CodeActionUi extends Disposable {
             this._register(widget.onClick(e => this.showCodeActionList(e.trigger, e.actions, e, { includeDisabledActions: false })));
             return widget;
         });
+    }
+    dispose() {
+        __classPrivateFieldSet(this, _disposed, true);
+        super.dispose();
     }
     update(newState) {
         var _a, _b, _c;
@@ -59,6 +78,9 @@ let CodeActionUi = class CodeActionUi extends Disposable {
             }
             catch (e) {
                 onUnexpectedError(e);
+                return;
+            }
+            if (__classPrivateFieldGet(this, _disposed)) {
                 return;
             }
             this._lightBulbWidget.getValue().update(actions, newState.trigger, newState.position);
@@ -78,8 +100,8 @@ let CodeActionUi = class CodeActionUi extends Disposable {
                     // Check to see if there is an action that we would have applied were it not invalid
                     if (newState.trigger.context) {
                         const invalidAction = this.getInvalidActionThatWouldHaveBeenApplied(newState.trigger, actions);
-                        if (invalidAction && invalidAction.disabled) {
-                            MessageController.get(this._editor).showMessage(invalidAction.disabled, newState.trigger.context.position);
+                        if (invalidAction && invalidAction.action.disabled) {
+                            MessageController.get(this._editor).showMessage(invalidAction.action.disabled, newState.trigger.context.position);
                             actions.dispose();
                             return;
                         }
@@ -115,7 +137,7 @@ let CodeActionUi = class CodeActionUi extends Disposable {
         }
         if ((trigger.autoApply === "first" /* First */ && actions.validActions.length === 0)
             || (trigger.autoApply === "ifSingle" /* IfSingle */ && actions.allActions.length === 1)) {
-            return actions.allActions.find(action => action.disabled);
+            return actions.allActions.find(({ action }) => action.disabled);
         }
         return undefined;
     }
@@ -135,6 +157,7 @@ let CodeActionUi = class CodeActionUi extends Disposable {
         });
     }
 };
+_disposed = new WeakMap();
 CodeActionUi = __decorate([
     __param(4, IInstantiationService)
 ], CodeActionUi);

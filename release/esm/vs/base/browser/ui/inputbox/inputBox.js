@@ -58,7 +58,7 @@ export class InputBox extends Widget {
         }
         this.element = dom.append(container, $('.monaco-inputbox.idle'));
         let tagName = this.options.flexibleHeight ? 'textarea' : 'input';
-        let wrapper = dom.append(this.element, $('.wrapper'));
+        let wrapper = dom.append(this.element, $('.ibwrapper'));
         this.input = dom.append(wrapper, $(tagName + '.input.empty'));
         this.input.setAttribute('autocorrect', 'off');
         this.input.setAttribute('autocapitalize', 'off');
@@ -160,6 +160,9 @@ export class InputBox extends Widget {
         this.input.select();
         if (range) {
             this.input.setSelectionRange(range.start, range.end);
+            if (range.end === this.input.value.length) {
+                this.input.scrollLeft = this.input.scrollWidth;
+            }
         }
     }
     isSelectionAtEnd() {
@@ -250,7 +253,7 @@ export class InputBox extends Widget {
                 this.hideMessage();
             }
         }
-        return !errorMsg;
+        return errorMsg === null || errorMsg === void 0 ? void 0 : errorMsg.type;
     }
     stylesForType(type) {
         switch (type) {

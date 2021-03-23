@@ -14,7 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 import { ILayoutService } from '../../layout/browser/layoutService.js';
 import { IInstantiationService } from '../../instantiation/common/instantiation.js';
 import { IThemeService, Themable } from '../../theme/common/themeService.js';
-import { inputBackground, inputForeground, inputBorder, inputValidationInfoBackground, inputValidationInfoForeground, inputValidationInfoBorder, inputValidationWarningBackground, inputValidationWarningForeground, inputValidationWarningBorder, inputValidationErrorBackground, inputValidationErrorForeground, inputValidationErrorBorder, badgeBackground, badgeForeground, contrastBorder, buttonForeground, buttonBackground, buttonHoverBackground, progressBarBackground, widgetShadow, listFocusForeground, listFocusBackground, activeContrastBorder, pickerGroupBorder, pickerGroupForeground, quickInputForeground, quickInputBackground, quickInputTitleBackground } from '../../theme/common/colorRegistry.js';
+import { inputBackground, inputForeground, inputBorder, inputValidationInfoBackground, inputValidationInfoForeground, inputValidationInfoBorder, inputValidationWarningBackground, inputValidationWarningForeground, inputValidationWarningBorder, inputValidationErrorBackground, inputValidationErrorForeground, inputValidationErrorBorder, badgeBackground, badgeForeground, contrastBorder, buttonForeground, buttonBackground, buttonHoverBackground, progressBarBackground, widgetShadow, listFocusForeground, activeContrastBorder, pickerGroupBorder, pickerGroupForeground, quickInputForeground, quickInputBackground, quickInputTitleBackground, quickInputListFocusBackground } from '../../theme/common/colorRegistry.js';
 import { CancellationToken } from '../../../base/common/cancellation.js';
 import { computeStyles } from '../../theme/common/styler.js';
 import { IContextKeyService, RawContextKey } from '../../contextkey/common/contextkey.js';
@@ -59,7 +59,7 @@ let QuickInputService = class QuickInputService extends Themable {
         const controller = this._register(new QuickInputController(Object.assign(Object.assign({}, defaultOptions), options)));
         controller.layout(host.dimension, (_b = (_a = host.offset) === null || _a === void 0 ? void 0 : _a.top) !== null && _b !== void 0 ? _b : 0);
         // Layout changes
-        this._register(host.onLayout(dimension => { var _a, _b; return controller.layout(dimension, (_b = (_a = host.offset) === null || _a === void 0 ? void 0 : _a.top) !== null && _b !== void 0 ? _b : 0); }));
+        this._register(host.onDidLayout(dimension => { var _a, _b; return controller.layout(dimension, (_b = (_a = host.offset) === null || _a === void 0 ? void 0 : _a.top) !== null && _b !== void 0 ? _b : 0); }));
         // Context keys
         this._register(controller.onShow(() => this.resetContextKeys()));
         this._register(controller.onHide(() => this.resetContextKeys()));
@@ -140,7 +140,7 @@ let QuickInputService = class QuickInputService extends Themable {
                 listBackground: quickInputBackground,
                 // Look like focused when inactive.
                 listInactiveFocusForeground: listFocusForeground,
-                listInactiveFocusBackground: listFocusBackground,
+                listInactiveFocusBackground: quickInputListFocusBackground,
                 listFocusOutline: activeContrastBorder,
                 listInactiveFocusOutline: activeContrastBorder,
                 pickerGroupBorder,

@@ -2,10 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { LineBreakData } from '../../common/viewModel/splitLinesCollection.js';
+var _a;
 import { createStringBuilder } from '../../common/core/stringBuilder.js';
 import * as strings from '../../../base/common/strings.js';
 import { Configuration } from '../config/configuration.js';
+import { LineBreakData } from '../../common/viewModel/viewModel.js';
+const ttPolicy = (_a = window.trustedTypes) === null || _a === void 0 ? void 0 : _a.createPolicy('domLineBreaksComputer', { createHTML: value => value });
 export class DOMLineBreaksComputerFactory {
     static create() {
         return new DOMLineBreaksComputerFactory();
@@ -27,6 +29,7 @@ export class DOMLineBreaksComputerFactory {
     }
 }
 function createLineBreaks(requests, fontInfo, tabSize, firstLineBreakColumn, wrappingIndent) {
+    var _a;
     if (firstLineBreakColumn === -1) {
         const result = [];
         for (let i = 0, len = requests.length; i < len; i++) {
@@ -86,7 +89,9 @@ function createLineBreaks(requests, fontInfo, tabSize, firstLineBreakColumn, wra
         allCharOffsets[i] = tmp[0];
         allVisibleColumns[i] = tmp[1];
     }
-    containerDomNode.innerHTML = sb.build();
+    const html = sb.build();
+    const trustedhtml = (_a = ttPolicy === null || ttPolicy === void 0 ? void 0 : ttPolicy.createHTML(html)) !== null && _a !== void 0 ? _a : html;
+    containerDomNode.innerHTML = trustedhtml;
     containerDomNode.style.position = 'absolute';
     containerDomNode.style.top = '10000';
     containerDomNode.style.wordWrap = 'break-word';
@@ -186,11 +191,12 @@ function renderLine(lineContent, initialVisibleColumn, tabSize, width, sb) {
                 if (strings.isFullWidthCharacter(charCode)) {
                     charWidth++;
                 }
-                // if (renderControlCharacters && charCode < 32) {
-                // 	sb.write1(9216 + charCode);
-                // } else {
-                sb.write1(charCode);
-            // }
+                if (charCode < 32) {
+                    sb.write1(9216 + charCode);
+                }
+                else {
+                    sb.write1(charCode);
+                }
         }
         charOffset += producedCharacters;
         visibleColumn += charWidth;

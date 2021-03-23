@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-import { Location, Position, Range, SymbolKind } from '../_deps/vscode-languageserver-types/main.js';
+import { Location, Position, Range, SymbolKind } from '../../vscode-languageserver-types/main.js';
 import * as nls from '../../../fillers/vscode-nls.js';
 import * as nodes from '../parser/ChoiceScriptNodes.js';
 import { Symbols } from '../parser/ChoiceScriptSymbolScope.js';

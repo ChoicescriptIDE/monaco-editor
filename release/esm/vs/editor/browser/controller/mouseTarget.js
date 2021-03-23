@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import * as browser from '../../../base/browser/browser.js';
 import { PageCoordinates } from '../editorDom.js';
 import { PartFingerprints } from '../view/viewPart.js';
 import { ViewLine } from '../viewParts/lines/viewLine.js';
@@ -10,6 +9,7 @@ import { Position } from '../../common/core/position.js';
 import { Range as EditorRange } from '../../common/core/range.js';
 import { CursorColumns } from '../../common/controller/cursorCommon.js';
 import * as dom from '../../../base/browser/dom.js';
+import { AtomicTabMoveOperations } from '../../common/controller/cursorAtomicMoveOperations.js';
 export class PointerHandlerLastRenderData {
     constructor(lastViewCursorsRenderData, lastTextareaPosition) {
         this.lastViewCursorsRenderData = lastViewCursorsRenderData;
@@ -119,10 +119,11 @@ export class HitTestContext {
     constructor(context, viewHelper, lastRenderData) {
         this.model = context.model;
         const options = context.configuration.options;
-        this.layoutInfo = options.get(117 /* layoutInfo */);
+        this.layoutInfo = options.get(124 /* layoutInfo */);
         this.viewDomNode = viewHelper.viewDomNode;
-        this.lineHeight = options.get(51 /* lineHeight */);
-        this.typicalHalfwidthCharacterWidth = options.get(36 /* fontInfo */).typicalHalfwidthCharacterWidth;
+        this.lineHeight = options.get(53 /* lineHeight */);
+        this.stickyTabStops = options.get(99 /* stickyTabStops */);
+        this.typicalHalfwidthCharacterWidth = options.get(38 /* fontInfo */).typicalHalfwidthCharacterWidth;
         this.lastRenderData = lastRenderData;
         this._context = context;
         this._viewHelper = viewHelper;
@@ -134,7 +135,11 @@ export class HitTestContext {
         // The target is either a view zone or the empty space after the last view-line
         const viewZoneWhitespace = context.viewLayout.getWhitespaceAtVerticalOffset(mouseVerticalOffset);
         if (viewZoneWhitespace) {
-            let viewZoneMiddle = viewZoneWhitespace.verticalOffset + viewZoneWhitespace.height / 2, lineCount = context.model.getLineCount(), positionBefore = null, position, positionAfter = null;
+            const viewZoneMiddle = viewZoneWhitespace.verticalOffset + viewZoneWhitespace.height / 2;
+            const lineCount = context.model.getLineCount();
+            let positionBefore = null;
+            let position;
+            let positionAfter = null;
             if (viewZoneWhitespace.afterLineNumber !== lineCount) {
                 // There are more lines after this view zone
                 positionAfter = new Position(viewZoneWhitespace.afterLineNumber + 1, 1);
@@ -187,6 +192,12 @@ export class HitTestContext {
     }
     isAfterLines(mouseVerticalOffset) {
         return this._context.viewLayout.isAfterLines(mouseVerticalOffset);
+    }
+    isInTopPadding(mouseVerticalOffset) {
+        return this._context.viewLayout.isInTopPadding(mouseVerticalOffset);
+    }
+    isInBottomPadding(mouseVerticalOffset) {
+        return this._context.viewLayout.isInBottomPadding(mouseVerticalOffset);
     }
     getVerticalOffsetForLineNumber(lineNumber) {
         return this._context.viewLayout.getVerticalOffsetForLineNumber(lineNumber);
@@ -440,8 +451,11 @@ export class MouseTargetFactory {
         if (!ElementPath.isChildOfViewLines(request.targetPath)) {
             return null;
         }
+        if (ctx.isInTopPadding(request.mouseVerticalOffset)) {
+            return request.fulfill(7 /* CONTENT_EMPTY */, new Position(1, 1), undefined, EMPTY_CONTENT_AFTER_LINES);
+        }
         // Check if it is below any lines and any view zones
-        if (ctx.isAfterLines(request.mouseVerticalOffset)) {
+        if (ctx.isAfterLines(request.mouseVerticalOffset) || ctx.isInBottomPadding(request.mouseVerticalOffset)) {
             // This most likely indicates it happened after the last view-line
             const lineCount = ctx.model.getLineCount();
             const maxLineColumn = ctx.model.getLineMaxColumn(lineCount);
@@ -449,7 +463,7 @@ export class MouseTargetFactory {
         }
         if (domHitTestExecuted) {
             // Check if we are hitting a view-line (can happen in the case of inline decorations on empty lines)
-            // See https://github.com/Microsoft/vscode/issues/46942
+            // See https://github.com/microsoft/vscode/issues/46942
             if (ElementPath.isStrictChildOfViewLines(request.targetPath)) {
                 const lineNumber = ctx.getLineNumberAtVerticalOffset(request.mouseVerticalOffset);
                 if (ctx.model.getLineLength(lineNumber) === 0) {
@@ -506,9 +520,9 @@ export class MouseTargetFactory {
     }
     getMouseColumn(editorPos, pos) {
         const options = this._context.configuration.options;
-        const layoutInfo = options.get(117 /* layoutInfo */);
+        const layoutInfo = options.get(124 /* layoutInfo */);
         const mouseContentHorizontalOffset = this._context.viewLayout.getCurrentScrollLeft() + pos.x - editorPos.x - layoutInfo.contentLeft;
-        return MouseTargetFactory._getMouseColumn(mouseContentHorizontalOffset, options.get(36 /* fontInfo */).typicalHalfwidthCharacterWidth);
+        return MouseTargetFactory._getMouseColumn(mouseContentHorizontalOffset, options.get(38 /* fontInfo */).typicalHalfwidthCharacterWidth);
     }
     static _getMouseColumn(mouseContentHorizontalOffset, typicalHalfwidthCharacterWidth) {
         if (mouseContentHorizontalOffset < 0) {
@@ -521,11 +535,6 @@ export class MouseTargetFactory {
         const pos = new Position(lineNumber, column);
         const lineWidth = ctx.getLineWidth(lineNumber);
         if (request.mouseContentHorizontalOffset > lineWidth) {
-            if (browser.isEdge && pos.column === 1) {
-                // See https://github.com/Microsoft/vscode/issues/10875
-                const detail = createEmptyContentDataInLines(request.mouseContentHorizontalOffset - lineWidth);
-                return request.fulfill(7 /* CONTENT_EMPTY */, new Position(lineNumber, ctx.model.getLineMaxColumn(lineNumber)), undefined, detail);
-            }
             const detail = createEmptyContentDataInLines(request.mouseContentHorizontalOffset - lineWidth);
             return request.fulfill(7 /* CONTENT_EMPTY */, pos, undefined, detail);
         }
@@ -673,11 +682,15 @@ export class MouseTargetFactory {
                 };
             }
         }
-        // For inline decorations, Gecko returns the `<span>` of the line and the offset is the `<span>` with the inline decoration
+        // For inline decorations, Gecko sometimes returns the `<span>` of the line and the offset is the `<span>` with the inline decoration
+        // Some other times, it returns the `<span>` with the inline decoration
         if (hitResult.offsetNode.nodeType === hitResult.offsetNode.ELEMENT_NODE) {
-            const parent1 = hitResult.offsetNode.parentNode; // expected to be the view line div
+            const parent1 = hitResult.offsetNode.parentNode;
             const parent1ClassName = parent1 && parent1.nodeType === parent1.ELEMENT_NODE ? parent1.className : null;
+            const parent2 = parent1 ? parent1.parentNode : null;
+            const parent2ClassName = parent2 && parent2.nodeType === parent2.ELEMENT_NODE ? parent2.className : null;
             if (parent1ClassName === ViewLine.CLASS_NAME) {
+                // it returned the `<span>` of the line and the offset is the `<span>` with the inline decoration
                 const tokenSpan = hitResult.offsetNode.childNodes[Math.min(hitResult.offset, hitResult.offsetNode.childNodes.length - 1)];
                 if (tokenSpan) {
                     const p = ctx.getPositionFromDOMInfo(tokenSpan, 0);
@@ -687,83 +700,48 @@ export class MouseTargetFactory {
                     };
                 }
             }
+            else if (parent2ClassName === ViewLine.CLASS_NAME) {
+                // it returned the `<span>` with the inline decoration
+                const p = ctx.getPositionFromDOMInfo(hitResult.offsetNode, 0);
+                return {
+                    position: p,
+                    hitTarget: null
+                };
+            }
         }
         return {
             position: null,
             hitTarget: hitResult.offsetNode
         };
     }
-    /**
-     * Most probably IE
-     */
-    static _doHitTestWithMoveToPoint(ctx, coords) {
-        let resultPosition = null;
-        let resultHitTarget = null;
-        const textRange = document.body.createTextRange();
-        try {
-            textRange.moveToPoint(coords.clientX, coords.clientY);
+    static _snapToSoftTabBoundary(position, viewModel) {
+        const lineContent = viewModel.getLineContent(position.lineNumber);
+        const { tabSize } = viewModel.getTextModelOptions();
+        const newPosition = AtomicTabMoveOperations.atomicPosition(lineContent, position.column - 1, tabSize, 2 /* Nearest */);
+        if (newPosition !== -1) {
+            return new Position(position.lineNumber, newPosition + 1);
         }
-        catch (err) {
-            return {
+        return position;
+    }
+    static _doHitTest(ctx, request) {
+        let result;
+        if (typeof document.caretRangeFromPoint === 'function') {
+            result = this._doHitTestWithCaretRangeFromPoint(ctx, request);
+        }
+        else if (document.caretPositionFromPoint) {
+            result = this._doHitTestWithCaretPositionFromPoint(ctx, request.pos.toClientCoordinates());
+        }
+        else {
+            result = {
                 position: null,
                 hitTarget: null
             };
         }
-        textRange.collapse(true);
-        // Now, let's do our best to figure out what we hit :)
-        const parentElement = textRange ? textRange.parentElement() : null;
-        const parent1 = parentElement ? parentElement.parentNode : null;
-        const parent2 = parent1 ? parent1.parentNode : null;
-        const parent2ClassName = parent2 && parent2.nodeType === parent2.ELEMENT_NODE ? parent2.className : '';
-        if (parent2ClassName === ViewLine.CLASS_NAME) {
-            const rangeToContainEntireSpan = textRange.duplicate();
-            rangeToContainEntireSpan.moveToElementText(parentElement);
-            rangeToContainEntireSpan.setEndPoint('EndToStart', textRange);
-            resultPosition = ctx.getPositionFromDOMInfo(parentElement, rangeToContainEntireSpan.text.length);
-            // Move range out of the span node, IE doesn't like having many ranges in
-            // the same spot and will act badly for lines containing dashes ('-')
-            rangeToContainEntireSpan.moveToElementText(ctx.viewDomNode);
+        // Snap to the nearest soft tab boundary if atomic soft tabs are enabled.
+        if (result.position && ctx.stickyTabStops) {
+            result.position = this._snapToSoftTabBoundary(result.position, ctx.model);
         }
-        else {
-            // Looks like we've hit the hover or something foreign
-            resultHitTarget = parentElement;
-        }
-        // Move range out of the span node, IE doesn't like having many ranges in
-        // the same spot and will act badly for lines containing dashes ('-')
-        textRange.moveToElementText(ctx.viewDomNode);
-        return {
-            position: resultPosition,
-            hitTarget: resultHitTarget
-        };
-    }
-    static _doHitTest(ctx, request) {
-        // State of the art (18.10.2012):
-        // The spec says browsers should support document.caretPositionFromPoint, but nobody implemented it (http://dev.w3.org/csswg/cssom-view/)
-        // Gecko:
-        //    - they tried to implement it once, but failed: https://bugzilla.mozilla.org/show_bug.cgi?id=654352
-        //    - however, they do give out rangeParent/rangeOffset properties on mouse events
-        // Webkit:
-        //    - they have implemented a previous version of the spec which was using document.caretRangeFromPoint
-        // IE:
-        //    - they have a proprietary method on ranges, moveToPoint: https://msdn.microsoft.com/en-us/library/ie/ms536632(v=vs.85).aspx
-        // 24.08.2016: Edge has added WebKit's document.caretRangeFromPoint, but it is quite buggy
-        //    - when hit testing the cursor it returns the first or the last line in the viewport
-        //    - it inconsistently hits text nodes or span nodes, while WebKit only hits text nodes
-        //    - when toggling render whitespace on, and hit testing in the empty content after a line, it always hits offset 0 of the first span of the line
-        // Thank you browsers for making this so 'easy' :)
-        if (typeof document.caretRangeFromPoint === 'function') {
-            return this._doHitTestWithCaretRangeFromPoint(ctx, request);
-        }
-        else if (document.caretPositionFromPoint) {
-            return this._doHitTestWithCaretPositionFromPoint(ctx, request.pos.toClientCoordinates());
-        }
-        else if (document.body.createTextRange) {
-            return this._doHitTestWithMoveToPoint(ctx, request.pos.toClientCoordinates());
-        }
-        return {
-            position: null,
-            hitTarget: null
-        };
+        return result;
     }
 }
 export function shadowCaretRangeFromPoint(shadowRoot, x, y) {
@@ -774,7 +752,7 @@ export function shadowCaretRangeFromPoint(shadowRoot, x, y) {
         // Get the last child of the element until its firstChild is a text node
         // This assumes that the pointer is on the right of the line, out of the tokens
         // and that we want to get the offset of the last token of the line
-        while (el && el.firstChild && el.firstChild.nodeType !== el.firstChild.TEXT_NODE) {
+        while (el && el.firstChild && el.firstChild.nodeType !== el.firstChild.TEXT_NODE && el.lastChild && el.lastChild.firstChild) {
             el = el.lastChild;
         }
         // Grab its rect

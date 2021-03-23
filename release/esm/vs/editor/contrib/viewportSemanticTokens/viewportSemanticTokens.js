@@ -20,6 +20,7 @@ import { toMultilineTokens2 } from '../../common/services/semanticTokensProvider
 import { IThemeService } from '../../../platform/theme/common/themeService.js';
 import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
 import { isSemanticColoringEnabled, SEMANTIC_HIGHLIGHTING_SETTING_ID } from '../../common/services/modelServiceImpl.js';
+import { getDocumentRangeSemanticTokensProvider } from '../../common/services/getSemanticTokens.js';
 let ViewportSemanticTokensContribution = class ViewportSemanticTokensContribution extends Disposable {
     constructor(editor, _modelService, _themeService, _configurationService) {
         super();
@@ -55,10 +56,6 @@ let ViewportSemanticTokensContribution = class ViewportSemanticTokensContributio
             this._tokenizeViewport.schedule();
         }));
     }
-    static _getSemanticColoringProvider(model) {
-        const result = DocumentRangeSemanticTokensProviderRegistry.ordered(model);
-        return (result.length > 0 ? result[0] : null);
-    }
     _cancelAll() {
         for (const request of this._outstandingRequests) {
             request.cancel();
@@ -78,14 +75,20 @@ let ViewportSemanticTokensContribution = class ViewportSemanticTokensContributio
             return;
         }
         const model = this._editor.getModel();
-        if (model.hasSemanticTokens()) {
+        if (model.hasCompleteSemanticTokens()) {
             return;
         }
         if (!isSemanticColoringEnabled(model, this._themeService, this._configurationService)) {
+            if (model.hasSomeSemanticTokens()) {
+                model.setSemanticTokens(null, false);
+            }
             return;
         }
-        const provider = ViewportSemanticTokensContribution._getSemanticColoringProvider(model);
+        const provider = getDocumentRangeSemanticTokensProvider(model);
         if (!provider) {
+            if (model.hasSomeSemanticTokens()) {
+                model.setSemanticTokens(null, false);
+            }
             return;
         }
         const styling = this._modelService.getSemanticTokensProviderStyling(provider);

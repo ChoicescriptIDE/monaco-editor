@@ -295,6 +295,12 @@ FoldingRangeKind.Imports = new FoldingRangeKind('imports');
  * The value of the kind is 'region'.
  */
 FoldingRangeKind.Region = new FoldingRangeKind('region');
+export var InlineHintKind;
+(function (InlineHintKind) {
+    InlineHintKind[InlineHintKind["Other"] = 0] = "Other";
+    InlineHintKind[InlineHintKind["Type"] = 1] = "Type";
+    InlineHintKind[InlineHintKind["Parameter"] = 2] = "Parameter";
+})(InlineHintKind || (InlineHintKind = {}));
 // --- feature registries ------
 /**
  * @internal
@@ -327,7 +333,7 @@ export const DocumentHighlightProviderRegistry = new LanguageFeatureRegistry();
 /**
  * @internal
  */
-export const OnTypeRenameProviderRegistry = new LanguageFeatureRegistry();
+export const LinkedEditingRangeProviderRegistry = new LanguageFeatureRegistry();
 /**
  * @internal
  */
@@ -348,6 +354,10 @@ export const TypeDefinitionProviderRegistry = new LanguageFeatureRegistry();
  * @internal
  */
 export const CodeLensProviderRegistry = new LanguageFeatureRegistry();
+/**
+ * @internal
+ */
+export const InlineHintsProviderRegistry = new LanguageFeatureRegistry();
 /**
  * @internal
  */

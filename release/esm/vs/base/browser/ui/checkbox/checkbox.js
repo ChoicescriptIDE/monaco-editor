@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import './checkbox.css';
-import * as DOM from '../../dom.js';
 import { Widget } from '../widget.js';
 import { Color } from '../../../common/color.js';
 import { Emitter } from '../../../common/event.js';
+import { CSSIcon } from '../../../common/codicons.js';
 const defaultOpts = {
     inputActiveOptionBorder: Color.fromHex('#007ACC00'),
     inputActiveOptionForeground: Color.fromHex('#FFFFFF'),
@@ -23,19 +23,20 @@ export class Checkbox extends Widget {
         this._checked = this._opts.isChecked;
         const classes = ['monaco-custom-checkbox'];
         if (this._opts.icon) {
-            classes.push(this._opts.icon.classNames);
-        }
-        else {
-            classes.push('codicon'); // todo@aeschli: remove once codicon fully adopted
+            classes.push(...CSSIcon.asClassNameArray(this._opts.icon));
         }
         if (this._opts.actionClassName) {
-            classes.push(this._opts.actionClassName);
+            classes.push(...this._opts.actionClassName.split(' '));
         }
-        classes.push(this._checked ? 'checked' : 'unchecked');
+        if (this._checked) {
+            classes.push('checked');
+        }
         this.domNode = document.createElement('div');
         this.domNode.title = this._opts.title;
-        this.domNode.className = classes.join(' ');
-        this.domNode.tabIndex = 0;
+        this.domNode.classList.add(...classes);
+        if (!this._opts.notFocusable) {
+            this.domNode.tabIndex = 0;
+        }
         this.domNode.setAttribute('role', 'checkbox');
         this.domNode.setAttribute('aria-checked', String(this._checked));
         this.domNode.setAttribute('aria-label', this._opts.title);
@@ -68,12 +69,7 @@ export class Checkbox extends Widget {
     set checked(newIsChecked) {
         this._checked = newIsChecked;
         this.domNode.setAttribute('aria-checked', String(this._checked));
-        if (this._checked) {
-            this.domNode.classList.add('checked');
-        }
-        else {
-            this.domNode.classList.remove('checked');
-        }
+        this.domNode.classList.toggle('checked', this._checked);
         this.applyStyles();
     }
     width() {
@@ -99,11 +95,9 @@ export class Checkbox extends Widget {
         }
     }
     enable() {
-        this.domNode.tabIndex = 0;
         this.domNode.setAttribute('aria-disabled', String(false));
     }
     disable() {
-        DOM.removeTabIndexAndUpdateFocus(this.domNode);
         this.domNode.setAttribute('aria-disabled', String(true));
     }
 }

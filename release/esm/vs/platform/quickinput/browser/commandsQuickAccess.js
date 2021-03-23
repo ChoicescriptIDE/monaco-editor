@@ -35,7 +35,6 @@ import { ITelemetryService } from '../../telemetry/common/telemetry.js';
 import { isPromiseCanceledError } from '../../../base/common/errors.js';
 import { INotificationService } from '../../notification/common/notification.js';
 import { toErrorMessage } from '../../../base/common/errorMessage.js';
-import { IStorageKeysSyncRegistryService } from '../../userDataSync/common/storageKeys.js';
 let AbstractCommandsQuickAccessProvider = class AbstractCommandsQuickAccessProvider extends PickerQuickAccessProvider {
     constructor(options, instantiationService, keybindingService, commandService, telemetryService, notificationService) {
         super(AbstractCommandsQuickAccessProvider.PREFIX, options);
@@ -153,14 +152,11 @@ AbstractCommandsQuickAccessProvider = __decorate([
 ], AbstractCommandsQuickAccessProvider);
 export { AbstractCommandsQuickAccessProvider };
 let CommandsHistory = class CommandsHistory extends Disposable {
-    constructor(storageService, configurationService, storageKeysSyncRegistryService) {
+    constructor(storageService, configurationService) {
         super();
         this.storageService = storageService;
         this.configurationService = configurationService;
         this.configuredCommandsHistoryLength = 0;
-        // opt-in to syncing
-        storageKeysSyncRegistryService.registerStorageKey({ key: CommandsHistory.PREF_KEY_CACHE, version: 1 });
-        storageKeysSyncRegistryService.registerStorageKey({ key: CommandsHistory.PREF_KEY_COUNTER, version: 1 });
         this.updateConfiguration();
         this.load();
         this.registerListeners();
@@ -216,8 +212,8 @@ let CommandsHistory = class CommandsHistory extends Disposable {
         }
         const serializedCache = { usesLRU: true, entries: [] };
         CommandsHistory.cache.forEach((value, key) => serializedCache.entries.push({ key, value }));
-        storageService.store(CommandsHistory.PREF_KEY_CACHE, JSON.stringify(serializedCache), 0 /* GLOBAL */);
-        storageService.store(CommandsHistory.PREF_KEY_COUNTER, CommandsHistory.counter, 0 /* GLOBAL */);
+        storageService.store(CommandsHistory.PREF_KEY_CACHE, JSON.stringify(serializedCache), 0 /* GLOBAL */, 0 /* USER */);
+        storageService.store(CommandsHistory.PREF_KEY_COUNTER, CommandsHistory.counter, 0 /* GLOBAL */, 0 /* USER */);
     }
     static getConfiguredCommandHistoryLength(configurationService) {
         var _a, _b;
@@ -235,7 +231,6 @@ CommandsHistory.PREF_KEY_COUNTER = 'commandPalette.mru.counter';
 CommandsHistory.counter = 1;
 CommandsHistory = __decorate([
     __param(0, IStorageService),
-    __param(1, IConfigurationService),
-    __param(2, IStorageKeysSyncRegistryService)
+    __param(1, IConfigurationService)
 ], CommandsHistory);
 export { CommandsHistory };

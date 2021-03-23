@@ -7,10 +7,12 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -54,9 +56,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import { CSSNavigation } from './cssNavigation.js';
 import * as nodes from '../parser/cssNodes.js';
-import { URI } from '../../../../vscode-uri/index.js';
+import { URI, Utils } from '../../../../vscode-uri/index.js';
 import { startsWith } from '../utils/strings.js';
-import { extname } from '../utils/resources.js';
 var SCSSNavigation = /** @class */ (function (_super) {
     __extends(SCSSNavigation, _super);
     function SCSSNavigation(fileSystemProvider) {
@@ -119,11 +120,12 @@ var SCSSNavigation = /** @class */ (function (_super) {
                         return [4 /*yield*/, _super.prototype.resolveRelativeReference.call(this, ref, documentUri, documentContext)];
                     case 1:
                         target = _a.sent();
-                        if (!(this.fileSystemProvider && target && extname(target).length === 0)) return [3 /*break*/, 8];
+                        if (!(this.fileSystemProvider && target)) return [3 /*break*/, 8];
+                        parsedUri = URI.parse(target);
+                        if (!(parsedUri.path && Utils.extname(parsedUri).length === 0)) return [3 /*break*/, 8];
                         _a.label = 2;
                     case 2:
                         _a.trys.push([2, 7, , 8]);
-                        parsedUri = URI.parse(target);
                         pathVariations = toPathVariations(parsedUri);
                         if (!pathVariations) return [3 /*break*/, 6];
                         j = 0;

@@ -11,14 +11,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import './list.css';
 import { dispose, DisposableStore } from '../../../common/lifecycle.js';
 import { isNumber } from '../../../common/types.js';
-import { range, firstIndex, binarySearch } from '../../../common/arrays.js';
+import { range, binarySearch } from '../../../common/arrays.js';
 import { memoize } from '../../../common/decorators.js';
-import * as DOM from '../../dom.js';
 import * as platform from '../../../common/platform.js';
 import { Gesture } from '../../touch.js';
 import { StandardKeyboardEvent } from '../../keyboardEvent.js';
 import { Event, Emitter, EventBufferer } from '../../../common/event.js';
-import { domEvent } from '../../event.js';
+import { domEvent, stopEvent } from '../../event.js';
 import { ListError } from './list.js';
 import { ListView } from './listView.js';
 import { Color } from '../../../common/color.js';
@@ -27,6 +26,7 @@ import { CombinedSpliceable } from './splice.js';
 import { clamp } from '../../../common/numbers.js';
 import { matchesPrefix } from '../../../common/filters.js';
 import { alert } from '../aria/aria.js';
+import { createStyleSheet } from '../../dom.js';
 class TraitRenderer {
     constructor(trait) {
         this.trait = trait;
@@ -39,7 +39,7 @@ class TraitRenderer {
         return container;
     }
     renderElement(element, index, templateData) {
-        const renderedElementIndex = firstIndex(this.renderedElements, el => el.templateData === templateData);
+        const renderedElementIndex = this.renderedElements.findIndex(el => el.templateData === templateData);
         if (renderedElementIndex >= 0) {
             const rendered = this.renderedElements[renderedElementIndex];
             this.trait.unrender(templateData);
@@ -74,7 +74,7 @@ class TraitRenderer {
         }
     }
     disposeTemplate(templateData) {
-        const index = firstIndex(this.renderedElements, el => el.templateData === templateData);
+        const index = this.renderedElements.findIndex(el => el.templateData === templateData);
         if (index < 0) {
             return;
         }
@@ -105,10 +105,10 @@ class Trait {
         this._set(indexes, indexes);
     }
     renderIndex(index, container) {
-        DOM.toggleClass(container, this._trait, this.contains(index));
+        container.classList.toggle(this._trait, this.contains(index));
     }
     unrender(container) {
-        DOM.removeClass(container, this._trait);
+        container.classList.remove(this._trait);
     }
     /**
      * Sets the indexes which should have this trait.
@@ -183,10 +183,10 @@ export function isInputElement(e) {
     return e.tagName === 'INPUT' || e.tagName === 'TEXTAREA';
 }
 export function isMonacoEditor(e) {
-    if (DOM.hasClass(e, 'monaco-editor')) {
+    if (e.classList.contains('monaco-editor')) {
         return true;
     }
-    if (DOM.hasClass(e, 'monaco-list')) {
+    if (e.classList.contains('monaco-list')) {
         return false;
     }
     if (!e.parentElement) {
@@ -253,10 +253,12 @@ class KeyboardController {
         this.view.domNode.focus();
     }
     onEscape(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.list.setSelection([], e.browserEvent);
-        this.view.domNode.focus();
+        if (this.list.getSelection().length) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.list.setSelection([], e.browserEvent);
+            this.view.domNode.focus();
+        }
     }
     dispose() {
         this.disposables.dispose();
@@ -585,6 +587,10 @@ export class DefaultStyleController {
 				.monaco-list${suffix}:focus .monaco-list-row.selected.focused { color: ${styles.listFocusAndSelectionForeground}; }
 			`);
         }
+        if (styles.listInactiveFocusForeground) {
+            content.push(`.monaco-list${suffix} .monaco-list-row.focused { color:  ${styles.listInactiveFocusForeground}; }`);
+            content.push(`.monaco-list${suffix} .monaco-list-row.focused:hover { color:  ${styles.listInactiveFocusForeground}; }`); // overwrite :hover style in this case!
+        }
         if (styles.listInactiveFocusBackground) {
             content.push(`.monaco-list${suffix} .monaco-list-row.focused { background-color:  ${styles.listInactiveFocusBackground}; }`);
             content.push(`.monaco-list${suffix} .monaco-list-row.focused:hover { background-color:  ${styles.listInactiveFocusBackground}; }`); // overwrite :hover style in this case!
@@ -597,7 +603,7 @@ export class DefaultStyleController {
             content.push(`.monaco-list${suffix} .monaco-list-row.selected { color: ${styles.listInactiveSelectionForeground}; }`);
         }
         if (styles.listHoverBackground) {
-            content.push(`.monaco-list${suffix}:not(.drop-target) .monaco-list-row:hover:not(.selected):not(.focused) { background-color:  ${styles.listHoverBackground}; }`);
+            content.push(`.monaco-list${suffix}:not(.drop-target) .monaco-list-row:hover:not(.selected):not(.focused) { background-color: ${styles.listHoverBackground}; }`);
         }
         if (styles.listHoverForeground) {
             content.push(`.monaco-list${suffix} .monaco-list-row:hover:not(.selected):not(.focused) { color:  ${styles.listHoverForeground}; }`);
@@ -636,10 +642,14 @@ export class DefaultStyleController {
         if (styles.listMatchesShadow) {
             content.push(`.monaco-list-type-filter { box-shadow: 1px 1px 1px ${styles.listMatchesShadow}; }`);
         }
-        const newStyles = content.join('\n');
-        if (newStyles !== this.styleElement.innerHTML) {
-            this.styleElement.innerHTML = newStyles;
+        if (styles.tableColumnsBorder) {
+            content.push(`
+				.monaco-table:hover > .monaco-split-view2,
+				.monaco-table:hover > .monaco-split-view2 .monaco-sash.vertical::before {
+					border-color: ${styles.tableColumnsBorder};
+			}`);
         }
+        this.styleElement.textContent = content.join('\n');
     }
 }
 const defaultStyles = {
@@ -651,7 +661,8 @@ const defaultStyles = {
     listInactiveSelectionBackground: Color.fromHex('#3F3F46'),
     listHoverBackground: Color.fromHex('#2A2D2E'),
     listDropBackground: Color.fromHex('#383B3D'),
-    treeIndentGuidesStroke: Color.fromHex('#a9a9a9')
+    treeIndentGuidesStroke: Color.fromHex('#a9a9a9'),
+    tableColumnsBorder: Color.fromHex('#cccccc').transparent(0.2)
 };
 const DefaultOptions = {
     keyboardSupport: true,
@@ -845,7 +856,6 @@ export class List {
         this.eventBufferer = new EventBufferer();
         this._ariaLabel = '';
         this.disposables = new DisposableStore();
-        this.didJustPressContextMenuKey = false;
         this._onDidDispose = new Emitter();
         this.onDidDispose = this._onDidDispose.event;
         const role = this._options.accessibilityProvider && this._options.accessibilityProvider.getWidgetRole ? (_a = this._options.accessibilityProvider) === null || _a === void 0 ? void 0 : _a.getWidgetRole() : 'list';
@@ -868,7 +878,7 @@ export class List {
             this.styleController = _options.styleController(this.view.domId);
         }
         else {
-            const styleElement = DOM.createStyleSheet(this.view.domNode);
+            const styleElement = createStyleSheet(this.view.domNode);
             this.styleController = new DefaultStyleController(styleElement, this.view.domId);
         }
         this.spliceable = new CombinedSpliceable([
@@ -917,31 +927,39 @@ export class List {
     get onMouseDown() { return this.view.onMouseDown; }
     get onTouchStart() { return this.view.onTouchStart; }
     get onTap() { return this.view.onTap; }
+    /**
+     * Possible context menu trigger events:
+     * - ContextMenu key
+     * - Shift F10
+     * - Ctrl Option Shift M (macOS with VoiceOver)
+     * - Mouse right click
+     */
     get onContextMenu() {
-        const fromKeydown = Event.chain(domEvent(this.view.domNode, 'keydown'))
+        let didJustPressContextMenuKey = false;
+        const fromKeyDown = Event.chain(domEvent(this.view.domNode, 'keydown'))
             .map(e => new StandardKeyboardEvent(e))
-            .filter(e => this.didJustPressContextMenuKey = e.keyCode === 58 /* ContextMenu */ || (e.shiftKey && e.keyCode === 68 /* F10 */))
-            .filter(e => { e.preventDefault(); e.stopPropagation(); return false; })
+            .filter(e => didJustPressContextMenuKey = e.keyCode === 58 /* ContextMenu */ || (e.shiftKey && e.keyCode === 68 /* F10 */))
+            .map(stopEvent)
+            .filter(() => false)
             .event;
-        const fromKeyup = Event.chain(domEvent(this.view.domNode, 'keyup'))
-            .filter(() => {
-            const didJustPressContextMenuKey = this.didJustPressContextMenuKey;
-            this.didJustPressContextMenuKey = false;
-            return didJustPressContextMenuKey;
-        })
-            .filter(() => this.getFocus().length > 0 && !!this.view.domElement(this.getFocus()[0]))
-            .map(browserEvent => {
-            const index = this.getFocus()[0];
-            const element = this.view.element(index);
-            const anchor = this.view.domElement(index);
+        const fromKeyUp = Event.chain(domEvent(this.view.domNode, 'keyup'))
+            .forEach(() => didJustPressContextMenuKey = false)
+            .map(e => new StandardKeyboardEvent(e))
+            .filter(e => e.keyCode === 58 /* ContextMenu */ || (e.shiftKey && e.keyCode === 68 /* F10 */))
+            .map(stopEvent)
+            .map(({ browserEvent }) => {
+            const focus = this.getFocus();
+            const index = focus.length ? focus[0] : undefined;
+            const element = typeof index !== 'undefined' ? this.view.element(index) : undefined;
+            const anchor = typeof index !== 'undefined' ? this.view.domElement(index) : this.view.domNode;
             return { index, element, anchor, browserEvent };
         })
             .event;
         const fromMouse = Event.chain(this.view.onContextMenu)
-            .filter(() => !this.didJustPressContextMenuKey)
+            .filter(_ => !didJustPressContextMenuKey)
             .map(({ element, index, browserEvent }) => ({ element, index, anchor: { x: browserEvent.clientX + 1, y: browserEvent.clientY }, browserEvent }))
             .event;
-        return Event.any(fromKeydown, fromKeyup, fromMouse);
+        return Event.any(fromKeyDown, fromKeyUp, fromMouse);
     }
     get onKeyDown() { return domEvent(this.view.domNode, 'keydown'); }
     createMouseController(options) {
@@ -995,7 +1013,7 @@ export class List {
         this.view.domNode.setAttribute('aria-label', value);
     }
     domFocus() {
-        this.view.domNode.focus();
+        this.view.domNode.focus({ preventScroll: true });
     }
     layout(height, width) {
         this.view.layout(height, width);
@@ -1060,6 +1078,7 @@ export class List {
             const previousScrollTop = this.view.getScrollTop();
             this.view.setScrollTop(previousScrollTop + this.view.renderHeight - this.view.elementHeight(lastPageIndex));
             if (this.view.getScrollTop() !== previousScrollTop) {
+                this.setFocus([]);
                 // Let the scroll event listener run
                 setTimeout(() => this.focusNextPage(browserEvent, filter), 0);
             }
@@ -1089,6 +1108,7 @@ export class List {
             const previousScrollTop = scrollTop;
             this.view.setScrollTop(scrollTop - this.view.renderHeight);
             if (this.view.getScrollTop() !== previousScrollTop) {
+                this.setFocus([]);
                 // Let the scroll event listener run
                 setTimeout(() => this.focusPreviousPage(browserEvent, filter), 0);
             }
@@ -1202,7 +1222,7 @@ export class List {
     }
     _onFocusChange() {
         const focus = this.focus.get();
-        DOM.toggleClass(this.view.domNode, 'element-focused', focus.length > 0);
+        this.view.domNode.classList.toggle('element-focused', focus.length > 0);
         this.onDidChangeActiveDescendant();
     }
     onDidChangeActiveDescendant() {
@@ -1221,9 +1241,9 @@ export class List {
     }
     _onSelectionChange() {
         const selection = this.selection.get();
-        DOM.toggleClass(this.view.domNode, 'selection-none', selection.length === 0);
-        DOM.toggleClass(this.view.domNode, 'selection-single', selection.length === 1);
-        DOM.toggleClass(this.view.domNode, 'selection-multiple', selection.length > 1);
+        this.view.domNode.classList.toggle('selection-none', selection.length === 0);
+        this.view.domNode.classList.toggle('selection-single', selection.length === 1);
+        this.view.domNode.classList.toggle('selection-multiple', selection.length > 1);
     }
     dispose() {
         this._onDidDispose.fire();

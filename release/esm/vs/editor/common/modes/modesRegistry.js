@@ -40,10 +40,11 @@ export class EditorModesRegistry {
 export const ModesRegistry = new EditorModesRegistry();
 Registry.add(Extensions.ModesRegistry, ModesRegistry);
 export const PLAINTEXT_MODE_ID = 'plaintext';
+export const PLAINTEXT_EXTENSION = '.txt';
 export const PLAINTEXT_LANGUAGE_IDENTIFIER = new LanguageIdentifier(PLAINTEXT_MODE_ID, 1 /* PlainText */);
 ModesRegistry.registerLanguage({
     id: PLAINTEXT_MODE_ID,
-    extensions: ['.txt'],
+    extensions: [PLAINTEXT_EXTENSION],
     aliases: [nls.localize('plainText.alias', "Plain Text"), 'text'],
     mimetypes: ['text/plain']
 });
@@ -65,4 +66,4 @@ LanguageConfigurationRegistry.register(PLAINTEXT_LANGUAGE_IDENTIFIER, {
     folding: {
         offSide: true
     }
-});
+}, 0);

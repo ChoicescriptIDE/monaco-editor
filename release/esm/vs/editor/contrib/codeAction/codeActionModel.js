@@ -2,15 +2,30 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var _isDisposed;
 import { createCancelablePromise, TimeoutTimer } from '../../../base/common/async.js';
+import { isPromiseCanceledError } from '../../../base/common/errors.js';
 import { Emitter } from '../../../base/common/event.js';
 import { Disposable, MutableDisposable } from '../../../base/common/lifecycle.js';
+import { isEqual } from '../../../base/common/resources.js';
 import { Range } from '../../common/core/range.js';
 import { CodeActionProviderRegistry } from '../../common/modes.js';
 import { RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
 import { Progress } from '../../../platform/progress/common/progress.js';
 import { getCodeActions } from './codeAction.js';
-import { isEqual } from '../../../base/common/resources.js';
 export const SUPPORTED_CODE_ACTIONS = new RawContextKey('supportedCodeAction', '');
 class CodeActionOracle extends Disposable {
     constructor(_editor, _markerService, _signalChange, _delay = 250) {
@@ -112,16 +127,32 @@ export var CodeActionsState;
 (function (CodeActionsState) {
     CodeActionsState.Empty = { type: 0 /* Empty */ };
     class Triggered {
-        constructor(trigger, rangeOrSelection, position, actions) {
+        constructor(trigger, rangeOrSelection, position, _cancellablePromise) {
             this.trigger = trigger;
             this.rangeOrSelection = rangeOrSelection;
             this.position = position;
-            this.actions = actions;
+            this._cancellablePromise = _cancellablePromise;
             this.type = 1 /* Triggered */;
+            this.actions = _cancellablePromise.catch((e) => {
+                if (isPromiseCanceledError(e)) {
+                    return emptyCodeActionSet;
+                }
+                throw e;
+            });
+        }
+        cancel() {
+            this._cancellablePromise.cancel();
         }
     }
     CodeActionsState.Triggered = Triggered;
 })(CodeActionsState || (CodeActionsState = {}));
+const emptyCodeActionSet = {
+    allActions: [],
+    validActions: [],
+    dispose: () => { },
+    documentation: [],
+    hasAutoFix: false
+};
 export class CodeActionModel extends Disposable {
     constructor(_editor, _markerService, contextKeyService, _progressService) {
         super();
@@ -132,6 +163,7 @@ export class CodeActionModel extends Disposable {
         this._state = CodeActionsState.Empty;
         this._onDidChangeState = this._register(new Emitter());
         this.onDidChangeState = this._onDidChangeState.event;
+        _isDisposed.set(this, false);
         this._supportedCodeActions = SUPPORTED_CODE_ACTIONS.bindTo(contextKeyService);
         this._register(this._editor.onDidChangeModel(() => this._update()));
         this._register(this._editor.onDidChangeModelLanguage(() => this._update()));
@@ -139,16 +171,23 @@ export class CodeActionModel extends Disposable {
         this._update();
     }
     dispose() {
+        if (__classPrivateFieldGet(this, _isDisposed)) {
+            return;
+        }
+        __classPrivateFieldSet(this, _isDisposed, true);
         super.dispose();
         this.setState(CodeActionsState.Empty, true);
     }
     _update() {
+        if (__classPrivateFieldGet(this, _isDisposed)) {
+            return;
+        }
         this._codeActionOracle.value = undefined;
         this.setState(CodeActionsState.Empty);
         const model = this._editor.getModel();
         if (model
             && CodeActionProviderRegistry.has(model)
-            && !this._editor.getOption(72 /* readOnly */)) {
+            && !this._editor.getOption(75 /* readOnly */)) {
             const supportedActions = [];
             for (const provider of CodeActionProviderRegistry.all(model)) {
                 if (Array.isArray(provider.providedCodeActionKinds)) {
@@ -185,11 +224,12 @@ export class CodeActionModel extends Disposable {
         }
         // Cancel old request
         if (this._state.type === 1 /* Triggered */) {
-            this._state.actions.cancel();
+            this._state.cancel();
         }
         this._state = newState;
-        if (!skipNotify) {
+        if (!skipNotify && !__classPrivateFieldGet(this, _isDisposed)) {
             this._onDidChangeState.fire(newState);
         }
     }
 }
+_isDisposed = new WeakMap();

@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { contrastBorder, listFocusBackground, listFocusForeground, listActiveSelectionBackground, listActiveSelectionForeground, listInactiveSelectionForeground, listInactiveSelectionBackground, listInactiveFocusBackground, listHoverBackground, listHoverForeground, listDropBackground, widgetShadow, activeContrastBorder, badgeBackground, badgeForeground, menuForeground, menuBackground, menuSelectionForeground, menuSelectionBackground, menuSelectionBorder, menuBorder, menuSeparatorBackground, darken, listFilterWidgetOutline, listFilterWidgetNoMatchesOutline, listFilterWidgetBackground, treeIndentGuidesStroke, resolveColorValue } from './colorRegistry.js';
+import { contrastBorder, listFocusBackground, listFocusForeground, listActiveSelectionBackground, listActiveSelectionForeground, listInactiveSelectionForeground, listInactiveSelectionBackground, listInactiveFocusBackground, listHoverBackground, listHoverForeground, listDropBackground, widgetShadow, activeContrastBorder, badgeBackground, badgeForeground, menuForeground, menuBackground, menuSelectionForeground, menuSelectionBackground, menuSelectionBorder, menuBorder, menuSeparatorBackground, listFilterWidgetOutline, listFilterWidgetNoMatchesOutline, listFilterWidgetBackground, treeIndentGuidesStroke, resolveColorValue, listFocusOutline, listInactiveFocusOutline, tableColumnsBorder } from './colorRegistry.js';
 export function computeStyles(theme, styleMap) {
     const styles = Object.create(null);
     for (let key in styleMap) {
@@ -37,26 +37,28 @@ export function attachListStyler(widget, themeService, overrides) {
     return attachStyler(themeService, Object.assign(Object.assign({}, defaultListStyles), (overrides || {})), widget);
 }
 export const defaultListStyles = {
-    listFocusBackground: listFocusBackground,
-    listFocusForeground: listFocusForeground,
-    listActiveSelectionBackground: darken(listActiveSelectionBackground, 0.1),
-    listActiveSelectionForeground: listActiveSelectionForeground,
+    listFocusBackground,
+    listFocusForeground,
+    listFocusOutline,
+    listActiveSelectionBackground,
+    listActiveSelectionForeground,
     listFocusAndSelectionBackground: listActiveSelectionBackground,
     listFocusAndSelectionForeground: listActiveSelectionForeground,
-    listInactiveSelectionBackground: listInactiveSelectionBackground,
-    listInactiveSelectionForeground: listInactiveSelectionForeground,
-    listInactiveFocusBackground: listInactiveFocusBackground,
-    listHoverBackground: listHoverBackground,
-    listHoverForeground: listHoverForeground,
-    listDropBackground: listDropBackground,
-    listFocusOutline: activeContrastBorder,
+    listInactiveSelectionBackground,
+    listInactiveSelectionForeground,
+    listInactiveFocusBackground,
+    listInactiveFocusOutline,
+    listHoverBackground,
+    listHoverForeground,
+    listDropBackground,
     listSelectionOutline: activeContrastBorder,
     listHoverOutline: activeContrastBorder,
-    listFilterWidgetBackground: listFilterWidgetBackground,
-    listFilterWidgetOutline: listFilterWidgetOutline,
-    listFilterWidgetNoMatchesOutline: listFilterWidgetNoMatchesOutline,
+    listFilterWidgetBackground,
+    listFilterWidgetOutline,
+    listFilterWidgetNoMatchesOutline,
     listMatchesShadow: widgetShadow,
-    treeIndentGuidesStroke: treeIndentGuidesStroke
+    treeIndentGuidesStroke,
+    tableColumnsBorder
 };
 export const defaultMenuStyles = {
     shadowColor: widgetShadow,
