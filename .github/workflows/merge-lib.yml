@@ -2,7 +2,7 @@ name: merge-lib
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
