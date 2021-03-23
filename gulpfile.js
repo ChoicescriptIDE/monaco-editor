@@ -6,10 +6,8 @@ const path = require('path');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const cp = require('child_process');
-const os = require('os');
 const yaserver = require('yaserver');
 const http = require('http');
-const typedoc = require("gulp-typedoc");
 const CleanCSS = require('clean-css');
 const uncss = require('uncss');
 const File = require('vinyl');
@@ -438,7 +436,7 @@ function addPluginDTS() {
 		}));
 
 		fs.writeFileSync('website/playground/monaco.d.ts.txt', contents);
-		fs.writeFileSync('monaco.d.ts', contents);
+		fs.writeFileSync('typedoc/monaco.d.ts', contents);
 		this.emit('data', data);
 	});
 }
@@ -534,32 +532,6 @@ function addPluginThirdPartyNotices() {
 
 
 // --- website
-function typedocStream() {
-	const initialCWD = process.cwd();
-	// TypeDoc is silly and consumes the `exclude` option.
-	// This option does not make it to typescript compiler, which ends up including /node_modules/ .d.ts files.
-	// We work around this by changing the cwd... :O
-	return gulp.src('monaco.d.ts')
-	.pipe(es.through(undefined, function() {
-		process.chdir(os.tmpdir());
-		this.emit('end');
-	}))
-	.pipe(typedoc({
-		mode: 'file',
-		out: path.join(__dirname, '../monaco-editor-website/api'),
-		includeDeclarations: true,
-		theme: path.join(__dirname, 'website/typedoc-theme'),
-		entryPoint: 'monaco',
-		name: 'Monaco Editor API v' + MONACO_EDITOR_VERSION,
-		readme: 'none',
-		hideGenerator: true
-	}))
-	.pipe(es.through(undefined, function() {
-		process.chdir(initialCWD);
-		this.emit('end');
-	}))
-};
-gulp.task('typedoc', () => typedocStream());
 const cleanWebsiteTask = function(cb) { rimraf('../monaco-editor-website', { maxBusyTries: 1 }, cb); };
 const buildWebsiteTask = taskSeries(cleanWebsiteTask, function() {
 
@@ -576,8 +548,7 @@ const buildWebsiteTask = taskSeries(cleanWebsiteTask, function() {
 	return (
 		es.merge(
 			gulp.src([
-				'website/**/*',
-				'!website/typedoc-theme/**'
+				'website/**/*'
 			], { dot: true })
 			.pipe(es.through(function(data) {
 				if (!data.contents || !/\.(html)$/.test(data.path) || /new-samples/.test(data.path)) {
@@ -654,9 +625,7 @@ const buildWebsiteTask = taskSeries(cleanWebsiteTask, function() {
 					this.emit('end');
 				}
 			}))
-			.pipe(gulp.dest('../monaco-editor-website')),
-
-			typedocStream()
+			.pipe(gulp.dest('../monaco-editor-website'))
 		)
 
 		.pipe(es.through(function(data) {
@@ -678,7 +647,7 @@ const buildWebsiteTask = taskSeries(cleanWebsiteTask, function() {
 });
 gulp.task('build-website', buildWebsiteTask);
 
-gulp.task('website', taskSeries(buildWebsiteTask, function() {
+gulp.task('prepare-website-branch', async function() {
 	cp.execSync('git init', {
 		cwd: path.join(__dirname, '../monaco-editor-website')
 	});
@@ -707,7 +676,7 @@ gulp.task('website', taskSeries(buildWebsiteTask, function() {
 		cwd: path.join(__dirname, '../monaco-editor-website')
 	});
 	console.log('RUN monaco-editor-website>git push origin gh-pages --force');
-}));
+});
 
 const generateTestSamplesTask = function() {
 	var sampleNames = fs.readdirSync(path.join(__dirname, 'test/samples'));
