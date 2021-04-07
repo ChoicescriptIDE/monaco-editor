@@ -33,6 +33,9 @@ export var conf = {
     ]
 };
 export var language = {
+    includeLF: true,
+    defaultToken: 'source',
+    ignoreCase: true,
     tokenPostfix: '.choicescript',
     commands: [
         'abort',
@@ -126,6 +129,7 @@ export var language = {
         'redirect_scene',
         'return'
     ],
+    unquotedStringCommands: ['bug', 'image', 'text_image', 'sound', 'page_break'],
     csPlusCommands: [
         'console_log',
         'console_track',
@@ -135,7 +139,13 @@ export var language = {
         'console_clear',
         'console_track_list',
         'cside_theme_set',
-        'cside_theme_apply'
+        'cside_theme_apply',
+        /* smPlugin */
+        'sm_save',
+        'sm_load',
+        'sm_delete',
+        'sm_update',
+        'sm_menu'
     ],
     symbols: /[=><&+\-*\/\^%!#]+/,
     operators: [
@@ -164,62 +174,66 @@ export var language = {
     ],
     escapes: /[\\"]/,
     tokenizer: {
-        command_line: [
-            [/[{}\[\]()]/, '@brackets'],
+        root: [
             {
-                // SWITCH to parsing a text line
-                regex: /^\s*[^\*\s]+.*$/,
-                action: { token: '@rematch', switchTo: '@text_line' }
+                regex: /[ \t]+/,
+                token: 'whitespace'
             },
+            {
+                regex: /\*[A-Za-z_]+/,
+                action: {
+                    token: '@rematch',
+                    switchTo: '@command_line'
+                }
+            },
+            {
+                regex: /[^*].*/,
+                action: { token: '@rematch', switchTo: '@text_line' }
+            }
+        ],
+        command_line: [
             {
                 // command
-                regex: /^\s*\*\w+/,
+                regex: /\*\w+/,
                 action: { token: '@rematch', next: '@command' }
             },
-            { include: '@expression' },
             {
-                // SWITCH to parsing a text line if we hit a CHOICE OPTION
-                regex: /\s+#/,
-                action: { token: '@rematch', switchTo: '@text_line' }
+                regex: /\n/,
+                action: {
+                    token: 'linebreak',
+                    switchTo: '@root',
+                    log: 'found linebreak $0 in state $S0'
+                }
             },
             {
                 // whitespace
-                regex: /\s+/,
+                regex: /[ \t]+/,
                 action: { token: 'whitespace' }
-            }
+            },
+            { include: '@expression' }
         ],
         text_line: [
-            {
-                // SWITCH to parsing a command line
-                regex: /^\s*\*.*$/,
-                action: { token: '@rematch', switchTo: '@command_line' }
-            },
             {
                 regex: /#/,
                 action: { token: 'choice-marker' }
             },
-            // The following are useful for debugging; but don't really benefit end-usage?
-            //[/\s+/, 'whitespace'],
-            /*{
-                regex: /\w+/,
-                action: { token: 'annotation' }
-            },
             {
-                regex: /\s+/,
+                regex: /\n/,
+                action: {
+                    token: 'linebreak',
+                    switchTo: '@root'
+                }
+            },
+            { include: '@variable' },
+            {
+                regex: /[ \t]+/,
                 action: { token: 'whitespace' }
-            },*/
-            //
-            [/[\$@]\{.*\}/, { token: '@rematch', next: '@variable' }]
+            }
         ],
         command: [
             {
-                // indentation
-                regex: /^\s+/,
-                action: { token: 'whitespace' }
-            },
-            {
                 // comments
-                regex: '\\*comment.*$',
+                regex: '\\*comment.*',
                 action: { token: 'comment', next: '@pop' }
             },
             {
@@ -227,7 +241,11 @@ export var language = {
                 regex: /(?:\*)(\w+)/,
                 action: {
                     cases: {
-                        '$1@optionCommands': { token: 'command', switchTo: '@reuse_option' },
+                        '$1@unquotedStringCommands': {
+                            token: 'command',
+                            switchTo: '@unquoted_string'
+                        },
+                        '$1@optionCommands': { token: 'keyword', switchTo: '@reuse_option' },
                         '$1@flowCommands': { token: 'flow-command', next: '@pop' },
                         '$1@csPlusCommands': { token: 'extra-keywords', next: '@pop' },
                         '$1@commands': { token: 'command', next: '@pop' },
@@ -237,22 +255,53 @@ export var language = {
                 }
             }
         ],
+        unquoted_string: [
+            { include: '@string_body' },
+            [/"/, 'delim'],
+            { regex: /\n/, action: { token: 'whitespace', next: '@pop' } },
+            { regex: /\|/, action: { token: 'whitespace', next: '@pop' } }
+        ],
         string: [
             // highlight variable replacements inside strings:
-            [/[\$@]\{.*\}/, { token: '@rematch', next: '@variable' }],
-            [/[^\\@\$"]+(?!\$\{)/, { token: 'string.string' }],
+            [
+                /\n/,
+                {
+                    token: 'linebreak',
+                    bracket: '@close',
+                    next: '@popall',
+                    switchTo: '@root'
+                }
+            ],
+            { include: '@string_body' },
             [/\\"/, 'string.escape'],
             [/\\./, 'string.escape.invalid'],
             [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }]
         ],
+        string_body: [{ include: '@variable' }, [/[^\\@\$"\n]+/, { token: 'string.string' }]],
         variable: [
             // parse variable replacements and multireplace
-            { regex: /\${|@{/, action: { token: 'variable', bracket: '@open' } },
+            {
+                regex: /\$\{/,
+                action: { token: '@rematch', next: '@varreplace' }
+            },
+            {
+                regex: /@\{/,
+                action: { token: '@rematch', next: '@multireplace' }
+            }
+        ],
+        varreplace: [
+            { regex: /\$\{/, action: { token: 'bracket.var', bracket: '@open' } },
+            { regex: /\}/, action: { token: 'bracket.var', bracket: '@close', next: '@pop' } },
+            { include: '@expression' }
+        ],
+        multireplace: [
+            { regex: /@{/, action: { token: 'bracket.multi', bracket: '@open' } },
+            { regex: /\}/, action: { token: 'bracket.multi', bracket: '@close', next: '@pop' } },
             { include: '@expression' },
-            { regex: /\{/, action: { token: 'variable', bracket: '@open', next: '@push' } },
-            { regex: /\}/, action: { token: 'variable', bracket: '@close', next: '@pop' } }
+            { include: '@unquoted_string' }
         ],
         expression: [
+            [/\n/, { token: 'linebreak', next: '@popall' }],
             {
                 // identifiers, keywords and textual operators
                 regex: /\b[A-Za-z_]+\w*/,
@@ -275,6 +324,15 @@ export var language = {
                 regex: /\b[0-9]+\b/,
                 action: { token: 'number' }
             },
+            {
+                regex: /[{]/,
+                action: { token: 'bracket.deref', bracket: '@open', next: '@push' }
+            },
+            {
+                regex: /[}]/,
+                action: { token: 'bracket.deref', bracket: '@close', next: '@pop' }
+            },
+            [/[\[\]()]/, '@brackets'],
             // symbol operators
             [
                 '@symbols',
