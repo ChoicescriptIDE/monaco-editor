@@ -34,7 +34,6 @@ export var conf = {
 };
 export var language = {
     includeLF: true,
-    defaultToken: 'source',
     ignoreCase: true,
     tokenPostfix: '.choicescript',
     commands: [
@@ -201,8 +200,7 @@ export var language = {
                 regex: /\n/,
                 action: {
                     token: 'linebreak',
-                    switchTo: '@root',
-                    log: 'found linebreak $0 in state $S0'
+                    switchTo: '@root'
                 }
             },
             {

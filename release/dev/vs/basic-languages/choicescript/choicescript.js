@@ -37,7 +37,6 @@ define('vs/basic-languages/choicescript/choicescript',["require", "exports", "..
     };
     exports.language = {
         includeLF: true,
-        defaultToken: 'source',
         ignoreCase: true,
         tokenPostfix: '.choicescript',
         commands: [
@@ -204,8 +203,7 @@ define('vs/basic-languages/choicescript/choicescript',["require", "exports", "..
                     regex: /\n/,
                     action: {
                         token: 'linebreak',
-                        switchTo: '@root',
-                        log: 'found linebreak $0 in state $S0'
+                        switchTo: '@root'
                     }
                 },
                 {
