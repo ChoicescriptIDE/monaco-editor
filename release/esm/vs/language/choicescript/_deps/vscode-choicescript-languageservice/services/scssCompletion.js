@@ -11,6 +11,8 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -302,7 +304,7 @@ var SCSSCompletion = /** @class */ (function (_super) {
             label: "@use",
             documentation: localize("scss.builtin.@use", "Loads mixins, functions, and variables from other Sass stylesheets as 'modules', and combines CSS from multiple stylesheets together."),
             references: [{ name: 'Sass documentation', url: 'https://sass-lang.com/documentation/at-rules/use' }],
-            insertText: "@use '$0';",
+            insertText: "@use $0;",
             insertTextFormat: InsertTextFormat.Snippet,
             kind: CompletionItemKind.Keyword
         },
@@ -310,7 +312,7 @@ var SCSSCompletion = /** @class */ (function (_super) {
             label: "@forward",
             documentation: localize("scss.builtin.@forward", "Loads a Sass stylesheet and makes its mixins, functions, and variables available when this stylesheet is loaded with the @use rule."),
             references: [{ name: 'Sass documentation', url: 'https://sass-lang.com/documentation/at-rules/forward' }],
-            insertText: "@forward '$0';",
+            insertText: "@forward $0;",
             insertTextFormat: InsertTextFormat.Snippet,
             kind: CompletionItemKind.Keyword
         },

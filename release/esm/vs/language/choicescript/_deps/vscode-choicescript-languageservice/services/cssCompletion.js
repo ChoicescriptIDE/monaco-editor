@@ -67,7 +67,7 @@ var CSSCompletion = /** @class */ (function () {
         this.completionParticipants = [];
     }
     CSSCompletion.prototype.configure = function (settings) {
-        this.settings = settings;
+        this.defaultSettings = settings;
     };
     CSSCompletion.prototype.getSymbolContext = function () {
         if (!this.symbolContext) {
@@ -78,19 +78,20 @@ var CSSCompletion = /** @class */ (function () {
     CSSCompletion.prototype.setCompletionParticipants = function (registeredCompletionParticipants) {
         this.completionParticipants = registeredCompletionParticipants || [];
     };
-    CSSCompletion.prototype.doComplete2 = function (document, position, styleSheet, documentContext) {
+    CSSCompletion.prototype.doComplete2 = function (document, position, styleSheet, documentContext, completionSettings) {
+        if (completionSettings === void 0) { completionSettings = this.defaultSettings; }
         return __awaiter(this, void 0, void 0, function () {
             var participant, contributedParticipants, result, pathCompletionResult;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         if (!this.lsOptions.fileSystemProvider || !this.lsOptions.fileSystemProvider.readDirectory) {
-                            return [2 /*return*/, this.doComplete(document, position, styleSheet)];
+                            return [2 /*return*/, this.doComplete(document, position, styleSheet, completionSettings)];
                         }
                         participant = new PathCompletionParticipant(this.lsOptions.fileSystemProvider.readDirectory);
                         contributedParticipants = this.completionParticipants;
                         this.completionParticipants = [participant].concat(contributedParticipants);
-                        result = this.doComplete(document, position, styleSheet);
+                        result = this.doComplete(document, position, styleSheet, completionSettings);
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, , 3, 4]);
@@ -109,13 +110,14 @@ var CSSCompletion = /** @class */ (function () {
             });
         });
     };
-    CSSCompletion.prototype.doComplete = function (document, position, styleSheet) {
+    CSSCompletion.prototype.doComplete = function (document, position, styleSheet, documentSettings) {
         this.offset = document.offsetAt(position);
         this.position = position;
         this.currentWord = getCurrentWord(document, this.offset);
         this.defaultReplaceRange = Range.create(Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);
         this.textDocument = document;
         this.styleSheet = styleSheet;
+        this.documentSettings = documentSettings;
         try {
             var result = { isIncomplete: false, items: [] };
             this.nodePath = nodes.getNodePath(this.styleSheet, this.offset);
@@ -303,24 +305,16 @@ var CSSCompletion = /** @class */ (function () {
     };
     Object.defineProperty(CSSCompletion.prototype, "isTriggerPropertyValueCompletionEnabled", {
         get: function () {
-            if (!this.settings ||
-                !this.settings.completion ||
-                this.settings.completion.triggerPropertyValueCompletion === undefined) {
-                return true;
-            }
-            return this.settings.completion.triggerPropertyValueCompletion;
+            var _a, _b;
+            return (_b = (_a = this.documentSettings) === null || _a === void 0 ? void 0 : _a.triggerPropertyValueCompletion) !== null && _b !== void 0 ? _b : true;
         },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(CSSCompletion.prototype, "isCompletePropertyWithSemicolonEnabled", {
         get: function () {
-            if (!this.settings ||
-                !this.settings.completion ||
-                this.settings.completion.completePropertyWithSemicolon === undefined) {
-                return true;
-            }
-            return this.settings.completion.completePropertyWithSemicolon;
+            var _a, _b;
+            return (_b = (_a = this.documentSettings) === null || _a === void 0 ? void 0 : _a.completePropertyWithSemicolon) !== null && _b !== void 0 ? _b : true;
         },
         enumerable: false,
         configurable: true

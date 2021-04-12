@@ -11,6 +11,8 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -731,6 +733,18 @@ var ChoiceCommand = /** @class */ (function (_super) {
     return ChoiceCommand;
 }(StandardCommand));
 export { ChoiceCommand };
+var IfElseCommand = /** @class */ (function (_super) {
+    __extends(IfElseCommand, _super);
+    function IfElseCommand() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.condition = null; // null for *else
+        _this.next = null;
+        _this.prev = null;
+        return _this;
+    }
+    return IfElseCommand;
+}(StandardCommand));
+export { IfElseCommand };
 var ChoiceOption = /** @class */ (function (_super) {
     __extends(ChoiceOption, _super);
     function ChoiceOption(offset, length) {
@@ -814,6 +828,17 @@ var Line = /** @class */ (function (_super) {
     return Line;
 }(Node));
 export { Line };
+/* Indented 'blocks' under *if/*else statements or choice #options */
+var CodeBlock = /** @class */ (function (_super) {
+    __extends(CodeBlock, _super);
+    function CodeBlock() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.options = [];
+        return _this;
+    }
+    return CodeBlock;
+}(Node));
+export { CodeBlock };
 var TextLine = /** @class */ (function (_super) {
     __extends(TextLine, _super);
     function TextLine(offset, length) {

@@ -37,7 +37,8 @@ function createFacade(parser, completion, hover, navigation, codeActions, valida
     return {
         configure: function (settings) {
             validation.configure(settings);
-            completion.configure(settings);
+            completion.configure(settings === null || settings === void 0 ? void 0 : settings.completion);
+            hover.configure(settings === null || settings === void 0 ? void 0 : settings.hover);
         },
         setDataProviders: cssDataManager.setDataProviders.bind(cssDataManager),
         doValidation: validation.doValidation.bind(validation),
@@ -97,5 +98,16 @@ function createChoiceScriptFacade(parser, completion, hover, navigation, validat
         findDefinition: navigation.findDefinitionGlobal.bind(navigation),
         findDocumentSymbols: navigation.findDocumentSymbols.bind(navigation),
         findReferences: navigation.findReferences.bind(navigation),
+        //findDocumentHighlights: navigation.findDocumentHighlights.bind(navigation),
+        //findDocumentLinks: navigation.findDocumentLinks.bind(navigation),
+        //findDocumentLinks2: navigation.findDocumentLinks2.bind(navigation),
+        //doCodeActions: codeActions.doCodeActions.bind(codeActions),
+        //doCodeActions2: codeActions.doCodeActions2.bind(codeActions),
+        //findColorSymbols: (d, s: StyleSheetImpl) => navigation.findDocumentColors(d, s).map(s => s.range),
+        //findDocumentColors: navigation.findDocumentColors.bind(navigation),
+        //getColorPresentations: navigation.getColorPresentations.bind(navigation),
+        //doRename: navigation.doRename.bind(navigation),
+        //getFoldingRanges,
+        //getSelectionRanges
     };
 }

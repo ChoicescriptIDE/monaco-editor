@@ -15,7 +15,11 @@ var CSSHover = /** @class */ (function () {
         this.cssDataManager = cssDataManager;
         this.selectorPrinting = new SelectorPrinting(cssDataManager);
     }
+    CSSHover.prototype.configure = function (settings) {
+        this.defaultSettings = settings;
+    };
     CSSHover.prototype.doHover = function (document, position, stylesheet, settings) {
+        if (settings === void 0) { settings = this.defaultSettings; }
         function getRange(node) {
             return Range.create(document.positionAt(node.offset), document.positionAt(node.end));
         }

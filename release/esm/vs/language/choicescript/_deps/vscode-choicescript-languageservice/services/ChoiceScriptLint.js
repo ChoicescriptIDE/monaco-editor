@@ -287,7 +287,8 @@ var LintVisitor = /** @class */ (function () {
         }
     };
     LintVisitor.prefixes = [
-        '-ms-', '-moz-', '-o-', '-webkit-',
+        '-ms-', '-moz-', '-o-', '-webkit-', // Quite common
+        //		'-xv-', '-atsc-', '-wap-', '-khtml-', 'mso-', 'prince-', '-ah-', '-hp-', '-ro-', '-rim-', '-tc-' // Quite un-common
     ];
     return LintVisitor;
 }());

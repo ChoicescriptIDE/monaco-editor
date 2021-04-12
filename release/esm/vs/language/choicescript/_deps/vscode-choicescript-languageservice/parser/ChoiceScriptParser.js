@@ -20,6 +20,8 @@ var ChoiceScriptParser = /** @class */ (function () {
         this.indentUnitSize = 2;
         this.indentLevel = 0;
         this.lineNum = 1;
+        //
+        this.implicitControlFlow = true;
         switch (indentUnit) {
             case "auto":
                 this.indentType = undefined;
@@ -235,7 +237,8 @@ var ChoiceScriptParser = /** @class */ (function () {
             }
             if (line.getLineType() !== nodes.LineType.Comment) {
                 if (line.indent > indentLevel) {
-                    this.markError(line.getIndentNode(), ParseError.IndentationError);
+                    // console.log("INDENT: " + line.indent + ", " + indentLevel);
+                    // this.markError(line.getIndentNode()!, ParseError.IndentationError);
                 }
                 else if (line.indent < indentLevel) {
                     this.indentLevel = line.indent;
@@ -248,7 +251,8 @@ var ChoiceScriptParser = /** @class */ (function () {
         var token = this.token;
         var line = this.create(nodes.Line);
         line.addIndent(this._parseIndentation());
-        var lineRet = (this._populateChoiceOptionLine(line) ||
+        var lineRet = (this._parseChoiceScriptComment() ||
+            this._populateChoiceOptionLine(line) ||
             this._populateChoiceScriptLine(line) ||
             this._populateTextLine(line));
         if (!lineRet) {
@@ -593,13 +597,18 @@ var ChoiceScriptParser = /** @class */ (function () {
         return null;
     };
     ChoiceScriptParser.prototype._parseChoiceScriptStatement = function () {
-        return this._parseChoiceScriptComment()
+        // first let's save ourselves a lot of effort:
+        // if there's no asterisk, then it's definitely not a command
+        if (!this.peek(TokenType.Asterisk)) {
+            return null;
+        }
+        return this._parseSceneList()
             || this._parseVariableDeclaration()
             || this._parseLabelDeclaration()
             || this._parseSetCommand()
-            || this._parseChoiceCommand()
+            || this._parseChoiceCommand() // _parseChoiceBlock
             || this._parseFlowCommand()
-            || this._parseIfCommand()
+            || this._parseIfBlock()
             || this._parseStandardCommand()
             || this._parseInvalidCommand();
     };
@@ -613,17 +622,6 @@ var ChoiceScriptParser = /** @class */ (function () {
         }
         return this.finish(comment);
     };
-    ChoiceScriptParser.prototype._parseChoiceScriptCommand = function () {
-        return this._parseChoiceScriptComment()
-            || this._parseVariableDeclaration()
-            || this._parseLabelDeclaration()
-            || this._parseSetCommand()
-            || this._parseChoiceCommand()
-            || this._parseFlowCommand()
-            || this._parseIfCommand()
-            || this._parseStandardCommand()
-            || this._parseInvalidCommand();
-    };
     ChoiceScriptParser.prototype._parseLabelDeclaration = function () {
         var declaration = this.create(nodes.LabelDeclaration);
         var command = this.create(nodes.FlowCommand);
@@ -631,7 +629,7 @@ var ChoiceScriptParser = /** @class */ (function () {
             return null;
         }
         declaration.addChild(this.finish(command));
-        if (!declaration.setLabel(this._parseTIdent(nodes.Label))) {
+        if (!declaration.setLabel(this._parseLabel())) {
             return this.finish(declaration, ParseError.LabelNameExpected);
         }
         return this.finish(declaration);
@@ -644,7 +642,7 @@ var ChoiceScriptParser = /** @class */ (function () {
         }
         var commandToken = this.prevToken;
         declaration.addChild(this.finish(command));
-        if (!declaration.setVariable(this._parseTIdent(nodes.Variable))) {
+        if (!declaration.setVariable(this._parseVariable())) {
             return this.finish(declaration, ParseError.VariableNameExpected);
         }
         // *create commands must be initialized
@@ -675,12 +673,49 @@ var ChoiceScriptParser = /** @class */ (function () {
         }
         return this.finish(node);
     };
-    // FIXME: Labels only have to pass !labelName.test(/\s/)
-    ChoiceScriptParser.prototype._parseLabel = function () {
-        return this._parseTIdent(nodes.Label);
+    ChoiceScriptParser.prototype._parseSceneList = function () {
+        var _a, _b;
+        var node = this.create(nodes.Node);
+        if (!this.acceptOneKeyword(["scene_list"])) {
+            return null;
+        }
+        if (!this.accept(TokenType.EOL)) {
+            return this.finish(node, ParseError.EmptySceneList);
+        }
+        var prevIndent = this.indentLevel;
+        var sceneLine = this._parseLine();
+        var newIndent = ((_a = sceneLine.getIndentNode()) === null || _a === void 0 ? void 0 : _a.indentDepth) || 0;
+        if (newIndent <= prevIndent) {
+            return this.finish(node, ParseError.EmptySceneList);
+        }
+        var currentIndent = newIndent;
+        while (currentIndent === newIndent) {
+            node.addChild(sceneLine);
+            var line = this._parseLine();
+            currentIndent = (_b = line.getIndentNode()) === null || _b === void 0 ? void 0 : _b.indentDepth;
+        }
+        if (currentIndent > newIndent) {
+            return this.finish(node, ParseError.IndentationError);
+        }
+        return this.finish(node);
     };
-    // FIXME: Variables MUST start with a letter: .test(/^[A-Za-z]+) -- Should we do this in PARSE or LINT?
-    // AND otherwise only contain "word" characters: e.g. test(/^\w+$/)
+    ChoiceScriptParser.prototype._parseLabel = function () {
+        var label = this.create(nodes.Label);
+        this.scanner.ignoreWhitespace = false;
+        var labelHasWhitespace = false;
+        // Labels only have to pass !labelName.test(/\s/)
+        while (!this.peek(TokenType.EOL) && !this.peek(TokenType.EOF)) {
+            if (this.token.type === TokenType.Whitespace)
+                labelHasWhitespace = true;
+            this.consumeToken();
+        }
+        this.scanner.ignoreWhitespace = true;
+        if (label.length < 1)
+            return null;
+        if (labelHasWhitespace)
+            this.markError(label, ParseError.NoLabelSpaces);
+        return this.finish(label);
+    };
     ChoiceScriptParser.prototype._parseVariable = function () {
         return this._parseTIdent(nodes.Variable);
     };
@@ -700,7 +735,7 @@ var ChoiceScriptParser = /** @class */ (function () {
     }*/
     ChoiceScriptParser.prototype._parseLabelRef = function () {
         var labelRef = this.create(nodes.LabelRef);
-        if (!labelRef.addChild(this._parseTIdent(nodes.Label) || this._parseStringExpression())) {
+        if (!labelRef.addChild(this._parseStringExpression() || this._parseLabel())) {
             return null;
         }
         return this.finish(labelRef);
@@ -746,19 +781,100 @@ var ChoiceScriptParser = /** @class */ (function () {
         this._parseGoCommandBody(node, (_a = this.prevToken) === null || _a === void 0 ? void 0 : _a.text);
         return this.finish(node);
     };
-    ChoiceScriptParser.prototype._parseIfCommand = function (inline) {
+    ChoiceScriptParser.prototype._parseIfElsifOrElseCommand = function (command) {
+        if (command === void 0) { command = "if"; }
         var node = this.create(nodes.Command);
-        if (!this.acceptOneKeyword(["if", "selectable_if"])) {
+        if (!this.acceptOneKeyword([command])) {
             return null;
         }
-        if (inline && !this.accept(TokenType.ParenthesisL)) {
-            // inline *ifs must be braced
-            return null;
-        }
-        if (!node.addChild(this._parseCSExpr(inline ? TokenType.ParenthesisR : undefined, undefined))) {
-            return this.finish(node, ParseError.ExpressionExpected);
+        switch (command) {
+            case "if":
+            case "elsif":
+            case "elseif":
+                if (!node.addChild(this._parseCSExpr())) {
+                    return this.finish(node, ParseError.ExpressionExpected);
+                }
+                break;
+            case "else":
+                break;
+            default:
+                return this.finish(node, ParseError.GenericSyntaxError);
         }
         return this.finish(node);
+    };
+    ChoiceScriptParser.prototype._parseIfBlock = function () {
+        var localIndent = this.indentLevel;
+        var ifblock = this.create(nodes.CodeBlock);
+        // *if
+        var ifNode;
+        if (!(ifNode = this._parseIfElsifOrElseCommand())) {
+            return null;
+        }
+        ifblock.addChild(ifNode);
+        if (!this.accept(TokenType.EOL)) {
+            return this.finish(ifblock, ParseError.IndentBlockExpected);
+        }
+        ifNode.addChild(this._parseBlock());
+        var loneIf = this.mark();
+        // *elsif?
+        var parser = this;
+        function parseEE(name) {
+            var mark = parser.mark();
+            var nextLine = parser.create(nodes.Line);
+            nextLine.addIndent(parser._parseIndentation());
+            var command = parser._parseIfElsifOrElseCommand(name);
+            if (command && !parser.accept(TokenType.EOL)) {
+                parser.markError(command, ParseError.IndentBlockExpected);
+            }
+            nextLine.addChild(command);
+            return command ? parser.finish(nextLine) : parser.restoreAtMark(mark);
+        }
+        var elsifNode;
+        while ((elsifNode = parseEE("elsif")) || (elsifNode = parseEE("elseif"))) {
+            ifblock.addChild(elsifNode);
+            if (!elsifNode.addChild(this._parseBlock())) {
+                this.markError(elsifNode, ParseError.IndentBlockExpected);
+            }
+        }
+        // *else
+        var elseNode;
+        if (elseNode = parseEE("else")) {
+            ifblock.addChild(elseNode);
+            if (!elseNode.addChild(this._parseBlock())) {
+                this.markError(elseNode, ParseError.IndentBlockExpected);
+            }
+        }
+        return this.finish(ifblock);
+    };
+    // A 'block' of code/text under an if or choice
+    ChoiceScriptParser.prototype._parseBlock = function () {
+        var cb = this.create(nodes.CodeBlock);
+        var localIndent = ++this.indentLevel;
+        var mark, line;
+        while (true) {
+            mark = this.mark();
+            line = this._parseLine();
+            //console.log(line.indent, localIndent, this.scanner.substring(line.offset, line.length));
+            if (line.indent < localIndent) {
+                this.restoreAtMark(mark);
+                break;
+            }
+            else if (line.indent > localIndent) {
+                this.markError(line, ParseError.IndentationError);
+                break;
+            } /* else if (this.peek(TokenType.EOF)) {
+                cb.addChild(line);
+                break;
+            }*/
+            //console.log(line.indent, line.getText());
+            cb.addChild(line);
+        }
+        this.indentLevel--;
+        if (cb.getChildren().length < 1) {
+            this.restoreAtMark(mark);
+            return null;
+        }
+        return cb;
     };
     ChoiceScriptParser.prototype._parseReuseCommand = function () {
         var node = this.create(nodes.Node);
@@ -799,10 +915,10 @@ var ChoiceScriptParser = /** @class */ (function () {
         }
         this.restoreAtMark(mark);*/
         line.addChild(this._parseReuseCommand()); // optional
-        line.addChild(this._parseIfCommand(true /* inline */)); // inline / optional
+        //line.addChild(this._parseIfCommand(true /* inline */)); // inline / optional
         if (!this.accept(TokenType.Hash)) {
             this.restoreAtMark(indentMark);
-            if (!line.addChild(this._parseIfBlock(true /* choiceOption */))) {
+            if (!line.addChild(this._parseIfBlock( /* true, choiceOption */))) {
                 this.restoreAtMark(mark);
                 return null;
             }
@@ -821,24 +937,6 @@ var ChoiceScriptParser = /** @class */ (function () {
         this.indentLevel++;
         //while(line.addChild(this._parseLine())) {}
         return this.finish(line);
-    };
-    ChoiceScriptParser.prototype._parseIfBlock = function (guardsChoiceOption) {
-        var node = this.create(nodes.Node);
-        if (!this.acceptOneKeyword(["if"])) {
-            return null;
-        }
-        if (!node.addChild(this._parseCSExpr(undefined, undefined))) {
-            return this.finish(node, ParseError.ExpressionExpected);
-        }
-        if (!this.accept(TokenType.EOL)) {
-            throw new Error("ParseError: Expected EOL after IF statement");
-        }
-        if (guardsChoiceOption) {
-            if (!node.addChild(this._parseChoiceOptionLine())) {
-                return this.finish(node, ParseError.ExpectedChoiceOption);
-            }
-        }
-        return this.finish(node);
     };
     ChoiceScriptParser.prototype._parseChoiceOptionText = function () {
         var option = this.create(nodes.ChoiceOption);
@@ -859,15 +957,40 @@ var ChoiceScriptParser = /** @class */ (function () {
         }
         return this.finish(option);
     };
+    /*public _parseChoiceOptions(): nodes.Line[] | null {
+        let node = this.create(nodes.Node); // "Option Wrapper"
+        let currentIndent = this.indentLevel;
+        let options: nodes.Line[] = [];
+        let opt;
+        while (opt = this._parseChoiceOptionLine()) {
+            options.push(opt);
+        }
+        for (let opt of options) {
+            let indent = opt?.getIndentNode()?.indentDepth;
+            if (indent! <= currentIndent) {
+
+            }
+        }
+        let firstOptionLine = this._parseChoiceOptionLine();
+        let newIndent = firstOptionLine?.getIndentNode()?.indentDepth;
+
+        if (newIndent! <= currentIndent) {
+            this.markError(firstOptionLine!, ParseError.IndentationError);
+        }
+        this.indentLevel = currentIndent;
+        return null;
+    }*/
     ChoiceScriptParser.prototype._parseChoiceCommand = function () {
         var node = this.create(nodes.ChoiceCommand);
-        if (this.acceptOneKeyword(["choice"])) {
-            // TODO? complicated to support nested choices
+        var isFake = false;
+        if (this.acceptOneKeyword(["fake_choice"])) {
+            isFake = true;
+        }
+        if (isFake || this.acceptOneKeyword(["choice"])) {
             while (!this.peek(TokenType.EOL) && !this.peek(TokenType.EOF)) {
                 this.consumeToken();
             }
             this.accept(TokenType.EOL);
-            this.indentLevel++;
             while (node.addChild(this._parseChoiceOptionLine())) { }
             if (node.hasChildren()) {
                 return this.finish(node);
@@ -875,7 +998,22 @@ var ChoiceScriptParser = /** @class */ (function () {
             else {
                 return this.finish(node, ParseError.NoChoiceOption);
             }
+            // TODO? complicated to support nested choices
+            //let options = this._parseChoiceOptions();
+            /*
+            while (!this.peek(TokenType.EOL) && !this.peek(TokenType.EOF)) { this.consumeToken(); }
+            this.accept(TokenType.EOL);
+            let prevIndent = this.indentLevel;
+            while(node.addChild(this._parseChoiceOptionLine())) {}
+            if (node.hasChildren()) {
+                return this.finish(node);
+            } else {
+                return this.finish(node, ParseError.NoChoiceOption);
+            }*/
         }
+        return null;
+    };
+    ChoiceScriptParser.prototype._parseChoiceBlock = function () {
         return null;
     };
     ChoiceScriptParser.prototype._parseSetCommand = function () {
@@ -920,29 +1058,6 @@ var ChoiceScriptParser = /** @class */ (function () {
         this.markError(node, ParseError.UnknownCommand);
         this.consumeToken(); // assume the next token is the attempted command
         return this.finish(node);
-    };
-    ChoiceScriptParser.prototype._needsSemicolonAfter = function (node) {
-        switch (node.type) {
-            case nodes.NodeType.Keyframe:
-            case nodes.NodeType.ViewPort:
-            case nodes.NodeType.Media:
-            case nodes.NodeType.Namespace:
-            case nodes.NodeType.If:
-            case nodes.NodeType.For:
-            case nodes.NodeType.Each:
-            case nodes.NodeType.While:
-            case nodes.NodeType.FunctionDeclaration:
-            case nodes.NodeType.MixinContentDeclaration:
-                return false;
-            case nodes.NodeType.VariableDeclaration:
-            case nodes.NodeType.ReturnStatement:
-            case nodes.NodeType.MediaQuery:
-            case nodes.NodeType.Import:
-            case nodes.NodeType.AtApplyRule:
-            case nodes.NodeType.CustomPropertyDeclaration:
-                return true;
-        }
-        return false;
     };
     ChoiceScriptParser.prototype._parseNumericalOperator = function () {
         if (this.peek(TokenType.Asterisk) ||
@@ -1111,6 +1226,12 @@ var ChoiceScriptParser = /** @class */ (function () {
         else { // tabs
         }
         return null;
+    };
+    ChoiceScriptParser.prototype.__decreaseIndent = function (levels) {
+        this.indentLevel -= (this.indentUnitSize * levels);
+    };
+    ChoiceScriptParser.prototype.__increaseIndent = function (levels) {
+        this.indentLevel += (this.indentUnitSize * levels);
     };
     return ChoiceScriptParser;
 }());

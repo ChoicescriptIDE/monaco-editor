@@ -14,6 +14,7 @@ var CSIssueType = /** @class */ (function () {
 }());
 export { CSIssueType };
 export var ParseError = {
+    NoLabelSpaces: new CSIssueType('cs-noLabelSpaces', localize('no.label.spaces', "Label names must not contain spaces")),
     ExpectedScene: new CSIssueType('cs-expectedScene', localize('expected.scene', "Expected a scene name or string expression")),
     ExpectedLabel: new CSIssueType('cs-expectedLabel', localize('expected.label', "Expected a label name or string expression")),
     GenericSyntaxError: new CSIssueType('cs-genericSyntaxError', localize('generic.syntax.error', "Syntax error")),
@@ -22,6 +23,7 @@ export var ParseError = {
     MixedIndentation: new CSIssueType('cs-mixedIndentation', localize('mixed.indentation', "Mixed indentation units (spaces/tabs)")),
     ExpectedChoiceOption: new CSIssueType('cs-expectedchoiceoption', localize('expected.choice.option', "Expected Choice option starting with a hash '#'")),
     UnknownCommand: new CSIssueType('cs-unknowncommand', localize('unknown.command', "unknown command")),
+    EmptySceneList: new CSIssueType('cs-emptyscenelist', localize('expected.scenes', "Expected at least one scene in the scene list")),
     NoChoiceOption: new CSIssueType('cs-nochoiceoption', localize('no.choice.command', "expected at least one choice option")),
     NotEnoughMultiReplaceOptions: new CSIssueType('cs-notenoughmultireplaceopts', localize('notenough.multi.command', "there should be at least one pipe '|' to separate at least two options")),
     NumberExpected: new CSIssueType('cs-numberexpected', localize('expected.number', "number expected")),
@@ -33,6 +35,7 @@ export var ParseError = {
     NoCloseQuote: new CSIssueType('cs-noclosequote', localize('no.close.quote', "Invalid string, expected a closing quotation: '\"'")),
     SemiColonExpected: new CSIssueType('cs-semicolonexpected', localize('expected.semicolon', "semi-colon expected")),
     TermExpected: new CSIssueType('cs-termexpected', localize('expected.term', "term expected")),
+    IndentBlockExpected: new CSIssueType('cs-blockexpected', localize('expected.block', "Expected an indented code block")),
     ExpressionExpected: new CSIssueType('cs-expressionexpected', localize('expected.expression', "expression expected")),
     OperatorExpected: new CSIssueType('cs-operatorexpected', localize('expected.operator', "operator expected")),
     IdentifierExpected: new CSIssueType('cs-identifierexpected', localize('expected.ident', "identifier expected")),

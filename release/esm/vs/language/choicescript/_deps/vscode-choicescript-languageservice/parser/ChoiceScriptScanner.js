@@ -456,11 +456,6 @@ var ChoiceScriptScanner = /** @class */ (function () {
                     return this.finishToken(pos, TokenType.Whitespace);
                 }
             }
-            else if (this.comment()) {
-                if (!this.ignoreComment) {
-                    return this.finishToken(pos, TokenType.Comment);
-                }
-            }
             else {
                 return null;
             }
@@ -638,24 +633,6 @@ var ChoiceScriptScanner = /** @class */ (function () {
         }
         return false;
     };
-    ChoiceScriptScanner.prototype.comment = function () {
-        if (this.stream.advanceIfChars([_FSL, _MUL])) {
-            var success_1 = false, hot_1 = false;
-            this.stream.advanceWhileChar(function (ch) {
-                if (hot_1 && ch === _FSL) {
-                    success_1 = true;
-                    return false;
-                }
-                hot_1 = ch === _MUL;
-                return true;
-            });
-            if (success_1) {
-                this.stream.advance(1);
-            }
-            return true;
-        }
-        return false;
-    };
     return ChoiceScriptScanner;
 }());
 export { ChoiceScriptScanner };
@@ -798,34 +775,11 @@ var Scanner = /** @class */ (function () {
                     return this.finishToken(offset, TokenType.Whitespace);
                 }
             }
-            else if (this.comment()) {
-                if (!this.ignoreComment) {
-                    return this.finishToken(offset, TokenType.Comment);
-                }
-            }
             else {
                 return null;
             }
         }
         return null;
-    };
-    Scanner.prototype.comment = function () {
-        if (this.stream.advanceIfChars([_FSL, _MUL])) {
-            var success_2 = false, hot_2 = false;
-            this.stream.advanceWhileChar(function (ch) {
-                if (hot_2 && ch === _FSL) {
-                    success_2 = true;
-                    return false;
-                }
-                hot_2 = ch === _MUL;
-                return true;
-            });
-            if (success_2) {
-                this.stream.advance(1);
-            }
-            return true;
-        }
-        return false;
     };
     Scanner.prototype._fastMathOp = function () {
         var ch;
