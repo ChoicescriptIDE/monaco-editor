@@ -3,7 +3,13 @@ import '../../editor/editor.api.js';
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { languages, Emitter } from './fillers/monaco-editor-core.js';
+import { editor, languages, Emitter } from './fillers/monaco-editor-core.js';
+var DictionaryEvent = /** @class */ (function () {
+    function DictionaryEvent() {
+    }
+    return DictionaryEvent;
+}());
+export { DictionaryEvent };
 // --- CSS configuration and defaults ---------
 var LanguageServiceDefaultsImpl = /** @class */ (function () {
     function LanguageServiceDefaultsImpl(languageId, diagnosticsOptions, modeConfiguration) {
@@ -111,6 +117,7 @@ languages.onLanguage('css', function () {
 var LanguageServiceDefaultsChoiceScriptImpl = /** @class */ (function () {
     function LanguageServiceDefaultsChoiceScriptImpl(languageId, diagnosticsOptions, modeConfiguration) {
         this._onDidChange = new Emitter();
+        this._onDidDictionaryChange = new Emitter();
         this._languageId = languageId;
         this.setDiagnosticsOptions(diagnosticsOptions);
         this.setModeConfiguration(modeConfiguration);
@@ -118,6 +125,13 @@ var LanguageServiceDefaultsChoiceScriptImpl = /** @class */ (function () {
     Object.defineProperty(LanguageServiceDefaultsChoiceScriptImpl.prototype, "onDidChange", {
         get: function () {
             return this._onDidChange.event;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(LanguageServiceDefaultsChoiceScriptImpl.prototype, "onDictionaryChange", {
+        get: function () {
+            return this._onDidDictionaryChange.event;
         },
         enumerable: false,
         configurable: true
@@ -143,6 +157,9 @@ var LanguageServiceDefaultsChoiceScriptImpl = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    LanguageServiceDefaultsChoiceScriptImpl.prototype.addWordToDictionary = function (accessor, dict, word) {
+        this._onDidDictionaryChange.fire({ dictionary: dict, word: word });
+    };
     LanguageServiceDefaultsChoiceScriptImpl.prototype.setDiagnosticsOptions = function (options) {
         this._diagnosticsOptions = options || Object.create(null);
         this._onDidChange.fire(this);
@@ -189,6 +206,9 @@ function getCSMode() {
 }
 languages.onLanguage('choicescript', function () {
     //getModeCS('choicescript').then(csmode => csmode.setupMode(choicescriptDefaults));
+    editor.registerCommand("addWordToDictionary", function (accessor, dict, word) {
+        choicescriptDefaults.addWordToDictionary(accessor, dict, word);
+    });
     getCSMode().then(function (mode) {
         languages.choicescriptDispose = mode.setupMode(choicescriptDefaults);
         // handle reset on setModeConfiguration

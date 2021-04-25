@@ -1115,7 +1115,7 @@ var __extends = (this && this.__extends) || (function () {
      *--------------------------------------------------------------------------------------------*/
     'use strict';
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.ParseErrorCollector = exports.Marker = exports.Level = exports.GuardCondition = exports.LessGuard = exports.ListEntry = exports.Variable = exports.LabelDeclaration = exports.VariableDeclaration = exports.StringValue = exports.NumericValue = exports.HexColorValue = exports.Operator = exports.Term = exports.StringExpression = exports.BinaryExpression = exports.Expression = exports.MultiReplace = exports.MultiReplaceOption = exports.SupportsCondition = exports.MediaQuery = exports.Namespace = exports.Import = exports.FunctionArgument = exports.FunctionParameter = exports.Invocation = exports.AtApplyRule = exports.ChoiceScriptLine = exports.TextLine = exports.CodeBlock = exports.Line = exports.RealWord = exports.ChoiceOption = exports.IfElseCommand = exports.ChoiceCommand = exports.SetCommand = exports.RandCommand = exports.FlowCommand = exports.StandardCommand = exports.LabelRef = exports.Label = exports.Command = exports.SceneRef = exports.Scene = exports.Identifier = exports.ChoiceScriptComment = exports.ChoiceScriptStatement = exports.VariableReplacement = exports.Nodelist = exports.Indentation = exports.Node = exports.getNodePath = exports.getNodeAtOffset = exports.ReferenceType = exports.NodeType = exports.IndentType = exports.LineType = exports.ChoiceScriptType = void 0;
+    exports.ParseErrorCollector = exports.Marker = exports.Level = exports.GuardCondition = exports.LessGuard = exports.ListEntry = exports.Variable = exports.LabelDeclaration = exports.VariableDeclaration = exports.StringValue = exports.NumericValue = exports.HexColorValue = exports.Operator = exports.Term = exports.StringExpression = exports.BinaryExpression = exports.Expression = exports.MultiReplace = exports.MultiReplaceOption = exports.SupportsCondition = exports.MediaQuery = exports.Namespace = exports.Import = exports.FunctionArgument = exports.FunctionParameter = exports.Invocation = exports.AtApplyRule = exports.ChoiceScriptLine = exports.TextLine = exports.CodeBlock = exports.Line = exports.RealWord = exports.ChoiceOption = exports.IfElseCommand = exports.ParamsCommand = exports.ChoiceCommand = exports.SetCommand = exports.RandCommand = exports.FlowCommand = exports.StandardCommand = exports.LabelRef = exports.Label = exports.Command = exports.SceneRef = exports.Scene = exports.Identifier = exports.ChoiceScriptComment = exports.ChoiceScriptStatement = exports.VariableReplacement = exports.Nodelist = exports.Indentation = exports.Node = exports.getNodePath = exports.getNodeAtOffset = exports.ReferenceType = exports.NodeType = exports.IndentType = exports.LineType = exports.ChoiceScriptType = void 0;
     /// <summary>
     /// Nodes for the css 2.1 specification. See for reference:
     /// http://www.w3.org/TR/CSS21/grammar.html#grammar
@@ -1161,55 +1161,56 @@ var __extends = (this && this.__extends) || (function () {
         NodeType[NodeType["Value"] = 17] = "Value";
         NodeType[NodeType["RealWord"] = 18] = "RealWord";
         NodeType[NodeType["ChoiceCommand"] = 19] = "ChoiceCommand";
-        NodeType[NodeType["ChoiceOption"] = 20] = "ChoiceOption";
-        NodeType[NodeType["MultiReplace"] = 21] = "MultiReplace";
-        NodeType[NodeType["MultiReplaceOption"] = 22] = "MultiReplaceOption";
-        NodeType[NodeType["VariableReplacement"] = 23] = "VariableReplacement";
-        NodeType[NodeType["PrintVariable"] = 24] = "PrintVariable";
-        NodeType[NodeType["NumericValue"] = 25] = "NumericValue";
-        NodeType[NodeType["Boolean"] = 26] = "Boolean";
-        NodeType[NodeType["Indentation"] = 27] = "Indentation";
-        NodeType[NodeType["VariableDeclaration"] = 28] = "VariableDeclaration";
-        NodeType[NodeType["LabelDeclaration"] = 29] = "LabelDeclaration";
-        NodeType[NodeType["FlowCommand"] = 30] = "FlowCommand";
+        NodeType[NodeType["ParamsCommand"] = 20] = "ParamsCommand";
+        NodeType[NodeType["ChoiceOption"] = 21] = "ChoiceOption";
+        NodeType[NodeType["MultiReplace"] = 22] = "MultiReplace";
+        NodeType[NodeType["MultiReplaceOption"] = 23] = "MultiReplaceOption";
+        NodeType[NodeType["VariableReplacement"] = 24] = "VariableReplacement";
+        NodeType[NodeType["PrintVariable"] = 25] = "PrintVariable";
+        NodeType[NodeType["NumericValue"] = 26] = "NumericValue";
+        NodeType[NodeType["Boolean"] = 27] = "Boolean";
+        NodeType[NodeType["Indentation"] = 28] = "Indentation";
+        NodeType[NodeType["VariableDeclaration"] = 29] = "VariableDeclaration";
+        NodeType[NodeType["LabelDeclaration"] = 30] = "LabelDeclaration";
+        NodeType[NodeType["FlowCommand"] = 31] = "FlowCommand";
         // ...
-        NodeType[NodeType["HexColorValue"] = 31] = "HexColorValue";
-        NodeType[NodeType["Variable"] = 32] = "Variable";
-        NodeType[NodeType["CreateVariable"] = 33] = "CreateVariable";
-        NodeType[NodeType["If"] = 34] = "If";
-        NodeType[NodeType["Else"] = 35] = "Else";
-        NodeType[NodeType["For"] = 36] = "For";
-        NodeType[NodeType["Each"] = 37] = "Each";
-        NodeType[NodeType["While"] = 38] = "While";
-        NodeType[NodeType["MixinContentReference"] = 39] = "MixinContentReference";
-        NodeType[NodeType["MixinContentDeclaration"] = 40] = "MixinContentDeclaration";
-        NodeType[NodeType["Media"] = 41] = "Media";
-        NodeType[NodeType["Keyframe"] = 42] = "Keyframe";
-        NodeType[NodeType["FontFace"] = 43] = "FontFace";
-        NodeType[NodeType["Import"] = 44] = "Import";
-        NodeType[NodeType["Namespace"] = 45] = "Namespace";
-        NodeType[NodeType["Invocation"] = 46] = "Invocation";
-        NodeType[NodeType["FunctionDeclaration"] = 47] = "FunctionDeclaration";
-        NodeType[NodeType["ReturnStatement"] = 48] = "ReturnStatement";
-        NodeType[NodeType["MediaQuery"] = 49] = "MediaQuery";
-        NodeType[NodeType["FunctionParameter"] = 50] = "FunctionParameter";
-        NodeType[NodeType["FunctionArgument"] = 51] = "FunctionArgument";
-        NodeType[NodeType["KeyframeSelector"] = 52] = "KeyframeSelector";
-        NodeType[NodeType["ViewPort"] = 53] = "ViewPort";
-        NodeType[NodeType["Document"] = 54] = "Document";
-        NodeType[NodeType["AtApplyRule"] = 55] = "AtApplyRule";
-        NodeType[NodeType["CustomPropertyDeclaration"] = 56] = "CustomPropertyDeclaration";
-        NodeType[NodeType["CustomPropertySet"] = 57] = "CustomPropertySet";
-        NodeType[NodeType["ListEntry"] = 58] = "ListEntry";
-        NodeType[NodeType["Supports"] = 59] = "Supports";
-        NodeType[NodeType["SupportsCondition"] = 60] = "SupportsCondition";
-        NodeType[NodeType["NamespacePrefix"] = 61] = "NamespacePrefix";
-        NodeType[NodeType["GridLine"] = 62] = "GridLine";
-        NodeType[NodeType["Plugin"] = 63] = "Plugin";
-        NodeType[NodeType["UnknownAtRule"] = 64] = "UnknownAtRule";
-        NodeType[NodeType["Command"] = 65] = "Command";
-        NodeType[NodeType["StandardCommand"] = 66] = "StandardCommand";
-        NodeType[NodeType["InvalidBuiltin"] = 67] = "InvalidBuiltin";
+        NodeType[NodeType["HexColorValue"] = 32] = "HexColorValue";
+        NodeType[NodeType["Variable"] = 33] = "Variable";
+        NodeType[NodeType["CreateVariable"] = 34] = "CreateVariable";
+        NodeType[NodeType["If"] = 35] = "If";
+        NodeType[NodeType["Else"] = 36] = "Else";
+        NodeType[NodeType["For"] = 37] = "For";
+        NodeType[NodeType["Each"] = 38] = "Each";
+        NodeType[NodeType["While"] = 39] = "While";
+        NodeType[NodeType["MixinContentReference"] = 40] = "MixinContentReference";
+        NodeType[NodeType["MixinContentDeclaration"] = 41] = "MixinContentDeclaration";
+        NodeType[NodeType["Media"] = 42] = "Media";
+        NodeType[NodeType["Keyframe"] = 43] = "Keyframe";
+        NodeType[NodeType["FontFace"] = 44] = "FontFace";
+        NodeType[NodeType["Import"] = 45] = "Import";
+        NodeType[NodeType["Namespace"] = 46] = "Namespace";
+        NodeType[NodeType["Invocation"] = 47] = "Invocation";
+        NodeType[NodeType["FunctionDeclaration"] = 48] = "FunctionDeclaration";
+        NodeType[NodeType["ReturnStatement"] = 49] = "ReturnStatement";
+        NodeType[NodeType["MediaQuery"] = 50] = "MediaQuery";
+        NodeType[NodeType["FunctionParameter"] = 51] = "FunctionParameter";
+        NodeType[NodeType["FunctionArgument"] = 52] = "FunctionArgument";
+        NodeType[NodeType["KeyframeSelector"] = 53] = "KeyframeSelector";
+        NodeType[NodeType["ViewPort"] = 54] = "ViewPort";
+        NodeType[NodeType["Document"] = 55] = "Document";
+        NodeType[NodeType["AtApplyRule"] = 56] = "AtApplyRule";
+        NodeType[NodeType["CustomPropertyDeclaration"] = 57] = "CustomPropertyDeclaration";
+        NodeType[NodeType["CustomPropertySet"] = 58] = "CustomPropertySet";
+        NodeType[NodeType["ListEntry"] = 59] = "ListEntry";
+        NodeType[NodeType["Supports"] = 60] = "Supports";
+        NodeType[NodeType["SupportsCondition"] = 61] = "SupportsCondition";
+        NodeType[NodeType["NamespacePrefix"] = 62] = "NamespacePrefix";
+        NodeType[NodeType["GridLine"] = 63] = "GridLine";
+        NodeType[NodeType["Plugin"] = 64] = "Plugin";
+        NodeType[NodeType["UnknownAtRule"] = 65] = "UnknownAtRule";
+        NodeType[NodeType["Command"] = 66] = "Command";
+        NodeType[NodeType["StandardCommand"] = 67] = "StandardCommand";
+        NodeType[NodeType["InvalidBuiltin"] = 68] = "InvalidBuiltin";
     })(NodeType = exports.NodeType || (exports.NodeType = {}));
     var ReferenceType;
     (function (ReferenceType) {
@@ -1833,6 +1834,38 @@ var __extends = (this && this.__extends) || (function () {
         return ChoiceCommand;
     }(StandardCommand));
     exports.ChoiceCommand = ChoiceCommand;
+    var ParamsCommand = /** @class */ (function (_super) {
+        __extends(ParamsCommand, _super);
+        function ParamsCommand(offset, length) {
+            var _this = _super.call(this, offset, length) || this;
+            _this.variables = [];
+            return _this;
+        }
+        ParamsCommand.prototype.addVariable = function (node) {
+            if (node) {
+                node.attachTo(this);
+                this.variables.push(node);
+                return true;
+            }
+            return false;
+        };
+        Object.defineProperty(ParamsCommand.prototype, "type", {
+            // Getters
+            get: function () {
+                return NodeType.ParamsCommand;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        ParamsCommand.prototype.getVariable = function (index) {
+            return this.variables[index];
+        };
+        ParamsCommand.prototype.getVariableCount = function () {
+            return this.variables.length;
+        };
+        return ParamsCommand;
+    }(Command));
+    exports.ParamsCommand = ParamsCommand;
     var IfElseCommand = /** @class */ (function (_super) {
         __extends(IfElseCommand, _super);
         function IfElseCommand() {
@@ -3701,6 +3734,7 @@ var __assign = (this && this.__assign) || function () {
                 return null;
             }
             return this._parseSceneList()
+                || this._parseParams()
                 || this._parseVariableDeclaration()
                 || this._parseLabelDeclaration()
                 || this._parseSetCommand()
@@ -3823,6 +3857,21 @@ var __assign = (this && this.__assign) || function () {
                 return null;
             }
             return node; // feel like this should be this.finish, but LESS example says otherwise;
+        };
+        ChoiceScriptParser.prototype._parseParams = function () {
+            var paramCmd = this.create(nodes.ParamsCommand);
+            if (!this.acceptOneKeyword(["params"])) {
+                return null;
+            }
+            while (!this.peek(ChoiceScriptScanner_1.TokenType.EOL) && !this.peek(ChoiceScriptScanner_1.TokenType.EOF)) {
+                console.log("txt", this.token.text);
+                console.log("type", this.token.type);
+                if (!paramCmd.addVariable(this._parseVariable())) {
+                    this.markError(paramCmd, ChoiceScriptErrors_1.ParseError.VariableNameExpected);
+                    this.consumeToken();
+                }
+            }
+            return this.finish(paramCmd);
         };
         /*public _parseTRef<T>(type: nodes.NodeConstructor<T>): T | null {
             const ref = <T>this.create(type);
@@ -4548,6 +4597,8 @@ var __extends = (this && this.__extends) || (function () {
                     return this.visitVariableDeclarationNode(node);
                 case nodes.NodeType.LabelDeclaration:
                     return this.visitLabelDeclarationNode(node);
+                case nodes.NodeType.ParamsCommand:
+                    return this.visitParamsCommandNode(node);
                 /*case nodes.NodeType.FunctionParameter: {
                     return this.visitFunctionParameterNode(<nodes.FunctionParameter>node);
                 }*/
@@ -4562,6 +4613,13 @@ var __extends = (this && this.__extends) || (function () {
         ScopeBuilder.prototype.visitLabelDeclarationNode = function (node) {
             if (node.getLabel()) {
                 this.addSymbol(node, node.getLabel().name, null, nodes.ReferenceType.Label);
+            }
+            return true;
+        };
+        ScopeBuilder.prototype.visitParamsCommandNode = function (node) {
+            var len = node.getVariableCount();
+            for (var i = 0; i < len; i++) {
+                this.addSymbol(node, node.getVariable(i).getName(), null, nodes.ReferenceType.Variable);
             }
             return true;
         };
@@ -33367,6 +33425,8 @@ var __extends = (this && this.__extends) || (function () {
          * @returns string The file data.
          */
         _readFile: function (path, charset) {
+            if (typeof Window === "undefined" && typeof XMLHttpRequest === "undefined")
+                return require("fs").readFileSync(path).toString();
             if (!charset)
                 charset = "ISO8859-1";
             var req = new XMLHttpRequest();
@@ -33717,16 +33777,23 @@ var __extends = (this && this.__extends) || (function () {
          *
          * @param {String} word The misspelling.
          * @param {Number} [limit=5] The maximum number of suggestions to return.
+         * @param {Function} callback The function to call on completion.
+         * @param {String} [workerPath="wordprocessor.js"] The location of the worker file.
          * @returns {String[]} The array of suggestions.
          */
         alphabet: "",
-        suggest: function (word, limit, callback) {
+        suggest: function (word, limit, callback, workerPath) {
+            if (typeof globalThis.Worker === "undefined") {
+                var Worker = require('web-worker');
+            }
+            else {
+                Worker = globalThis.Worker;
+            }
             if (!limit)
                 limit = 5;
-            console.log("typo.js -->", this.check("hello"));
-            console.log("dictionary: ", this.dictionary);
+            if (!workerPath)
+                workerPath = "wordprocessor.js";
             if (this.check(word)) {
-                console.log('nout');
                 callback([]);
                 return;
             }
@@ -33777,10 +33844,9 @@ var __extends = (this && this.__extends) || (function () {
                     callback(rv);
                 };
                 for (var i = 0; i < numWorkers; ++i) {
-                    var worker = new Worker("wordprocessor.js");
+                    var worker = new Worker(workerPath);
                     worker.addEventListener('message', function (index) {
                         return function (e) {
-                            //console.log(e.data);
                             rv = rv.concat(e.data);
                             workersCompleted[index] = true;
                             this.terminate(); //CJW stop the worker (else the buildup makes the app crash)?
@@ -33850,7 +33916,6 @@ var __extends = (this && this.__extends) || (function () {
                 });
             }
             correct(word, function (rv) {
-                console.log("word", word, "rv", rv);
                 callback(rv);
             });
         }
@@ -33946,15 +34011,28 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                     baseUrl = settings.spellcheck.dictionaryPath;
                     dict = settings.spellcheck.dictionary;
                     // TODO handle failure
-                    this.typo = new typo_1.Typo(dict, 
-                    //fs.readFileSync(baseUrl + "/" + dict + "/" + dict + ".aff").toString(),
-                    //fs.readFileSync(baseUrl + "/" + dict + "/" + dict + ".dic").toString(),
-                    this.typo._readFile(baseUrl + "/" + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + "/" + dict + "/" + dict + ".dic"), {
+                    this.typo = new typo_1.Typo(dict, this.typo._readFile(baseUrl + "/" + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + "/" + dict + "/" + dict + ".dic"), {
                         platform: 'any'
                     });
                     return [2 /*return*/];
                 });
             });
+        };
+        ChoiceScriptValidation.prototype.suggestSpelling = function (words) {
+            var validator = this;
+            var results = [];
+            var _loop_1 = function (w) {
+                results.push(new Promise(function (resolve, reject) {
+                    validator.typo.suggest(w, 5, function (suggestions) {
+                        resolve(suggestions);
+                    }, validator.settings.spellcheck.workerPath);
+                }));
+            };
+            for (var _i = 0, words_1 = words; _i < words_1.length; _i++) {
+                var w = words_1[_i];
+                _loop_1(w);
+            }
+            return Promise.all(results);
         };
         ChoiceScriptValidation.prototype.doValidation = function (document, scene, settings) {
             if (settings === void 0) { settings = this.settings; }
@@ -43805,6 +43883,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
             findDefinition: navigation.findDefinitionGlobal.bind(navigation),
             findDocumentSymbols: navigation.findDocumentSymbols.bind(navigation),
             findReferences: navigation.findReferences.bind(navigation),
+            suggestSpelling: validation.suggestSpelling.bind(validation)
             //findDocumentHighlights: navigation.findDocumentHighlights.bind(navigation),
             //findDocumentLinks: navigation.findDocumentLinks.bind(navigation),
             //findDocumentLinks2: navigation.findDocumentLinks2.bind(navigation),
@@ -43829,7 +43908,7 @@ define('vscode-choicescript-languageservice', ['vscode-choicescript-languageserv
 define('vs/language/choicescript/languageFeaturesChoiceScript',["require", "exports", "vscode-choicescript-languageservice", "./fillers/monaco-editor-core"], function (require, exports, choicescriptService, monaco_editor_core_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.IndexAdapter = exports.DocumentSymbolAdapter = exports.ReferenceAdapter = exports.DefinitionAdapter = exports.HoverAdapter = exports.CompletionAdapter = exports.DiagnosticsAdapter = void 0;
+    exports.IndexAdapter = exports.DocumentSymbolAdapter = exports.ReferenceAdapter = exports.DefinitionAdapter = exports.CodeActionAdapter = exports.HoverAdapter = exports.CompletionAdapter = exports.DiagnosticsAdapter = void 0;
     // --- diagnostics --- ---
     var DiagnosticsAdapter = /** @class */ (function () {
         function DiagnosticsAdapter(_languageId, _worker, defaults) {
@@ -44132,6 +44211,65 @@ define('vs/language/choicescript/languageFeaturesChoiceScript',["require", "expo
         return HoverAdapter;
     }());
     exports.HoverAdapter = HoverAdapter;
+    // --- CodeActions, Spelling QuickFix ---
+    var CodeActionAdapter = /** @class */ (function () {
+        function CodeActionAdapter(_worker) {
+            this._worker = _worker;
+        }
+        CodeActionAdapter.prototype.provideCodeActions = function (model, range, context, token) {
+            var resource = model.uri;
+            var words = [];
+            return this._worker(resource)
+                .then(function (worker) {
+                var markers = context.markers;
+                if (markers.length <= 0)
+                    return null;
+                // Only use is spellings (for now), and we limit
+                // the results to the first one, regardless of context,
+                // for performance reasons.
+                markers = markers.filter(function (m) { return m.code === "badSpelling"; });
+                markers = markers.slice(0, 1); //
+                for (var _i = 0, markers_1 = markers; _i < markers_1.length; _i++) {
+                    var m = markers_1[_i];
+                    var wordRange = new monaco_editor_core_1.Range(m.startLineNumber, m.startColumn, m.endLineNumber, m.endColumn);
+                    var word = model.getWordAtPosition(new monaco_editor_core_1.Position(wordRange.startLineNumber, wordRange.startColumn));
+                    if (!word)
+                        continue;
+                    words.push({ word: word.word, range: wordRange });
+                }
+                if (words.length <= 0)
+                    return null;
+                return worker.suggestSpelling(words.map(function (w) { return w.word; }));
+            })
+                .then(function (results) {
+                if (!results)
+                    return null;
+                var actions = [];
+                if (results.length > 0) {
+                    for (var i = 0; i < results[0].length; i++) {
+                        actions.push({
+                            title: "Correct spelling: " + results[0][i], kind: "quickfix",
+                            edit: {
+                                edits: [{ edit: { range: words[0].range, text: results[0][i] }, resource: model.uri }]
+                            }
+                        });
+                    }
+                }
+                actions.push({ title: "Ignore '" + words[0].word + "' this session", kind: "quickfix",
+                    command: { id: "addWordToDictionary", title: "Ignore Word", arguments: [words[0].word, "session"] }
+                }),
+                    actions.push({ title: "Add '" + words[0].word + "' to the User Dictionary", kind: "quickfix",
+                        command: { id: "addWordToDictionary", title: "Add Word", arguments: [words[0].word, "persistent"] }
+                    });
+                return actions.length > 0 ? {
+                    actions: actions,
+                    dispose: function () { },
+                } : null;
+            });
+        };
+        return CodeActionAdapter;
+    }());
+    exports.CodeActionAdapter = CodeActionAdapter;
     // --- document highlights ------
     /*function toDocumentHighlightKind(kind: number): languages.DocumentHighlightKind {
         switch (kind) {
@@ -44571,6 +44709,9 @@ define('vs/language/choicescript/choicescriptMode',["require", "exports", "./wor
                         new languageFeatures.DocumentColorAdapter(worker)
                     )
                 );*/
+            }
+            if (modeConfiguration.diagnostics) {
+                providers.push(monaco_editor_core_1.languages.registerCodeActionProvider(languageId, new languageFeatures.CodeActionAdapter(worker)));
             }
             if (modeConfiguration.foldingRanges) {
                 /*providers.push(

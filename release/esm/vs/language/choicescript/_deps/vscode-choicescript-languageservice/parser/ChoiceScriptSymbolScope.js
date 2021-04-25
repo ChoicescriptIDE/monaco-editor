@@ -137,6 +137,8 @@ var ScopeBuilder = /** @class */ (function () {
                 return this.visitVariableDeclarationNode(node);
             case nodes.NodeType.LabelDeclaration:
                 return this.visitLabelDeclarationNode(node);
+            case nodes.NodeType.ParamsCommand:
+                return this.visitParamsCommandNode(node);
             /*case nodes.NodeType.FunctionParameter: {
                 return this.visitFunctionParameterNode(<nodes.FunctionParameter>node);
             }*/
@@ -151,6 +153,13 @@ var ScopeBuilder = /** @class */ (function () {
     ScopeBuilder.prototype.visitLabelDeclarationNode = function (node) {
         if (node.getLabel()) {
             this.addSymbol(node, node.getLabel().name, null, nodes.ReferenceType.Label);
+        }
+        return true;
+    };
+    ScopeBuilder.prototype.visitParamsCommandNode = function (node) {
+        var len = node.getVariableCount();
+        for (var i = 0; i < len; i++) {
+            this.addSymbol(node, node.getVariable(i).getName(), null, nodes.ReferenceType.Variable);
         }
         return true;
     };

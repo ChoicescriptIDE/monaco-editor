@@ -57,6 +57,9 @@ export function setupMode(defaults) {
                 )
             );*/
         }
+        if (modeConfiguration.diagnostics) {
+            providers.push(languages.registerCodeActionProvider(languageId, new languageFeatures.CodeActionAdapter(worker)));
+        }
         if (modeConfiguration.foldingRanges) {
             /*providers.push(
                 languages.registerFoldingRangeProvider(

@@ -141,6 +141,8 @@
          * @returns string The file data.
          */
         _readFile: function (path, charset) {
+            if (typeof Window === "undefined" && typeof XMLHttpRequest === "undefined")
+                return require("fs").readFileSync(path).toString();
             if (!charset)
                 charset = "ISO8859-1";
             var req = new XMLHttpRequest();
@@ -491,16 +493,23 @@
          *
          * @param {String} word The misspelling.
          * @param {Number} [limit=5] The maximum number of suggestions to return.
+         * @param {Function} callback The function to call on completion.
+         * @param {String} [workerPath="wordprocessor.js"] The location of the worker file.
          * @returns {String[]} The array of suggestions.
          */
         alphabet: "",
-        suggest: function (word, limit, callback) {
+        suggest: function (word, limit, callback, workerPath) {
+            if (typeof globalThis.Worker === "undefined") {
+                var Worker = require('web-worker');
+            }
+            else {
+                Worker = globalThis.Worker;
+            }
             if (!limit)
                 limit = 5;
-            console.log("typo.js -->", this.check("hello"));
-            console.log("dictionary: ", this.dictionary);
+            if (!workerPath)
+                workerPath = "wordprocessor.js";
             if (this.check(word)) {
-                console.log('nout');
                 callback([]);
                 return;
             }
@@ -551,10 +560,9 @@
                     callback(rv);
                 };
                 for (var i = 0; i < numWorkers; ++i) {
-                    var worker = new Worker("wordprocessor.js");
+                    var worker = new Worker(workerPath);
                     worker.addEventListener('message', function (index) {
                         return function (e) {
-                            //console.log(e.data);
                             rv = rv.concat(e.data);
                             workersCompleted[index] = true;
                             this.terminate(); //CJW stop the worker (else the buildup makes the app crash)?
@@ -624,7 +632,6 @@
                 });
             }
             correct(word, function (rv) {
-                console.log("word", word, "rv", rv);
                 callback(rv);
             });
         }

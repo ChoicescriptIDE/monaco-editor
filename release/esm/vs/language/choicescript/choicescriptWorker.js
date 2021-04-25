@@ -185,6 +185,13 @@ var ChoiceScriptWorker = /** @class */ (function () {
             });
         });
     };
+    ChoiceScriptWorker.prototype.suggestSpelling = function (words) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, this._csLanguageService.suggestSpelling(words)];
+            });
+        });
+    };
     ChoiceScriptWorker.prototype.configure = function (settings) {
         this._csLanguageService.configure(settings);
     };

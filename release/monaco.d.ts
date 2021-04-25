@@ -6863,6 +6863,10 @@ declare namespace monaco.languages.json {
 
 
 declare namespace monaco.languages.css {
+    export class DictionaryEvent {
+        word: string;
+        dictionary: string;
+    }
     export interface DiagnosticsOptions {
         readonly validate?: boolean;
         readonly lint?: {
@@ -6946,8 +6950,10 @@ declare namespace monaco.languages.css {
     export interface LanguageServiceDefaultsChoiceScript {
         readonly languageId: string;
         readonly onDidChange: IEvent<LanguageServiceDefaultsChoiceScript>;
+        readonly onDictionaryChange: IEvent<DictionaryEvent>;
         readonly diagnosticsOptions: DiagnosticsOptionsChoiceScript;
         readonly modeConfiguration: ModeConfiguration;
+        addWordToDictionary(accessor: any, dict: string, word: string): void;
         setDiagnosticsOptions(options: DiagnosticsOptionsChoiceScript): void;
         setModeConfiguration(modeConfiguration: ModeConfiguration): void;
     }

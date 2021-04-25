@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as choicescriptService from './_deps/vscode-choicescript-languageservice/cssLanguageService.js';
-import { languages, editor, Uri, Range, MarkerSeverity } from './fillers/monaco-editor-core.js';
+import { languages, editor, Uri, Position, Range, MarkerSeverity } from './fillers/monaco-editor-core.js';
 // --- diagnostics --- ---
 var DiagnosticsAdapter = /** @class */ (function () {
     function DiagnosticsAdapter(_languageId, _worker, defaults) {
@@ -306,6 +306,65 @@ var HoverAdapter = /** @class */ (function () {
     return HoverAdapter;
 }());
 export { HoverAdapter };
+// --- CodeActions, Spelling QuickFix ---
+var CodeActionAdapter = /** @class */ (function () {
+    function CodeActionAdapter(_worker) {
+        this._worker = _worker;
+    }
+    CodeActionAdapter.prototype.provideCodeActions = function (model, range, context, token) {
+        var resource = model.uri;
+        var words = [];
+        return this._worker(resource)
+            .then(function (worker) {
+            var markers = context.markers;
+            if (markers.length <= 0)
+                return null;
+            // Only use is spellings (for now), and we limit
+            // the results to the first one, regardless of context,
+            // for performance reasons.
+            markers = markers.filter(function (m) { return m.code === "badSpelling"; });
+            markers = markers.slice(0, 1); //
+            for (var _i = 0, markers_1 = markers; _i < markers_1.length; _i++) {
+                var m = markers_1[_i];
+                var wordRange = new Range(m.startLineNumber, m.startColumn, m.endLineNumber, m.endColumn);
+                var word = model.getWordAtPosition(new Position(wordRange.startLineNumber, wordRange.startColumn));
+                if (!word)
+                    continue;
+                words.push({ word: word.word, range: wordRange });
+            }
+            if (words.length <= 0)
+                return null;
+            return worker.suggestSpelling(words.map(function (w) { return w.word; }));
+        })
+            .then(function (results) {
+            if (!results)
+                return null;
+            var actions = [];
+            if (results.length > 0) {
+                for (var i = 0; i < results[0].length; i++) {
+                    actions.push({
+                        title: "Correct spelling: " + results[0][i], kind: "quickfix",
+                        edit: {
+                            edits: [{ edit: { range: words[0].range, text: results[0][i] }, resource: model.uri }]
+                        }
+                    });
+                }
+            }
+            actions.push({ title: "Ignore '" + words[0].word + "' this session", kind: "quickfix",
+                command: { id: "addWordToDictionary", title: "Ignore Word", arguments: [words[0].word, "session"] }
+            }),
+                actions.push({ title: "Add '" + words[0].word + "' to the User Dictionary", kind: "quickfix",
+                    command: { id: "addWordToDictionary", title: "Add Word", arguments: [words[0].word, "persistent"] }
+                });
+            return actions.length > 0 ? {
+                actions: actions,
+                dispose: function () { },
+            } : null;
+        });
+    };
+    return CodeActionAdapter;
+}());
+export { CodeActionAdapter };
 // --- document highlights ------
 /*function toDocumentHighlightKind(kind: number): languages.DocumentHighlightKind {
     switch (kind) {

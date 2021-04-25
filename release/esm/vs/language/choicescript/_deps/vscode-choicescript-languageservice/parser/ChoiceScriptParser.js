@@ -603,6 +603,7 @@ var ChoiceScriptParser = /** @class */ (function () {
             return null;
         }
         return this._parseSceneList()
+            || this._parseParams()
             || this._parseVariableDeclaration()
             || this._parseLabelDeclaration()
             || this._parseSetCommand()
@@ -725,6 +726,21 @@ var ChoiceScriptParser = /** @class */ (function () {
             return null;
         }
         return node; // feel like this should be this.finish, but LESS example says otherwise;
+    };
+    ChoiceScriptParser.prototype._parseParams = function () {
+        var paramCmd = this.create(nodes.ParamsCommand);
+        if (!this.acceptOneKeyword(["params"])) {
+            return null;
+        }
+        while (!this.peek(TokenType.EOL) && !this.peek(TokenType.EOF)) {
+            console.log("txt", this.token.text);
+            console.log("type", this.token.type);
+            if (!paramCmd.addVariable(this._parseVariable())) {
+                this.markError(paramCmd, ParseError.VariableNameExpected);
+                this.consumeToken();
+            }
+        }
+        return this.finish(paramCmd);
     };
     /*public _parseTRef<T>(type: nodes.NodeConstructor<T>): T | null {
         const ref = <T>this.create(type);

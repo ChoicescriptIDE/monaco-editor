@@ -98,6 +98,7 @@ function createChoiceScriptFacade(parser, completion, hover, navigation, validat
         findDefinition: navigation.findDefinitionGlobal.bind(navigation),
         findDocumentSymbols: navigation.findDocumentSymbols.bind(navigation),
         findReferences: navigation.findReferences.bind(navigation),
+        suggestSpelling: validation.suggestSpelling.bind(validation)
         //findDocumentHighlights: navigation.findDocumentHighlights.bind(navigation),
         //findDocumentLinks: navigation.findDocumentLinks.bind(navigation),
         //findDocumentLinks2: navigation.findDocumentLinks2.bind(navigation),

@@ -75,15 +75,28 @@ var ChoiceScriptValidation = /** @class */ (function () {
                 baseUrl = settings.spellcheck.dictionaryPath;
                 dict = settings.spellcheck.dictionary;
                 // TODO handle failure
-                this.typo = new Typo(dict, 
-                //fs.readFileSync(baseUrl + "/" + dict + "/" + dict + ".aff").toString(),
-                //fs.readFileSync(baseUrl + "/" + dict + "/" + dict + ".dic").toString(),
-                this.typo._readFile(baseUrl + "/" + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + "/" + dict + "/" + dict + ".dic"), {
+                this.typo = new Typo(dict, this.typo._readFile(baseUrl + "/" + dict + "/" + dict + ".aff"), this.typo._readFile(baseUrl + "/" + dict + "/" + dict + ".dic"), {
                     platform: 'any'
                 });
                 return [2 /*return*/];
             });
         });
+    };
+    ChoiceScriptValidation.prototype.suggestSpelling = function (words) {
+        var validator = this;
+        var results = [];
+        var _loop_1 = function (w) {
+            results.push(new Promise(function (resolve, reject) {
+                validator.typo.suggest(w, 5, function (suggestions) {
+                    resolve(suggestions);
+                }, validator.settings.spellcheck.workerPath);
+            }));
+        };
+        for (var _i = 0, words_1 = words; _i < words_1.length; _i++) {
+            var w = words_1[_i];
+            _loop_1(w);
+        }
+        return Promise.all(results);
     };
     ChoiceScriptValidation.prototype.doValidation = function (document, scene, settings) {
         if (settings === void 0) { settings = this.settings; }
