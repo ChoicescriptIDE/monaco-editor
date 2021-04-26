@@ -44256,10 +44256,10 @@ define('vs/language/choicescript/languageFeaturesChoiceScript',["require", "expo
                     }
                 }
                 actions.push({ title: "Ignore '" + words[0].word + "' this session", kind: "quickfix",
-                    command: { id: "addWordToDictionary", title: "Ignore Word", arguments: [words[0].word, "session"] }
+                    command: { id: "addWordToDictionary", title: "Ignore Word", arguments: ["session", words[0].word] }
                 }),
                     actions.push({ title: "Add '" + words[0].word + "' to the User Dictionary", kind: "quickfix",
-                        command: { id: "addWordToDictionary", title: "Add Word", arguments: [words[0].word, "persistent"] }
+                        command: { id: "addWordToDictionary", title: "Add Word", arguments: ["persistent", words[0].word] }
                     });
                 return actions.length > 0 ? {
                     actions: actions,
